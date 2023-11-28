@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "mmqg"
+version = "0.1.0"
+description = ""
+authors = ["Omar Zeghouani <omarzeghouanii@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+transformers = "^4.35.2"
+torch = [
+  {version = "^2.1.0+cu118", source = "pytorch", markers = "sys_platform == 'linux'"},
+  {version = "^2.1.0", source = "PyPI", markers = "sys_platform == 'darwin'"},
+  {version = "^2.1.0", source = "PyPI", markers = "sys_platform == 'win32'"}
+]
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu118"
+priority = "explicit"
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.1.6"
+black = "^23.11.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
