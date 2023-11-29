@@ -1,7 +1,4 @@
 import sys
-import os
-import ffmpeg
-import numpy as np
 import subprocess
 import tempfile
 
