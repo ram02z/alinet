@@ -52,3 +52,7 @@ docs/_static/
 docs/_templates/
 docs/*.rst
 !docs/index.rst
+
+# Ignore Videos and Audio
+videoInput.mp4
+audioOutput.mp3
