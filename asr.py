@@ -13,7 +13,7 @@ def convert_video_to_mp3(input, output):
 
 # Change the name of your videos into videoInput.mp4
 # TODO: Implement a method of uploading a video instead of hardcoding path
-convert_video_to_mp3("videoInput.mp4", "audioOutput.mp3")
+convert_video_to_mp3("sample_data/videoInput.mp4", "sample_data/audioOutput.mp3")
 
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 import torch

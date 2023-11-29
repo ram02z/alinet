@@ -53,6 +53,5 @@ docs/_templates/
 docs/*.rst
 !docs/index.rst
 
-# Ignore Videos and Audio
-videoInput.mp4
-audioOutput.mp3
+# Data folder containing videos and audio
+sample_data/
