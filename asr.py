@@ -2,18 +2,18 @@ import subprocess
 import os
 
 
-# def convert_video_to_mp3(input, output):
-#     ffmpeg_cmd = ["ffmpeg", "-i", input, "-vn", "-y", output]  # overrides output files
+def convert_video_to_mp3(input, output):
+    ffmpeg_cmd = ["ffmpeg", "-i", input, "-vn", "-y", output]  # overrides output files
 
-#     try:
-#         subprocess.run(ffmpeg_cmd, check=True)
-#         print("converted")
-#     except subprocess.CalledProcessError as e:
-#         print("failed")
+    try:
+        subprocess.run(ffmpeg_cmd, check=True)
+        print("converted")
+    except subprocess.CalledProcessError as e:
+        print("failed")
 
-# # Change the name of your videos into videoInput.mp4
-# # TODO: Implement a method of uploading a video instead of hardcoding path
-# convert_video_to_mp3("videoInput.mp4", "audioOutput.mp3")
+# Change the name of your videos into videoInput.mp4
+# TODO: Implement a method of uploading a video instead of hardcoding path
+convert_video_to_mp3("videoInput.mp4", "audioOutput.mp3")
 
 from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
 import torch
