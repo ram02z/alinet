@@ -1,21 +1,16 @@
-import sys
 import subprocess
 import tempfile
+import argparse
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+import torch
+
+parser = argparse.ArgumentParser()
+parser.add_argument("file_path", help="type the file path to your video here, e.g. sample_data/video.mp4")
+args = parser.parse_args()
 
 # Create a temporary folder to store created audio files
 temp_dir = tempfile.TemporaryDirectory()
 print(temp_dir.name)
-
-if len(sys.argv) < 2:
-    print("Please run the program again, and enter a file path to your video e.g. sample_data/video.mp4")
-    exit()
-
-video_path = sys.argv[1]
-print("Video Path Specified: ", video_path)
-
-if video_path[-3:] != "mp4":
-    print("Please run the program again, and input a correct file name containing the mp4 file extension (.mp4)")
-    exit()
 
 # Default FFMPEG method of extracting audio from video and generating an mp3
 def convert_video_to_mp3(video_path, audio_path):
@@ -28,12 +23,10 @@ def convert_video_to_mp3(video_path, audio_path):
         print("failed")
 
 audio__storage_path = temp_dir.name + "/audioOutput.mp3"
-convert_video_to_mp3(video_path, audio__storage_path)
+convert_video_to_mp3(args.file_path, audio__storage_path)
 
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
-import torch
 
-print("distil-whisper/medium-en")
+
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 

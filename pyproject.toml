@@ -14,7 +14,6 @@ torch = [
   {version = "^2.1.0", source = "PyPI", markers = "sys_platform == 'darwin'"},
   {version = "^2.1.0", source = "PyPI", markers = "sys_platform == 'win32'"}
 ]
-ffmpeg-python = "^0.2.0"
 
 [[tool.poetry.source]]
 name = "pytorch"
