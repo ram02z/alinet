@@ -1,9 +1,20 @@
 import subprocess
-import os
+import tempfile
+import argparse
+from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
+import torch
 
+parser = argparse.ArgumentParser()
+parser.add_argument("file_path", help="type the file path to your video here, e.g. sample_data/video.mp4")
+args = parser.parse_args()
 
-def convert_video_to_mp3(input, output):
-    ffmpeg_cmd = ["ffmpeg", "-i", input, "-vn", "-y", output]  # overrides output files
+# Create a temporary folder to store created audio files
+temp_dir = tempfile.TemporaryDirectory()
+print(temp_dir.name)
+
+# Default FFMPEG method of extracting audio from video and generating an mp3
+def convert_video_to_mp3(video_path, audio_path):
+    ffmpeg_cmd = ["ffmpeg", "-i", video_path, "-vn", "-y", audio_path]  # overrides output files
 
     try:
         subprocess.run(ffmpeg_cmd, check=True)
@@ -11,14 +22,11 @@ def convert_video_to_mp3(input, output):
     except subprocess.CalledProcessError as e:
         print("failed")
 
-# Change the name of your videos into videoInput.mp4
-# TODO: Implement a method of uploading a video instead of hardcoding path
-convert_video_to_mp3("sample_data/videoInput.mp4", "sample_data/audioOutput.mp3")
+audio__storage_path = temp_dir.name + "/audioOutput.mp3"
+convert_video_to_mp3(args.file_path, audio__storage_path)
 
-from transformers import AutoModelForSpeechSeq2Seq, AutoProcessor, pipeline
-import torch
 
-print("distil-whisper/medium-en")
+
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
@@ -44,7 +52,9 @@ transcriber = pipeline(
     device=device,
 )
 
-# result = transcriber(inputs="audio.mp3", return_timestamps=True)["chunks"]
-result = transcriber(inputs="audioOutput.mp3", return_timestamps=True)
+result = transcriber(inputs=audio__storage_path, return_timestamps=True)
 
 print(result["text"])
+
+# Delete the temporary folder
+temp_dir.cleanup()
