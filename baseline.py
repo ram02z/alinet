@@ -6,14 +6,17 @@ qg_model = AutoModelForSeq2SeqLM.from_pretrained("Salesforce/discord_qg")
 
 ending_punct = ['.', '!', '?']
 
-with open('./sample_data/lecture_1/audio.pkl', 'rb') as file:
+with open('./sample_data/lecture_2/transcript.pkl', 'rb') as file:
     chunks = pickle.load(file)
     time_chunks = []
     current_sentence = ""
     start_timestamp = None
     min_duration = 60
 
-    for chunk in chunks:
+    if not chunks['chunks'][-1]['timestamp'][1]:
+        chunks['chunks'][-1]['timestamp'] = (chunks['chunks'][-1]['timestamp'][0], chunks['chunks'][-1]['timestamp'][0])
+
+    for chunk in chunks['chunks']:
         text = chunk['text']
         timestamp = chunk['timestamp']
 
@@ -34,7 +37,7 @@ with open('./sample_data/lecture_1/audio.pkl', 'rb') as file:
 
     if current_sentence.strip():
         time_chunks.append(
-            {'timestamp': (start_timestamp, chunks[-1]['timestamp'][1]), 'text': current_sentence.strip()})
+            {'timestamp': (start_timestamp, chunks['chunks'][-1]['timestamp'][1]), 'text': current_sentence.strip()})
 
     for chunk in time_chunks:
         for start_word in ["How", "Why", "When", "What"]:
