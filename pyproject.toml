@@ -14,9 +14,8 @@ torch = [
   {version = "^2.1.0", source = "PyPI", markers = "sys_platform == 'darwin'"},
   {version = "^2.1.0", source = "PyPI", markers = "sys_platform == 'win32'"}
 ]
-evaluate = "^0.4.1"
 nltk = "^3.8.1"
-rouge-score = "^0.1.2"
+sentencepiece = "^0.1.99"
 
 [[tool.poetry.source]]
 name = "pytorch"
@@ -29,7 +28,10 @@ priority = "primary"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
-black = "^23.11.0"
+jupyter = "^1.0.0"
+evaluate = "^0.4.1"
+rouge-score = "^0.1.2"
+bert-score = "^0.3.13"
 
 [build-system]
 requires = ["poetry-core"]
