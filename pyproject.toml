@@ -30,7 +30,6 @@ priority = "primary"
 ruff = "^0.1.6"
 jupyter = "^1.0.0"
 evaluate = "^0.4.1"
-rouge-score = "^0.1.2"
 bert-score = "^0.3.13"
 
 [build-system]
