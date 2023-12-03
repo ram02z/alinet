@@ -1,8 +1,8 @@
-# Question Generation
+# Experiments
 
-## Experiments
+## Question Generation
 
-### [eval_models](eval_models.ipynb)
+### [eval_models](qg/eval_models.ipynb)
 
 > Evaluates fine-tuned question generation models available on Hugging Face (as of 01/12/2023) 
 > using a real lecture transcript. All models are context-only, so answer extraction is not required.
