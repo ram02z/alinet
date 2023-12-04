@@ -16,6 +16,8 @@ torch = [
 ]
 nltk = "^3.8.1"
 sentencepiece = "^0.1.99"
+summa = "^1.2.0"
+keybert = "^0.8.3"
 
 [[tool.poetry.source]]
 name = "pytorch"
