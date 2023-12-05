@@ -18,6 +18,7 @@ nltk = "^3.8.1"
 sentencepiece = "^0.1.99"
 summa = "^1.2.0"
 keybert = "^0.8.3"
+statistics = "^1.0.3.5"
 
 [[tool.poetry.source]]
 name = "pytorch"
