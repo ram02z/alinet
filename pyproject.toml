@@ -19,6 +19,9 @@ sentencepiece = "^0.1.99"
 summa = "^1.2.0"
 keybert = "^0.8.3"
 statistics = "^1.0.3.5"
+fitz = "^0.0.1.dev2"
+frontend = "^0.0.3"
+pymupdf = "^1.23.7"
 
 [[tool.poetry.source]]
 name = "pytorch"
