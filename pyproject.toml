@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10"
+python = ">=3.10, <4.0"
 transformers = "^4.35.2"
 torch = [
   {version = "^2.1.0+cu118", source = "pytorch", markers = "sys_platform == 'linux'"},
@@ -18,10 +18,10 @@ nltk = "^3.8.1"
 sentencepiece = "^0.1.99"
 summa = "^1.2.0"
 keybert = "^0.8.3"
-statistics = "^1.0.3.5"
-fitz = "^0.0.1.dev2"
-frontend = "^0.0.3"
+
 pymupdf = "^1.23.7"
+spacy = "^3.7.2"
+en-core-web-sm = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl"}
 
 [[tool.poetry.source]]
 name = "pytorch"
