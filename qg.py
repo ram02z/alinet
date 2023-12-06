@@ -12,6 +12,9 @@ class Model(StrEnum):
 
 class QGPipeline:
     def __init__(self, model_id=Model.DISCORD):
+        """
+        :param model_id: name of huggingface transformers model
+        """
         self._device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self._torch_dtype = (
             torch.float16 if torch.cuda.is_available() else torch.float32
@@ -24,9 +27,9 @@ class QGPipeline:
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-    def __call__(self, documents: list[str], start_word="What") -> str:
+    def __call__(self, documents: list[str], start_word="What") -> list[str]:
         """
-        Generates one question per document
+        Generates one question per document (context)
 
         :param documents: contexts to generate questions for
         :param start_word: question start word

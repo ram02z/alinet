@@ -52,7 +52,7 @@ class ASRPipeline:
         file_path: str,
         batch_size=16,
         chunk_length=15,
-    ) -> (list[dict[str | tuple[float, float]]], float):
+    ) -> (list[dict[str, str | tuple[float, float]]], float):
         """
         :param file_path: path of video/audio file
         :param batch_size: the size of each batch
