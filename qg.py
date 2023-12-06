@@ -41,10 +41,12 @@ class QGPipeline:
             padding=True,
             truncation=True,
             return_tensors="pt",
-        )
+        ).to(self._device)
+        
         decoder_input_ids = self.tokenizer.batch_encode_plus(
             [start_word] * len(documents), add_special_tokens=True, return_tensors="pt"
-        )["input_ids"][:, :-1]
+        ).to(self._device)["input_ids"][:, :-1]
+
         model_output = self.model.generate(
             **encoder_ids, decoder_input_ids=decoder_input_ids
         )

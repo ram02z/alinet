@@ -73,8 +73,6 @@ class ASRPipeline:
                 )
                 audio = AudioSegment.from_file(file_path, file_extension)
 
-        audio.export("sample.mp3", format="mp3")
-
         samples = pydub_to_np(audio)
         pipe = pipeline(
             "automatic-speech-recognition",
