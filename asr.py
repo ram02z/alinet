@@ -4,6 +4,7 @@ import os
 import warnings
 from pydub import AudioSegment
 import numpy as np
+from strenum import StrEnum
 
 
 def pydub_to_np(audio_segment: AudioSegment) -> np.ndarray:
@@ -25,15 +26,32 @@ def pydub_to_np(audio_segment: AudioSegment) -> np.ndarray:
     return arr
 
 
-class ASR:
-    def __init__(self):
+class Model(StrEnum):
+    DISTIL_MEDIUM = "distil-whisper/distil-medium.en"
+    DISTIL_LARGE = "distil-whisper/distil-large-v2"
+
+
+class ASRPipeline:
+    def __init__(self, model_id=Model.DISTIL_MEDIUM):
         self._device = "cuda:0" if torch.cuda.is_available() else "cpu"
         self._torch_dtype = (
             torch.float16 if torch.cuda.is_available() else torch.float32
         )
+        self.model = AutoModelForSpeechSeq2Seq.from_pretrained(
+            model_id,
+            torch_dtype=self._torch_dtype,
+            low_cpu_mem_usage=True,
+            use_safetensors=True,
+        )
+        self.model.to(self._device)
 
-    def transcribe(
-        self, file_path: str, batch_size=16, chunk_length=15
+        self.processor = AutoProcessor.from_pretrained(model_id)
+
+    def __call__(
+        self,
+        file_path: str,
+        batch_size=16,
+        chunk_length=15,
     ) -> (list[dict[str | tuple[float, float]]], float):
         """
         :param file_path: path of video/audio file
@@ -58,22 +76,11 @@ class ASR:
         audio.export("sample.mp3", format="mp3")
 
         samples = pydub_to_np(audio)
-        model_id = "distil-whisper/distil-medium.en"
-        model = AutoModelForSpeechSeq2Seq.from_pretrained(
-            model_id,
-            torch_dtype=self._torch_dtype,
-            low_cpu_mem_usage=True,
-            use_safetensors=True,
-        )
-        model.to(self._device)
-
-        processor = AutoProcessor.from_pretrained(model_id)
-
         pipe = pipeline(
             "automatic-speech-recognition",
-            model=model,
-            tokenizer=processor.tokenizer,
-            feature_extractor=processor.feature_extractor,
+            model=self.model,
+            tokenizer=self.processor.tokenizer,
+            feature_extractor=self.processor.feature_extractor,
             max_new_tokens=128,
             chunk_length_s=chunk_length,
             batch_size=batch_size,
@@ -92,6 +99,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("file_path", help="audio/video file")
     args = parser.parse_args()
-    asr = ASR()
-    chunks, duration = asr.transcribe(file_path=args.file_path)
+    pipe = ASRPipeline()
+    chunks, duration = pipe(file_path=args.file_path)
     print(chunks, duration)
