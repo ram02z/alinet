@@ -6,14 +6,23 @@ from pydub import AudioSegment
 import numpy as np
 
 
-def pydub_to_np(audio: AudioSegment) -> np.ndarray:
+def pydub_to_np(audio_segment: AudioSegment) -> np.ndarray:
     """
     Converts an AudioSegment object to a normalized 1D NumPy array of type float32.
-    The audio values are normalized to the range [-1.0, 1.0], suitable for 16-bit audio.
+    The function ensures the audio is in mono (single channel), 16 kHz frame rate,
+    and 16-bit sample width before conversion. The audio values are normalized
+    to the range [-1.0, 1.0], suitable for 16-bit audio.
     """
-    return (
-        np.frombuffer(audio.raw_data, np.int16).flatten().astype(np.float32) / 32768.0
-    )
+    if audio_segment.frame_rate != 16000:
+        audio_segment = audio_segment.set_frame_rate(16000)
+    if audio_segment.sample_width != 2:
+        audio_segment = audio_segment.set_sample_width(2)
+    if audio_segment.channels != 1:
+        audio_segment = audio_segment.set_channels(1)
+
+    arr = np.array(audio_segment.get_array_of_samples(), dtype=np.float32) / 32768.0
+
+    return arr
 
 
 class ASR:
@@ -39,6 +48,8 @@ class ASR:
                     f"Unsupported file extension '{file_extension}' processed."
                 )
                 audio = AudioSegment.from_file(file_path, file_extension)
+
+        audio.export("sample.mp3", format="mp3")
 
         samples = pydub_to_np(audio)
         model_id = "distil-whisper/distil-medium.en"
@@ -68,72 +79,6 @@ class ASR:
 
         return result["chunks"]
 
-
-# parser = argparse.ArgumentParser()
-# parser.add_argument(
-#     "file_path",
-#     help="type the file path to your video here, e.g. sample_data/video.mp4",
-# )
-# args = parser.parse_args()
-#
-# # Create a temporary folder to store created audio files
-# temp_dir = tempfile.TemporaryDirectory()
-# print(temp_dir.name)
-#
-#
-# # Default FFMPEG method of extracting audio from video and generating an mp3
-# def convert_video_to_mp3(video_path, audio_path):
-#     ffmpeg_cmd = [
-#         "ffmpeg",
-#         "-i",
-#         video_path,
-#         "-vn",
-#         "-y",
-#         audio_path,
-#     ]  # overrides output files
-#
-#     try:
-#         subprocess.run(ffmpeg_cmd, check=True)
-#         print("converted")
-#     except subprocess.CalledProcessError:
-#         print("failed")
-#
-#
-# audio__storage_path = temp_dir.name + "/audioOutput.mp3"
-# convert_video_to_mp3(args.file_path, audio__storage_path)
-#
-# device = "cuda:0" if torch.cuda.is_available() else "cpu"
-# torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-#
-# model_id = "distil-whisper/distil-medium.en"
-#
-# # NOTE: Using Accelerate library enables us to set the parameters, low_cpu_mem_usage=True, use_safetensors=True
-# model = AutoModelForSpeechSeq2Seq.from_pretrained(
-#     model_id,
-#     torch_dtype=torch_dtype,
-# )
-# model.to(device)
-#
-# processor = AutoProcessor.from_pretrained(model_id)
-#
-# transcriber = pipeline(
-#     "automatic-speech-recognition",
-#     model=model,
-#     tokenizer=processor.tokenizer,
-#     feature_extractor=processor.feature_extractor,
-#     max_new_tokens=128,
-#     chunk_length_s=30,
-#     batch_size=16,  # NOTE: Change the batch size to what works on your machine for development
-#     torch_dtype=torch_dtype,
-#     device=device,
-# )
-#
-# result = transcriber(inputs=audio__storage_path, return_timestamps=True)
-#
-# print(result["text"])
-#
-# # Delete the temporary folder
-# temp_dir.cleanup()
 
 if __name__ == "__main__":
     asr = ASR()
