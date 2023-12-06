@@ -34,7 +34,13 @@ class ASR:
 
     def transcribe(
         self, file_path: str, batch_size=16, chunk_length=15
-    ) -> list[dict[str | tuple[float, float]]]:
+    ) -> (list[dict[str | tuple[float, float]]], float):
+        """
+        :param file_path: path of video/audio file
+        :param batch_size: the size of each batch
+        :param chunk_length: the input length for each chunk
+        :return: transcript chunks with chunk-level timestamps and transcript duration
+        """
         _, file_extension = os.path.splitext(file_path)
         file_extension = file_extension[1:]
 
@@ -77,10 +83,15 @@ class ASR:
 
         result = pipe(samples, return_timestamps=True)
 
-        return result["chunks"]
+        return result["chunks"], audio.duration_seconds
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file_path", help="audio/video file")
+    args = parser.parse_args()
     asr = ASR()
-    chunks = asr.transcribe("lecture_sample.mp4", chunk_length=15)
-    print(chunks)
+    chunks, duration = asr.transcribe(file_path=args.file_path)
+    print(chunks, duration)
