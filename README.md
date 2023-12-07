@@ -1,6 +1,6 @@
 # MMQG
 
-### MMQG: Is a multi-modal question generation system that utilizes video lectures and presentation slides to generate high-quality questions pertinent to the provided educational content. While initially designed for university professors, its applicability spans all academic levels. The primary aim is to assist teaching staff in efficiently creating instructional material, enabling students to self-assess their understanding of the content
+MMQG: Is a multi-modal question generation system that utilizes video lectures and presentation slides to generate high-quality questions pertinent to the provided educational content. While initially designed for university professors, its applicability spans all academic levels. The primary aim is to assist teaching staff in efficiently creating instructional material, enabling students to self-assess their understanding of the content
 
 # Installation
 MMQG requires the following dependencies:
@@ -12,7 +12,7 @@ MMQG requires the following dependencies:
 - For installation visit: https://python-poetry.org/docs/#installing-with-pipx
 
 **FFmpeg**, software for handling of video and audio files
-- can be installed using **homebrew**:
+- Installation using **homebrew**:
 
 ```
 brew install ffmpeg
