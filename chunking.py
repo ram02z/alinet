@@ -2,10 +2,13 @@ from transformers import AutoTokenizer
 import fitz
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import statistics
 from qg import Model
+from spacy.lang.en import English
 
 INPUT_TOKEN_LIMIT = {Model.DISCORD: 1024}
+
+nlp = English()
+nlp.add_pipe("sentencizer")
 
 
 class ChunkPipeline:
@@ -25,14 +28,17 @@ class ChunkPipeline:
         chunks: list[dict[str, str | tuple[float, float]]],
         audio_length: float,
         pdf_stream: bytes = None,
-        sentence_overlap=0,
-        min_duration=60,
+        stride_length=50,
+        min_duration=120,
+        filter_threshold=0.6,
     ) -> list[dict[str, str | tuple[float, float]]]:
         """
         :param chunks: transcript chunks with chunk-level timestamps.
         :param audio_length: length of the original audio in seconds
         :param pdf_stream: supplementary pdf to use for chunk filtering
-        :param sentence_overlap: number of sentence to prepend and append to each chunk
+        :param stride_length: maximum number of tokens to add to both sides of chunk
+        :param min_duration: minimum duration per chunk
+        :param filter_threshold: threshold to use for chunk filtering
         """
 
         # Last chunk end timestamp could be missing
@@ -43,12 +49,12 @@ class ChunkPipeline:
             )
 
         self._chunks = chunks
-        self._chunk(sentence_overlap, min_duration)
+        self._chunk(stride_length, min_duration)
         if pdf_stream:
-            self._filter(pdf_stream)
+            self._filter(pdf_stream, threshold=filter_threshold)
         return self._chunks
 
-    def _filter(self, pdf_stream):
+    def _filter(self, pdf_stream, threshold):
         with fitz.open(stream=pdf_stream, filetype="pdf") as doc:
             text = chr(12).join([page.get_text() for page in doc])
 
@@ -60,21 +66,32 @@ class ChunkPipeline:
             similarity_score = cosine_sim[0][1]
             similarity_scores.append(similarity_score)
 
-        median = statistics.median(similarity_scores)
-
         self._chunks = [
-            chunk for sim, chunk in zip(similarity_scores, self._chunks) if sim > median
+            chunk
+            for sim, chunk in zip(similarity_scores, self._chunks)
+            if sim > threshold
         ]
 
-    # TODO: implement sentence overlap
-    def _chunk(self, sentence_overlap, min_duration):
+    def _chunk(self, stride_length, min_duration):
         time_chunks = []
         current_sentence = ""
         start_timestamp = None
+        chunk_limit = self._input_limit - 2 * stride_length
 
-        for chunk in self._chunks:
-            text = chunk["text"]
-            timestamp = chunk["timestamp"]
+        def process_chunk(chunk):
+            nonlocal current_sentence, start_timestamp
+            doc = nlp(current_sentence)
+            time_chunks.append(
+                {
+                    "timestamp": (start_timestamp, chunk["timestamp"][1]),
+                    "text": [str(sent).strip() for sent in doc.sents],
+                }
+            )
+            current_sentence = ""
+            start_timestamp = None
+
+        for i, chunk in enumerate(self._chunks):
+            text, timestamp = chunk["text"], chunk["timestamp"]
 
             if start_timestamp is None:
                 start_timestamp = timestamp[0]
@@ -83,27 +100,53 @@ class ChunkPipeline:
             token_count = len(self._tokenizer.tokenize(current_sentence))
 
             if current_sentence.strip()[-1] == "." and (
-                token_count > self._input_limit
+                token_count > chunk_limit
                 or (timestamp[1] - start_timestamp) >= min_duration
             ):
-                time_chunks.append(
-                    {
-                        "timestamp": (start_timestamp, timestamp[1]),
-                        "text": current_sentence.strip(),
-                    }
-                )
-                current_sentence = ""
-                start_timestamp = None
+                process_chunk(chunk)
 
+        # Add left over sentence(s) to last chunk
         if current_sentence.strip():
-            time_chunks.append(
+            process_chunk(self._chunks[-1])
+
+        # Add stride to chunks
+        chunks = []
+        for i in range(len(time_chunks)):
+            # Right stride
+            right_sents = []
+            if i < len(time_chunks) - 1:
+                j = i + 1
+                jj = 0
+                while len(time_chunks[j]["text"]) > jj:
+                    sent = time_chunks[j]["text"][jj]
+                    token_count = len(
+                        self._tokenizer.tokenize("".join(right_sents) + sent)
+                    )
+                    if token_count >= stride_length:
+                        break
+                    right_sents.append(sent)
+                    jj += 1
+
+            # Left stride
+            left_sents = []
+            if i > 0:
+                k = i - 1
+                kk = 1
+                while len(time_chunks[k]["text"]) > kk:
+                    sent = time_chunks[k]["text"][-kk]
+                    token_count = len(
+                        self._tokenizer.tokenize("".join(left_sents) + sent)
+                    )
+                    if token_count >= stride_length:
+                        break
+                    left_sents.append(sent)
+                    kk += 1
+
+            chunks.append(
                 {
-                    "timestamp": (
-                        start_timestamp,
-                        self._chunks[-1]["timestamp"][1],
-                    ),
-                    "text": current_sentence.strip(),
+                    "timestamp": time_chunks[i]["timestamp"],
+                    "text": " ".join(left_sents + time_chunks[i]["text"] + right_sents),
                 }
             )
 
-        self._chunks = time_chunks
+        self._chunks = chunks
