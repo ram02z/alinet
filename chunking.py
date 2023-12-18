@@ -41,11 +41,6 @@ class ChunkPipeline:
                 audio_length,
             )
 
-        self._chunks = chunks
-        self._chunk(stride_length, min_duration)
-        return self._chunks
-
-    def _chunk(self, stride_length, min_duration):
         time_chunks = []
         current_sentence = ""
         start_timestamp = None
@@ -63,7 +58,7 @@ class ChunkPipeline:
             current_sentence = ""
             start_timestamp = None
 
-        for chunk in self._chunks:
+        for chunk in chunks:
             text, timestamp = chunk["text"], chunk["timestamp"]
 
             if start_timestamp is None:
@@ -80,10 +75,10 @@ class ChunkPipeline:
 
         # Add left over sentence(s) to last chunk
         if current_sentence.strip():
-            process_chunk(self._chunks[-1])
+            process_chunk(chunks[-1])
 
         # Add stride to chunks
-        chunks = []
+        chunks_with_stride = []
         for chunk_idx in range(len(time_chunks)):
             # Right stride
             right_sents = []
@@ -115,7 +110,7 @@ class ChunkPipeline:
                     left_sents.append(sent)
                     sentence_index += 1
 
-            chunks.append(
+            chunks_with_stride.append(
                 {
                     "timestamp": time_chunks[chunk_idx]["timestamp"],
                     "text": " ".join(
@@ -124,4 +119,4 @@ class ChunkPipeline:
                 }
             )
 
-        self._chunks = chunks
+        return chunks_with_stride
