@@ -11,7 +11,7 @@ MMQG requires the following dependencies:
 
 Using `brew` package manager as an example:
 
-```sh
+```shell
 # Install system dependencies
 brew install python@3.10 ffmpeg pipx
 
@@ -24,6 +24,12 @@ poetry install
 ```
 
 The virtual environment will be created locally in the `.venv` directory.
+
+To make use of PyTorch GPU support:
+
+```shell
+poetry install --extras cuda
+```
 
 ## Usage
 The system can be run by feeding it the path to the desired lecture video and the corresponding slides, with the file formats being **.mp4** and **PDF**, respectively:
