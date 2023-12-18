@@ -1,7 +1,4 @@
 from transformers import AutoTokenizer
-import fitz
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from qg import Model
 from spacy.lang.en import English
 
@@ -27,18 +24,14 @@ class ChunkPipeline:
         self,
         chunks: list[dict[str, str | tuple[float, float]]],
         audio_length: float,
-        pdf_stream: bytes = None,
         stride_length=50,
         min_duration=120,
-        filter_threshold=0.6,
     ) -> list[dict[str, str | tuple[float, float]]]:
         """
-        :param chunks: transcript chunks with chunk-level timestamps.
+        :param chunks: transcript chunks with chunk-level timestamps
         :param audio_length: length of the original audio in seconds
-        :param pdf_stream: supplementary pdf to use for chunk filtering
         :param stride_length: maximum number of tokens to add to both sides of chunk
         :param min_duration: minimum duration per chunk
-        :param filter_threshold: threshold to use for chunk filtering
         """
 
         # Last chunk end timestamp could be missing
@@ -50,27 +43,7 @@ class ChunkPipeline:
 
         self._chunks = chunks
         self._chunk(stride_length, min_duration)
-        if pdf_stream:
-            self._filter(pdf_stream, threshold=filter_threshold)
         return self._chunks
-
-    def _filter(self, pdf_stream, threshold):
-        with fitz.open(stream=pdf_stream, filetype="pdf") as doc:
-            text = chr(12).join([page.get_text() for page in doc])
-
-        similarity_scores = []
-        for chunk in self._chunks:
-            vectorizer = TfidfVectorizer()
-            tfidf_matrix = vectorizer.fit_transform([text, chunk["text"]])
-            cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-            similarity_score = cosine_sim[0][1]
-            similarity_scores.append(similarity_score)
-
-        self._chunks = [
-            chunk
-            for sim, chunk in zip(similarity_scores, self._chunks)
-            if sim > threshold
-        ]
 
     def _chunk(self, stride_length, min_duration):
         time_chunks = []
