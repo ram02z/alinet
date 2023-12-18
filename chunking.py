@@ -63,7 +63,7 @@ class ChunkPipeline:
             current_sentence = ""
             start_timestamp = None
 
-        for i, chunk in enumerate(self._chunks):
+        for chunk in self._chunks:
             text, timestamp = chunk["text"], chunk["timestamp"]
 
             if start_timestamp is None:
@@ -84,41 +84,43 @@ class ChunkPipeline:
 
         # Add stride to chunks
         chunks = []
-        for i in range(len(time_chunks)):
+        for chunk_idx in range(len(time_chunks)):
             # Right stride
             right_sents = []
-            if i < len(time_chunks) - 1:
-                j = i + 1
-                jj = 0
-                while len(time_chunks[j]["text"]) > jj:
-                    sent = time_chunks[j]["text"][jj]
+            if chunk_idx < len(time_chunks) - 1:
+                next_chunk_idx = chunk_idx + 1
+                sentence_idx = 0
+                while len(time_chunks[next_chunk_idx]["text"]) > sentence_idx:
+                    sent = time_chunks[next_chunk_idx]["text"][sentence_idx]
                     token_count = len(
                         self._tokenizer.tokenize("".join(right_sents) + sent)
                     )
                     if token_count >= stride_length:
                         break
                     right_sents.append(sent)
-                    jj += 1
+                    sentence_idx += 1
 
             # Left stride
             left_sents = []
-            if i > 0:
-                k = i - 1
-                kk = 1
-                while len(time_chunks[k]["text"]) > kk:
-                    sent = time_chunks[k]["text"][-kk]
+            if chunk_idx > 0:
+                prev_chunk_idx = chunk_idx - 1
+                sentence_index = 1
+                while len(time_chunks[prev_chunk_idx]["text"]) > sentence_index:
+                    sent = time_chunks[prev_chunk_idx]["text"][-sentence_index]
                     token_count = len(
                         self._tokenizer.tokenize("".join(left_sents) + sent)
                     )
                     if token_count >= stride_length:
                         break
                     left_sents.append(sent)
-                    kk += 1
+                    sentence_index += 1
 
             chunks.append(
                 {
-                    "timestamp": time_chunks[i]["timestamp"],
-                    "text": " ".join(left_sents + time_chunks[i]["text"] + right_sents),
+                    "timestamp": time_chunks[chunk_idx]["timestamp"],
+                    "text": " ".join(
+                        left_sents + time_chunks[chunk_idx]["text"] + right_sents
+                    ),
                 }
             )
 
