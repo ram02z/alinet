@@ -32,9 +32,16 @@ poetry install --extras cuda
 ```
 
 ## Usage
-The system can be run by feeding it the path to the desired lecture video and the corresponding slides, with the file formats being **.mp4** and **PDF**, respectively:
-```sh
-python main.py path/to/video/file.mp4 path/to/slides.pdf
-```
-The output will be all the generated questions.
 
+```sh
+python main.py path/to/video/file.mp4
+```
+
+This will output all the generated questions.
+
+To filter the generated questions using the original lecture slides, pass the slides path and the similarity threshold:
+
+```shell
+# If no threshold is given, the default (0.5) is used
+python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
+```

@@ -1,3 +1,5 @@
+import warnings
+
 import torch
 from transformers import (
     AutoTokenizer,
@@ -35,6 +37,10 @@ class QGPipeline:
         :param start_word: question start word
         :return: generated question
         """
+        if len(documents) == 0:
+            warnings.warn("Empty list of documents passed to question generation model.")
+            return []
+
         encoder_ids = self.tokenizer.batch_encode_plus(
             documents,
             add_special_tokens=True,
@@ -42,7 +48,7 @@ class QGPipeline:
             truncation=True,
             return_tensors="pt",
         ).to(self._device)
-        
+
         decoder_input_ids = self.tokenizer.batch_encode_plus(
             [start_word] * len(documents), add_special_tokens=True, return_tensors="pt"
         ).to(self._device)["input_ids"][:, :-1]
