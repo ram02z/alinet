@@ -10,7 +10,7 @@ readme = "README.md"
 python = ">=3.10, <4.0"
 transformers = "^4.35.2"
 torch = [
-  {version = "^2.1.2+cu118", source = "pytorch", markers = "extra=='cuda'"},
+  #{version = "^2.1.2+cu118", source = "pytorch", markers = "extra=='cuda'"},
   {version = "^2.1.2", source = "PyPI", markers = "extra!='cuda'"},
 ]
 
