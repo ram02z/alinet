@@ -5,7 +5,7 @@
 ## Installation
 MMQG requires the following dependencies:
 
-- Python >= 3.10
+- Python 3.10
 - Poetry
 - FFmpeg
 
@@ -25,7 +25,7 @@ poetry install
 
 The virtual environment will be created locally in the `.venv` directory.
 
-PyTorch with CUDA support will be installed by default on supported environments.
+PyTorch with CUDA support will be only be installed on Linux environments.
 
 ## Usage
 
