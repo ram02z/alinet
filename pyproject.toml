@@ -1,8 +1,13 @@
 [tool.poetry]
 name = "mmqg"
 version = "0.1.0"
-description = ""
-authors = ["Omar Zeghouani <omarzeghouanii@gmail.com>"]
+description = "multi-modal question generation"
+authors = [
+    "Omar Zeghouani <omarzeghouanii@gmail.com>",
+    "Jia Wei Hong <jiaweihong1@gmail.com>",
+    "William Simson van Dijkhuizen <wilvandijkhuizen@gmail.com>",
+    "Zawar Ali <ali.zawar.it@gmail.com>"
+]
 license = "MIT"
 readme = "README.md"
 
@@ -10,10 +15,9 @@ readme = "README.md"
 python = ">=3.10, <4.0"
 transformers = "^4.35.2"
 torch = [
-  {version = "^2.1.2+cu118", source = "pytorch", markers = "extra=='cuda'"},
-  {version = "^2.1.2", source = "PyPI", markers = "extra!='cuda'"},
+    { version = "2.1.2", source = "pytorch", platform = "!=darwin"},
+    { version = "2.1.2", source = "pypi", platform = "darwin"},
 ]
-
 pymupdf = "^1.23.7"
 pydub = "^0.25.1"
 accelerate = "^0.25.0"
@@ -22,17 +26,10 @@ strenum = "^0.4.15"
 spacy = "^3.7.2"
 sentencepiece = "^0.1.99"
 
-[tool.poetry.extras]
-cuda = []
-
 [[tool.poetry.source]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cu118"
-priority = "supplemental"
-
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
+priority = "explicit"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"

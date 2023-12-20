@@ -5200,10 +5200,7 @@ files = [
 idna = ">=2.0"
 multidict = ">=4.0"
 
-[extras]
-cuda = []
-
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <4.0"
-content-hash = "c086dc3b4ad0e44eedc6c8679d50c31b910f60f721d95c7885d2e1bddaea9360"
+content-hash = "fddd77c9e1d0ad61fe9da4977abb3dfa90b8738aabeee2666a34e049a202471c"

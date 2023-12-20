@@ -25,11 +25,7 @@ poetry install
 
 The virtual environment will be created locally in the `.venv` directory.
 
-To make use of PyTorch GPU support:
-
-```shell
-poetry install --extras cuda
-```
+PyTorch with CUDA support will be installed by default on supported environments.
 
 ## Usage
 
