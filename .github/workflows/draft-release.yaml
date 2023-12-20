@@ -27,6 +27,7 @@ jobs:
 
       - name: Commit changelog and manifest
         uses: stefanzweifel/git-auto-commit-action@v5
+        id: auto-commit-action
         with:
           commit_message: Prepare release ${{ github.event.inputs.version }}
           branch: release/${{ github.event.inputs.version }}
