@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from fitz import fitz
 
+
 def is_frame_different(frame1, frame2, threshold=0.9):
     gray_frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
     gray_frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
@@ -9,10 +10,9 @@ def is_frame_different(frame1, frame2, threshold=0.9):
     mean_abs_diff = np.mean(abs_diff)
     return mean_abs_diff > 1
 
-def convert_millis_to_time_format(millis):
+def convert_millis_to_seconds(millis):
     seconds = int(millis / 1000)
-    minutes, seconds = divmod(seconds, 60)
-    return f"{minutes:02d}:{seconds:02d}"
+    return seconds
 
 
 def main():
@@ -49,12 +49,12 @@ def main():
             break
 
         current_time_millis = cap.get(cv2.CAP_PROP_POS_MSEC)
-        timestamp = convert_millis_to_time_format(current_time_millis)
+        timestamp = convert_millis_to_seconds(current_time_millis)
 
         if is_frame_different(frame, previous_frame):
             i += 1
-            cv2.putText(frame, timestamp, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            cv2.imshow('Original Frame', frame)
+            # cv2.putText(frame, timestamp, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # cv2.imshow('Original Frame', frame)
 
             # Add tuple (text, start time, end time) to the list
             slide_chunks.append((None, timestamp, None))
@@ -81,6 +81,10 @@ def main():
     # Remove lase element of frame_list
     slide_chunks.pop()
 
+    for chunk in slide_chunks:
+        print(chunk)
+
     return slide_chunks
 
 
+main()
