@@ -78,19 +78,21 @@ python prepare_data.py \
 
 The training script, `train.py`, expects the cached dataset and tokenizer, and model id and type to be passed as arguments.
 To see the full list of training arguments, run `python train.py --help` or refer to HugginFace's [TrainerArguments](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) documentation.
-Additionally, the script will report to wandb if the `WANDB_PROJECT` environment variable is set.
 
 Data batches dynamically to fit the GPU memory by using `DataCollatorForSeq2Seq`.
 
 Example usage:
 
 ```shell
+export TASK_NAME="t5-base"
+
 python train.py \
     --train_file_path path/to/train/data.safetensors \
     --valid_file_path path/to/valid/data.safetensors \
     --tokenizer path/to/tokenizer.json \
     --model_id_or_path t5-base \
     --model_type t5 \
+    --task_name $TASK_NAME \
     --output_dir path/to/output/dir \
     --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 8 \
@@ -103,3 +105,14 @@ python train.py \
     --evaluate_during_training \
     --logging_steps 100
 ```
+
+To report to [W&B](https://wandb.ai/), pass the `--report_to wandb` argument and set the following environment variables:
+
+```shell
+export WANDB_PROJECT="mmqg"
+export WANDB_API_KEY="..."
+export WANDB_WATCH="all"
+export WANDB_LOG_MODEL="end"
+```
+
+For more information about the environment variables, refer to the [W&B documentation](https://docs.wandb.ai/guides/track/environment-variables).

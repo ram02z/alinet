@@ -89,19 +89,10 @@ def main():
         tokenizer, model=model, label_pad_token_id=label_pad_token_id
     )
 
-    # Initialise our TrainingArguments
-    extra_training_args = dict(
-        run_name=model_args.pretrained_model_name,
-        report_to="wandb",
-        prediction_loss_only=True,
-    )
-    args_dict = {**training_args.to_dict(), **extra_training_args}
-    args = TrainingArguments(**args_dict)
-
     # Initialise our Trainer
     trainer = Seq2SeqTrainer(
         models=model,
-        args=args,
+        args=training_args,
         data_collator=data_collator,
         train_dataset=train_dataset,
         eval_dataset=valid_dataset,
