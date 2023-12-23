@@ -55,3 +55,7 @@ docs/*.rst
 
 # Data folder containing videos and audio
 sample_data/
+
+# Output of generated dataset for finetuning
+finetune/datasets/*
+
