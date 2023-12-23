@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass, field
-from transformers import HfArgumentParser, T5Tokenizer, BartTokenizer
+from transformers import HfArgumentParser, T5Tokenizer, BartTokenizer, PreTrainedTokenizer
 from safetensors.torch import save_file
 
 from strenum import StrEnum
@@ -41,6 +41,11 @@ class DataProcessor:
     def __init__(
         self, model_type=ModelType.T5, max_source_length=512, max_target_length=32
     ):
+        """
+        :param model_type: ModelType enum
+        :param max_source_length: maximum length of source text
+        :param max_target_length: maximum length of target text
+        """
         match model_type:
             case ModelType.T5:
                 self.tokenizer = T5Tokenizer.from_pretrained("t5-base")
@@ -49,10 +54,15 @@ class DataProcessor:
         self.max_source_length = max_source_length
         self.max_target_length = max_target_length
 
-    def __call__(self, dataset):
-        dataset = dataset.map(self._convert_to_features)
+    def __call__(self, dataset: datasets.Dataset) -> (datasets.Dataset, PreTrainedTokenizer):
+        """
+        :param dataset: dataset to process
+        """
+        tokenized_dataset = dataset.map(self._convert_to_features, batched=True)
+        columns = ["input_ids", "labels", "attention_mask"]
+        tokenized_dataset.set_format(type="torch", columns=columns)
 
-        return dataset
+        return tokenized_dataset, self.tokenizer
 
     def _convert_to_features(self, x):
         input_encodings = self.tokenizer.batch_encode_plus(
@@ -69,8 +79,8 @@ class DataProcessor:
         )
 
         encodings = {
-            "source_ids": input_encodings["input_ids"],
-            "target_ids": target_encodings["input_ids"],
+            "input_ids": input_encodings["input_ids"],
+            "labels": target_encodings["input_ids"],
             "attention_mask": input_encodings["attention_mask"],
         }
 
@@ -84,13 +94,12 @@ def main():
     train_dataset = datasets.load_dataset(args.train_csv_file)
     valid_dataset = datasets.load_dataset(args.valid_csv_file)
 
-    data_processor = DataProcessor(
+    process, tokenizer = DataProcessor(
         args.model_type, args.max_source_length, args.max_target_length
     )
 
-    columns = ["source_ids", "target_ids", "attention_mask"]
-    train_dataset.set_format(type="torch", columns=columns)
-    valid_dataset.set_format(type="torch", columns=columns)
+    train_dataset = process(train_dataset)
+    valid_dataset = process(valid_dataset)
 
     train_file_path = f"train_data_{args.model_type}.safetensors"
     save_file(train_dataset, train_file_path)
@@ -101,7 +110,7 @@ def main():
     logger.info(f"saved validation dataset to {valid_file_path}")
 
     tokenizer_file_path = f"tokenizer_{args.model_type}"
-    data_processor.tokenizer.save_pretrained(tokenizer_file_path)
+    tokenizer.save_pretrained(tokenizer_file_path)
     logger.info(f"saved tokenizer to {tokenizer_file_path}")
 
 
