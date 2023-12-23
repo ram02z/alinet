@@ -46,16 +46,13 @@ class DataProcessor:
         """
         match model_type:
             case ModelType.T5:
-                self.tokenizer = T5Tokenizer.from_pretrained(
-                    "t5-base", model_max_length=max_source_length
-                )
+                self.tokenizer = T5Tokenizer.from_pretrained("t5-base")
             case ModelType.BART:
-                self.tokenizer = BartTokenizer.from_pretrained(
-                    "facebook/bart-base", model_max_length=max_source_length
-                )
+                self.tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
             case _:
                 raise ValueError(f"Unsupported model type {model_type}")
         self.max_source_length = max_source_length
+        self.max_target_length = max_target_length
 
     def __call__(self, dataset: datasets.Dataset, seed: int):
         """
@@ -90,11 +87,13 @@ class DataProcessor:
     def _convert_to_features(self, x):
         input_encodings = self.tokenizer.batch_encode_plus(
             x["source"],
+            max_length=self.max_target_length,
             truncation=True,
             add_special_tokens=True,
         )
         target_encodings = self.tokenizer.batch_encode_plus(
             x["target"],
+            max_length=self.max_source_length,
             truncation=True,
             add_special_tokens=True,
         )
