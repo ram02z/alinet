@@ -41,13 +41,13 @@ class DataProcessor:
     def __init__(
         self, model_type=ModelType.T5, max_source_length=512, max_target_length=32
     ):
-        self.max_source_length = max_source_length
-        self.max_target_length = max_target_length
         match model_type:
             case ModelType.T5:
                 self.tokenizer = T5Tokenizer.from_pretrained("t5-base")
             case ModelType.BART:
                 self.tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
+        self.max_source_length = max_source_length
+        self.max_target_length = max_target_length
 
     def __call__(self, dataset):
         dataset = dataset.map(self._convert_to_features)
@@ -59,11 +59,13 @@ class DataProcessor:
             x["source"],
             max_length=self.max_target_length,
             truncation=True,
+            add_special_tokens=True,
         )
         target_encodings = self.tokenizer.batch_encode_plus(
             x["target"],
             max_length=self.max_source_length,
             truncation=True,
+            add_special_tokens=True,
         )
 
         encodings = {
