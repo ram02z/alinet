@@ -49,37 +49,29 @@ python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 The data processor script, `prepare_data.py`, expects the training data to be in the following format:
 
 ```csv
-source,target
-<context>,<question>
+source,target,dataset
+<context>,<question>,<dataset-name>
 ```
 
-The data processor will process and cache the dataset in the 'torch' format and cache the tokenizer used to process the dataset.
-The output of the files will be in the following format:
-
-```shell
-# Cached datasets
-{split}_data_{model_type}.safetensors
-# Cached tokenizer
-tokenizer_{model_type}.json
-```
+The data processor will process and cache the dataset, and save the tokenizer in the specified output directory (default is `./data/`).
 
 Example usage:
 
 ```shell
 python prepare_data.py \
     --train_csv_file path/to/train/data.csv \
-    --valid_csv_file path/to/valid/data.csv \
+    --output_dir path/to/output/dir \
     --model_type t5 \
     --max_source_length 512 \
-    --max_target_length 32
+    --max_target_length 32 \
+    --seed 42
 ```
 
 ### Training
 
-The training script, `train.py`, expects the cached dataset and tokenizer, and model id and type to be passed as arguments.
-To see the full list of training arguments, run `python train.py --help` or refer to HugginFace's [TrainerArguments](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) documentation.
+The training script, `train.py`, expects the processed data directory to contain dataset splits and the `tokenizer_config.json` file (see [Data preparation usage](#data-preparation)).
 
-Data batches dynamically to fit the GPU memory by using `DataCollatorForSeq2Seq`.
+To see the full list of training arguments, run `python train.py --help` or refer to HuggingFace's [TrainerArguments](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) documentation.
 
 Example usage:
 
@@ -87,13 +79,11 @@ Example usage:
 export TASK_NAME="t5-base"
 
 python train.py \
-    --train_file_path path/to/train/data.safetensors \
-    --valid_file_path path/to/valid/data.safetensors \
-    --tokenizer path/to/tokenizer.json \
+    --data_dir path/to/processed/data/dir \
+    --output_dir path/to/output/dir \
     --model_id_or_path t5-base \
     --model_type t5 \
     --task_name $TASK_NAME \
-    --output_dir path/to/output/dir \
     --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 8 \
     --gradient_accumulation_steps 8 \

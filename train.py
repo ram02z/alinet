@@ -1,16 +1,15 @@
 import logging
 from dataclasses import dataclass, field
 
-from safetensors.torch import load_file
+from datasets import load_from_disk
 from transformers import (
     HfArgumentParser,
-    TrainingArguments,
     set_seed,
-    PreTrainedTokenizer,
     AutoModelForSeq2SeqLM,
-    AutoConfig,
     DataCollatorForSeq2Seq,
     Seq2SeqTrainer,
+    AutoTokenizer,
+    Seq2SeqTrainingArguments,
 )
 
 from prepare_data import ModelType
@@ -24,9 +23,6 @@ class ModelArguments:
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
     """
 
-    cached_tokenizer_path: str = field(
-        metadata={"help": "Path for cached tokenizer (must be same as model type)"}
-    )
     pretrained_model_name: str = field(
         default="t5-base",
         metadata={"help": "Model identifier from huggingface.co/models"},
@@ -43,55 +39,46 @@ class DataTrainingArguments:
     Arguments pertaining to what data we are going to input our model for training and eval.
     """
 
-    train_file_path: str = field(
-        metadata={"help": "Path for cached train dataset"},
-    )
-    valid_file_path: str = field(
-        metadata={"help": "Path for cached validation dataset"}
+    data_dir: str = field(
+        metadata={"help": "Path of directory with cached dataset and tokenizer"},
     )
 
 
 def main():
     parser = HfArgumentParser(
-        (ModelArguments, DataTrainingArguments, TrainingArguments)
+        (ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments)
     )
 
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+
+    logger.info("loading datasets")
+
+    dataset = load_from_disk(data_args.data_dir)
+    train_dataset = dataset["train"]
+    valid_dataset = dataset["valid"]
+
+    logger.info("finished loading datasets")
 
     logger.info(f"training args: {training_args}")
 
     set_seed(training_args.seed)
 
-    logger.info("loading tokenizer and model")
+    logger.info("loading pretrained model")
 
-    tokenizer = PreTrainedTokenizer.from_pretrained(model_args.cached_tokenizer_path)
-    config = AutoConfig.from_pretrained(
-        model_args.pretrained_model_name, decoder_start_token_id=tokenizer.pad_token_id
-    )
-    model = AutoModelForSeq2SeqLM(config).from_pretrained(
-        model_args.pretrained_model_name
-    )
+    tokenizer = AutoTokenizer.from_pretrained(data_args.data_dir, use_fast=False)
+    model = AutoModelForSeq2SeqLM.from_pretrained(model_args.pretrained_model_name)
 
-    logger.info("finished loading tokenizer and model")
-
-    logger.info("loading datasets")
-
-    train_dataset = load_file(data_args.train_file_path)
-    valid_dataset = load_file(data_args.valid_file_path)
-
-    logger.info("finished loading datasets")
+    logger.info("finished loading pretrained model")
 
     # Initialise our DataCollator
-    label_pad_token_id = (
-        -100 if data_args.ignore_pad_token_for_loss else tokenizer.pad_token_id
-    )
+    label_pad_token_id = -100
     data_collator = DataCollatorForSeq2Seq(
         tokenizer, model=model, label_pad_token_id=label_pad_token_id
     )
 
     # Initialise our Trainer
     trainer = Seq2SeqTrainer(
-        models=model,
+        model=model,
         args=training_args,
         data_collator=data_collator,
         train_dataset=train_dataset,
@@ -99,8 +86,13 @@ def main():
     )
 
     logger.info("starting training")
+
     trainer.train()
+
+    logger.info("finished training")
+
     trainer.save_model()
+    logger.info(f"saved model to {training_args.output_dir}")
 
 
 if __name__ == "__main__":
