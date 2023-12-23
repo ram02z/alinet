@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from fitz import fitz
+import pickle
 
 
 def is_frame_different(frame1, frame2, threshold=0.9):
@@ -15,7 +16,7 @@ def convert_millis_to_seconds(millis):
     return seconds
 
 
-def main():
+def slide_chunking():
     video_path = 'sample_data/lecture.mp4'
     slides_path = 'sample_data/hai_lecture_slides.pdf'
 
@@ -81,10 +82,11 @@ def main():
     # Remove lase element of frame_list
     slide_chunks.pop()
 
-    for chunk in slide_chunks:
-        print(chunk)
-
     return slide_chunks
 
 
-main()
+
+chunks = slide_chunking()
+
+with open('slide_chunks.pkl', 'wb') as file:
+    pickle.dump(chunks, file)
