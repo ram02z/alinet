@@ -53,9 +53,6 @@ docs/_templates/
 docs/*.rst
 !docs/index.rst
 
-# Data folder containing videos and audio
 sample_data/
-
-# Output of generated dataset for finetuning
-finetune/datasets/*
-
+data/
+!data/*.py
