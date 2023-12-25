@@ -102,7 +102,7 @@ export TASK_NAME="t5-base"
 python train.py \
     --data_dir path/to/processed/data/dir \
     --output_dir path/to/output/dir \
-    --model_id_or_path t5-base \
+    --pretrained_model_name t5-base \
     --model_type t5 \
     --task_name $TASK_NAME \
     --per_device_train_batch_size 8 \
@@ -113,7 +113,6 @@ python train.py \
     --seed 42 \
     --do_train \
     --do_eval \
-    --evaluate_during_training \
     --logging_steps 100
 ```
 
