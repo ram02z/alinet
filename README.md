@@ -44,13 +44,33 @@ python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 
 ## Fine-tuning
 
+### Dataset generation
+
+The dataset for the baseline system is generated using the `generate_dataset.py` script. 
+The script will output three CSV files in the `data` directory for training, validation, and testing.
+
+The dataset combines the following sources:
+
+- [SquAD 1.1](https://arxiv.org/abs/1606.05250)
+- [AdversarialQA](https://doi.org/10.1162/tacl_a_00338)
+- [NarrativeQA](https://arxiv.org/abs/1712.07040)
+- [FairyTaleQA](https://arxiv.org/abs/2203.13947)
+
+Example usage:
+
+```shell
+python data/generate_dataset.py \
+    --remove_duplicate_context \
+    --seed 42
+```
+
 ### Data preparation
 
 The data processor script, `prepare_data.py`, expects the training data to be in the following format:
 
 ```csv
-source,target,dataset
-<context>,<question>,<dataset-name>
+source,target
+<context>,<question>
 ```
 
 The data processor will process and cache the dataset, and save the tokenizer in the specified output directory (default is `./data/`).
@@ -71,7 +91,7 @@ python prepare_data.py \
 
 The training script, `train.py`, expects the processed data directory to contain dataset splits and the `tokenizer_config.json` file (see [Data preparation usage](#data-preparation)).
 
-To see the full list of training arguments, run `python train.py --help` or refer to HuggingFace's [TrainerArguments](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) documentation.
+To see the full list of training arguments, run `python train.py --help` or refer to HuggingFace's [TrainerArguments](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) documentation.
 
 Example usage:
 
