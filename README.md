@@ -47,7 +47,6 @@ python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 ### Dataset generation
 
 The dataset for the baseline system is generated using the `generate_dataset.py` script. 
-The script will output three CSV files in the `data` directory for training, validation, and testing.
 
 The dataset combines the following sources:
 
@@ -55,6 +54,8 @@ The dataset combines the following sources:
 - [AdversarialQA](https://doi.org/10.1162/tacl_a_00338)
 - [NarrativeQA](https://arxiv.org/abs/1712.07040)
 - [FairyTaleQA](https://arxiv.org/abs/2203.13947)
+
+The script will output the combined CSV file in the `data` directory.
 
 Example usage:
 

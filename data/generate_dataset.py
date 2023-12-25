@@ -92,21 +92,11 @@ def main():
         )
     dataset = dataset.map(normalise)
 
-    logger.info("splitting datasets")
-
-    train_testvalid = dataset.train_test_split(test_size=0.1, seed=42)
-    test_valid = train_testvalid["test"].train_test_split(test_size=0.5, seed=42)
-    train = train_testvalid["train"]
-    valid = test_valid["train"]
-    test = test_valid["test"]
-
-    logger.info("saving datasets")
+    logger.info("saving dataset")
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    train.to_csv(os.path.join(script_dir, "train.csv"))
-    valid.to_csv(os.path.join(script_dir, "valid.csv"))
-    test.to_csv(os.path.join(script_dir, "test.csv"))
+    dataset.to_csv(os.path.join(script_dir, "dataset.csv"))
 
 
 if __name__ == "__main__":
