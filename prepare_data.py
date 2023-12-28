@@ -4,15 +4,11 @@ from dataclasses import dataclass, field
 from datasets import DatasetDict
 from transformers import HfArgumentParser, set_seed, T5Tokenizer, BartTokenizer
 
-from strenum import StrEnum
 import datasets
 
+from models import ModelType
+
 logger = logging.getLogger(__name__)
-
-
-class ModelType(StrEnum):
-    BART = "bart"
-    T5 = "t5"
 
 
 @dataclass
