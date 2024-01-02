@@ -109,7 +109,6 @@ def main():
         },
     )
 
-    logger.info("results: %s", results)
     metric_value = None
     if metric_args.evaluation_module == EvaluationModule.BERTSCORE:
         mean_f1 = np.mean(results["f1"])
