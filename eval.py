@@ -18,9 +18,6 @@ logger = logging.getLogger(__name__)
 
 class EvaluationModule(StrEnum):
     BERTSCORE = "bertscore"
-    ROUGE = "rouge"
-    BLEU = "bleu"
-    METEOR = "meteor"
 
 
 @dataclass
@@ -79,7 +76,6 @@ def main():
     eval_dataset = (
         load_dataset("mrqa", split="test")
         .filter(contain_question_mark_token)
-        .select(range(10))
         .select_columns(["context", "question"])
         .rename_columns({"context": "source", "question": "target"})
         .map(normalise)
@@ -114,14 +110,17 @@ def main():
     )
 
     logger.info("results: %s", results)
-    mean_f1 = np.mean(results["f1"])
-    mean_recall = np.mean(results["recall"])
-    mean_precision = np.mean(results["precision"])
-    logger.info(f"mean f1: {mean_f1}")
-    logger.info(f"mean recall: {mean_recall}")
-    logger.info(f"mean precision: {mean_precision}")
+    metric_value = None
+    if metric_args.evaluation_module == EvaluationModule.BERTSCORE:
+        mean_f1 = np.mean(results["f1"])
+        metric_value = mean_f1
+        mean_recall = np.mean(results["recall"])
+        mean_precision = np.mean(results["precision"])
+        logger.info(f"mean f1: {mean_f1}")
+        logger.info(f"mean recall: {mean_recall}")
+        logger.info(f"mean precision: {mean_precision}")
 
-    if metric_args.push_to_hub:
+    if metric_args.push_to_hub and metric_value:
         logger.info("pushing results to the hub")
         evaluate.push_to_hub(
             model_id=model_args.pretrained_model_name_or_path,
@@ -130,7 +129,7 @@ def main():
             dataset_type="mrqa",
             dataset_split="test",
             dataset_name="MRQA 2019",
-            metric_value=mean_f1,
+            metric_value=metric_value,
             metric_type=metric_args.evaluation_module,
         )
 
