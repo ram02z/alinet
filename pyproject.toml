@@ -26,12 +26,12 @@ strenum = "^0.4.15"
 spacy = "^3.7.2"
 sentencepiece = "^0.1.99"
 datasets = "^2.16.0"
+evaluate = "^0.4.1"
+bert-score = "^0.3.13"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
 jupyter = "^1.0.0"
-evaluate = "^0.4.1"
-bert-score = "^0.3.13"
 
 [build-system]
 requires = ["poetry-core"]
