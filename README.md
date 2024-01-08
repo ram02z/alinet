@@ -97,14 +97,14 @@ To see the full list of training arguments, run `python train.py --help` or refe
 Example usage:
 
 ```shell
-export TASK_NAME="t5-base"
+export RUN_NAME="t5-base"
 
 python train.py \
     --data_dir path/to/processed/data/dir \
     --output_dir path/to/output/dir \
     --pretrained_model_name t5-base \
     --model_type t5 \
-    --task_name $TASK_NAME \
+    --run_name $RUN_NAME \
     --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 8 \
     --gradient_accumulation_steps 8 \
@@ -116,7 +116,8 @@ python train.py \
     --logging_steps 100
 ```
 
-To report to [W&B](https://wandb.ai/), pass the `--report_to wandb` argument and set the following environment variables:
+To report to [W&B](https://wandb.ai/), pass the `--report_to wandb` argument to
+`train.py` and set the following environment variables:
 
 ```shell
 export WANDB_PROJECT="mmqg"

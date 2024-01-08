@@ -55,7 +55,7 @@ def main():
 
     dataset = load_from_disk(data_args.data_dir)
     train_dataset = dataset["train"]
-    valid_dataset = dataset["valid"]
+    valid_dataset = dataset["validation"]
 
     logger.info("finished loading datasets")
 
@@ -96,4 +96,6 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    datasets.logging.set_verbosity_info()
     main()

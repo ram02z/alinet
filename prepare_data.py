@@ -1,7 +1,7 @@
 import logging
+import os
 from dataclasses import dataclass, field
 
-from datasets import DatasetDict
 from transformers import HfArgumentParser, set_seed, T5Tokenizer, BartTokenizer
 
 import datasets
@@ -13,10 +13,8 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class PrepareDataArguments:
-    train_csv_file: str = field(
-        metadata={
-            "help": "Path of CSV file with training data with source and target column"
-        }
+    data_dir: str = field(
+        default="data", metadata={"help": "Path of data directory with CSV split files"}
     )
     output_dir: str = field(default="data", metadata={"help": "Output directory"})
     model_type: ModelType = field(
@@ -49,21 +47,11 @@ class DataProcessor:
         self.max_source_length = max_source_length
         self.max_target_length = max_target_length
 
-    def __call__(self, dataset: datasets.Dataset, seed: int):
+    def __call__(self, dataset: datasets.DatasetDict):
         """
         :param dataset: dataset to process
         """
-        train_testvalid = dataset.train_test_split(test_size=0.1, seed=seed)
-        test_valid = train_testvalid["test"].train_test_split(test_size=0.5, seed=seed)
-
-        train_test_valid_dataset = DatasetDict(
-            {
-                "train": train_testvalid["train"],
-                "test": test_valid["test"],
-                "valid": test_valid["train"],
-            }
-        )
-        tokenized_dataset = train_test_valid_dataset.map(
+        tokenized_dataset = dataset.map(
             self._convert_to_features,
             batched=True,
             batch_size=2000,
@@ -107,8 +95,11 @@ def main():
 
     logger.info("loading dataset")
 
-    train_dataset = datasets.load_dataset(
-        "csv", data_files=args.train_csv_file, split="train"
+    csv_files = [f for f in os.listdir(args.data_dir) if f.endswith('.csv')]
+    data_files = {os.path.splitext(csv_file)[0]: csv_file for csv_file in csv_files}
+
+    dataset = datasets.load_dataset(
+        "csv", data_dir=args.data_dir, data_files=data_files
     )
 
     logger.info("finished loading dataset")
@@ -119,7 +110,7 @@ def main():
 
     logger.info("processing dataset")
 
-    dataset_dict = process(train_dataset, args.seed)
+    dataset_dict = process(dataset)
 
     logger.info("finished processing dataset")
 
@@ -132,4 +123,6 @@ def main():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    datasets.logging.set_verbosity_info()
     main()
