@@ -24,7 +24,7 @@ class ModelArguments:
     """
 
     pretrained_model_name: str = field(
-        default="t5-base",
+        default="google/t5-v1_1-base",
         metadata={"help": "Model identifier from huggingface.co/models"},
     )
     model_type: ModelType = field(
