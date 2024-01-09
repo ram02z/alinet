@@ -1,9 +1,22 @@
 import pickle
 import qg
+import spacy
 from chunking import ChunkPipeline
 from fitz import fitz
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+
+def compute_cosine_similarity_word_embeddings(text1, text2):
+    # Load spaCy model with word embeddings
+    nlp = spacy.load("en_core_web_md")
+
+    # Get the word embeddings for each text
+    embeddings1 = nlp(text1).vector.reshape(1, -1)
+    embeddings2 = nlp(text2).vector.reshape(1, -1)
+
+    # Compute cosine similarity between the two vectors
+    cosine_sim = cosine_similarity(embeddings1, embeddings2)[0, 0]
+    return cosine_sim
 
 def compute_cosine_similarity(text1, text2):
     vectorizer = TfidfVectorizer()
@@ -11,28 +24,24 @@ def compute_cosine_similarity(text1, text2):
     cosine_sim = cosine_similarity(vectors)
     return cosine_sim[0, 1]
 
-# get the whisper chunks
 with open("experiments/qg/comp3074_lecture_2.pkl", "rb") as file:
     whisper_chunks = pickle.load(file)['chunks']
 
-# get the slide chunks with timestamps
 with open('slide_chunks.pkl', 'rb') as file:
     slide_chunks = pickle.load(file)
 
-# generate trasncript chunks
 qg_model = qg.Model.DISCORD
 chunk_pipe = ChunkPipeline(qg_model)
 transcript_chunks = chunk_pipe(whisper_chunks,2301)
 
-# get last endtime in the slide chunkss
+# get end time stamp for last slide
 endtime = slide_chunks[-1][2]
 
 i = 0
 
-# a list of the indices of the relevant chunks
 relevant_chunks = []
 for j, chunk in enumerate(transcript_chunks):
-    # ensure we only process transcript chunks that correspond to the slide chunks
+    # ensure we only process transcript chunks that occour before the final slide
     if chunk['timestamp'][0] < endtime:
         list_of_slide_indices = []
         while i < len(slide_chunks):
@@ -53,7 +62,6 @@ for j, chunk in enumerate(transcript_chunks):
                     slide_text += slide_chunks[index][0]
 
                 print(f"The text on the relevant slides is: {slide_text}")
-                # compute similarity between the transcript text and the relevant slides
                 cosine_sim = compute_cosine_similarity(transcript_chunk_text, slide_text)
                 print(f"the 2 have a similarity score of: {cosine_sim}")
                 print("================================================================================")
