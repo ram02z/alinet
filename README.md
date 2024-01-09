@@ -64,3 +64,30 @@ python data/generate_dataset.py \
        --remove_duplicate_context \
        --seed 42
 ```
+
+### Evaluation
+
+The fine-tuned model's performance can be evaluated using the `eval.py` script. 
+
+The script supports the following evaluation metrics:
+- [BERTScore](https://arxiv.org/abs/1904.09675)
+
+The script will output the evaluation results to the `results` directory.
+
+Example usage:
+
+```shell
+python eval.py \
+       --pretrained_model_name_or_path path/to/model \
+       --evaluation_module bertscore \
+       --max_length 32 \
+       --num_beams 4
+```
+
+To push the metric results to the HuggingFace Hub, you need authenticate first:
+
+```shell
+huggingface-cli login
+```
+
+Ensure that `--push_to_hub` is passed to the `eval.py` script.

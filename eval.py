@@ -109,6 +109,13 @@ def main():
         },
     )
 
+    logger.info("saving results")
+    params = {
+        "evaluation_module": metric_args.evaluation_module,
+        "model": model_args.pretrained_model_name_or_path,
+    }
+    evaluate.save("./results/", **results, **params)
+
     metric_value = None
     if metric_args.evaluation_module == EvaluationModule.BERTSCORE:
         mean_f1 = np.mean(results["f1"])
