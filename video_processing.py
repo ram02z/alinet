@@ -68,7 +68,8 @@ def slide_chunking():
     cap.release()
     cv2.destroyAllWindows()
 
-    # Set each tuple's text to be the one from the slides
+    # Set each tuple's text to be the one from the slides 
+    #  as its better text than the one we would have retrieved with OCR
     with fitz.open(slides_path, filetype="pdf") as doc:
         for i, page in enumerate(doc):
             text = page.get_text()
@@ -83,8 +84,6 @@ def slide_chunking():
     slide_chunks.pop()
 
     return slide_chunks
-
-
 
 chunks = slide_chunking()
 
