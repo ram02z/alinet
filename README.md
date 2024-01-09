@@ -41,3 +41,26 @@ To filter the generated questions using the original lecture slides, pass the sl
 # If no threshold is given, the default (0.5) is used
 python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 ```
+
+
+## Fine-tuning
+
+### Dataset generation
+
+The dataset for the baseline system is generated using the `generate_dataset.py` script. 
+The script will output three CSV files in the `data` directory for training, validation, and testing.
+
+The dataset combines the following sources:
+
+- [SquAD 1.1](https://arxiv.org/abs/1606.05250)
+- [AdversarialQA](https://doi.org/10.1162/tacl_a_00338)
+- [NarrativeQA](https://arxiv.org/abs/1712.07040)
+- [FairyTaleQA](https://arxiv.org/abs/2203.13947)
+
+Example usage:
+
+```shell
+python data/generate_dataset.py \
+       --remove_duplicate_context \
+       --seed 42
+```

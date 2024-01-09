@@ -53,7 +53,7 @@ docs/_templates/
 docs/*.rst
 !docs/index.rst
 
-# Data folder containing videos and audio
-sample_data/
-
 test/
+sample_data/
+data/
+!data/*.py
