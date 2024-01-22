@@ -1,10 +1,7 @@
 import pickle
-import qg
 import spacy
-from chunking import ChunkPipeline
-from fitz import fitz
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from video_processing import slide_chunking
 
 def compute_cosine_similarity_word_embeddings(text1, text2):
     # Load spaCy model with word embeddings
@@ -18,59 +15,35 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
     cosine_sim = cosine_similarity(embeddings1, embeddings2)[0, 0]
     return cosine_sim
 
-def compute_cosine_similarity(text1, text2):
-    vectorizer = TfidfVectorizer()
-    vectors = vectorizer.fit_transform([text1, text2])
-    cosine_sim = cosine_similarity(vectors)
-    return cosine_sim[0, 1]
-
-with open("experiments/qg/comp3074_lecture_2.pkl", "rb") as file:
-    whisper_chunks = pickle.load(file)['chunks']
-
 with open('slide_chunks.pkl', 'rb') as file:
     slide_chunks = pickle.load(file)
 
-qg_model = qg.Model.DISCORD
-chunk_pipe = ChunkPipeline(qg_model)
-transcript_chunks = chunk_pipe(whisper_chunks,2301)
+def get_similarity_scores(duration, transcript_chunks, video_path, slide_path):
 
-# get end time stamp for last slide
-endtime = slide_chunks[-1][2]
+    slide_chunks = slide_chunking(video_path, slide_path)
 
-i = 0
+    i = 0
+    similarity_scores = []
+    for j, chunk in enumerate(transcript_chunks):
+        # ensure we only process transcript chunks that occour before the final slide
+        if chunk['timestamp'][0] < duration:
+            list_of_slide_indices = []
+            while i < len(slide_chunks):
+                list_of_slide_indices.append(i)
+                if chunk['timestamp'][1] <= slide_chunks[i][2]:
+                    transcript_chunk_text = chunk['text']
 
-relevant_chunks = []
-for j, chunk in enumerate(transcript_chunks):
-    # ensure we only process transcript chunks that occour before the final slide
-    if chunk['timestamp'][0] < endtime:
-        list_of_slide_indices = []
-        while i < len(slide_chunks):
-            list_of_slide_indices.append(i)
-            if chunk['timestamp'][1] <= slide_chunks[i][2]:
-                # print("FITS")
-                # print(f"current chunks start time is: {chunk['timestamp'][0]} and the end time is: {chunk['timestamp'][1]}", i)
-                # print(f"The slide chunk currently as an end time of: {slide_chunks[i][2]}")
-                # print(f"the slide indices that need to be combined are: {list_of_slide_indices}")
-                # print("===============================================================")
-                
-                transcript_chunk_text = chunk['text']
-                print(f"The text on the chunk is: {transcript_chunk_text}")
-                print("-------------------------------------------------------------------------------")
+                    # aggregate all the text from different slides, if more than one, into a single var
+                    slide_text = ""
+                    for index in list_of_slide_indices:
+                        slide_text += slide_chunks[index][0]
 
-                slide_text = ""
-                for index in list_of_slide_indices:
-                    slide_text += slide_chunks[index][0]
+                    # compute sim between the text retrieved from slide and the corresponding slide's text
+                    cosine_sim = compute_cosine_similarity_word_embeddings(transcript_chunk_text, slide_text)
 
-                print(f"The text on the relevant slides is: {slide_text}")
-                cosine_sim = compute_cosine_similarity(transcript_chunk_text, slide_text)
-                print(f"the 2 have a similarity score of: {cosine_sim}")
-                print("================================================================================")
-
-                relevant_chunks.append(cosine_sim)
-                break
-            i += 1
-
-print(relevant_chunks)
-
-
+                    similarity_scores.append(cosine_sim)
+                    
+                    break
+                i += 1
+    return similarity_scores
     
