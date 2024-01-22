@@ -15,9 +15,6 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
     cosine_sim = cosine_similarity(embeddings1, embeddings2)[0, 0]
     return cosine_sim
 
-with open('slide_chunks.pkl', 'rb') as file:
-    slide_chunks = pickle.load(file)
-
 def get_similarity_scores(duration, transcript_chunks, video_path, slide_path):
 
     slide_chunks = slide_chunking(video_path, slide_path)
