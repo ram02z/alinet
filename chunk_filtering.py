@@ -1,4 +1,3 @@
-import pickle
 import spacy
 from sklearn.metrics.pairwise import cosine_similarity
 from video_processing import slide_chunking
@@ -16,6 +15,9 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
     return cosine_sim
 
 def get_similarity_scores(duration, transcript_chunks, video_path, slide_path):
+    # Check if required inputs are provided
+    if not all([duration, transcript_chunks, video_path, slide_path]):
+        raise ValueError("Missing required input(s).")
 
     slide_chunks = slide_chunking(video_path, slide_path)
 
@@ -43,4 +45,7 @@ def get_similarity_scores(duration, transcript_chunks, video_path, slide_path):
                     break
                 i += 1
     return similarity_scores
-    
+
+if __name__ == "__main__":
+    # When testing provide the following args: duration, transcript_chunks, video_path, slide_path
+    get_similarity_scores()

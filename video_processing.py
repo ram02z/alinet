@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from fitz import fitz
-import pickle
+import logging
 
 def is_frame_different(frame1, frame2, threshold=0.9):
     gray_frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
@@ -36,31 +36,31 @@ def slide_chunking(video_path, slides_path):
         for _ in range(frame_interval - 1):
             ret, _ = cap.read()  # Skip frames
             if not ret:
-                print("End of video.")
+                logging.info("End of video")
                 break
 
         ret, frame = cap.read()
         if not ret:
-            print("End of video.")
+            logging.info("End of video")
             break
 
         current_time_millis = cap.get(cv2.CAP_PROP_POS_MSEC)
         timestamp = convert_millis_to_seconds(current_time_millis)
 
         if is_frame_different(frame, previous_frame):
+            """
+            Uncomment the 2 lines below to load a window that displays the current frames and respective timestamp
+            """
             # cv2.putText(frame, timestamp, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             # cv2.imshow('Original Frame', frame)
-
-            # Add tuple (text, start time, end time) to the list
             with fitz.open(slides_path, filetype="pdf") as doc:
-                text = doc[i].get_text()
-                slide_chunks.append((text, timestamp, None))
+                if i < slide_num:
+                    text = doc[i].get_text()
+                    # Add tuple (text, start time, end time) to the list
+                    slide_chunks.append((text, timestamp, None))
+                    print("the current slide chunk is : ", slide_chunks[i])
             i += 1
-
         previous_frame = frame.copy()
-
-        # if cv2.waitKey(25) & 0xFF == ord('q'):
-        #     break
 
     cap.release()
     cv2.destroyAllWindows()
@@ -71,9 +71,12 @@ def slide_chunking(video_path, slides_path):
         slide_chunks[i] = (slide_chunks[i][0], slide_chunks[i][1], next_frame_tuple[1])
 
     # Remove last element of frame_list, because last slide of most lectures is consolidation/review therefore useless
-    slide_chunks.pop()
-
+    last = slide_chunks.pop()
+    print(last)
     return slide_chunks
 
 if __name__ == "__main__":
-    chunks = slide_chunking()
+    """
+    Uncomment below code for debugging purposes, can change sample data used
+    """
+    # chunks = slide_chunking("sample_data/lecture.mp4", "sample_data/hai_lecture_slides.pdf")
