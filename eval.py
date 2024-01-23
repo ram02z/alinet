@@ -94,7 +94,7 @@ def main():
     logger.info("evaluating model")
     evaluator = Text2TextGenerationEvaluator()
     if metric_args.evaluation_module == EvaluationModule.BERTSCORE:
-        evaluator.METRIC_KWARGS = {"lang": "en"}
+        evaluator.METRIC_KWARGS = {"model_type": "microsoft/deberta-xlarge-mnli"}
     results = evaluator.compute(
         model_or_pipeline=model,
         tokenizer=tokenizer,
