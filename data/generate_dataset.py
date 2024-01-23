@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 class Dataset(StrEnum):
     BASELINE_TRAIN = "baseline_train"
-    AUGMENT_TRAIN = "augumented_squad_train"
+    AUGMENT_TRAIN = "augmented_squad_train"
     RC_EVAL = "reading_comprehension_eval"
     NOISE_EVAL = "spoken_noise_eval"
 
