@@ -27,6 +27,7 @@ spacy = "^3.7.2"
 sentencepiece = "^0.1.99"
 datasets = "^2.16.0"
 opencv-python = "^4.9.0.80"
+en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1-py3-none-any.whl"}
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
