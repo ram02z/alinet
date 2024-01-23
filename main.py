@@ -1,5 +1,6 @@
 import asr
 import qg
+import logging
 from asr import ASRPipeline
 from qg import QGPipeline
 from chunking import ChunkPipeline
@@ -28,7 +29,13 @@ def baseline(video_path: str, slides_path: str | None, similarity_threshold, fil
     filtered_questions = [question for sim, question in scores_and_questions if sim > similarity_threshold]
     filtering_percentage = len(filtered_questions) / len(generated_questions)
 
-    return generated_questions if filtering_percentage < filtering_threshold else filtered_questions
+    if filtering_percentage < filtering_threshold:
+        return generated_questions
+    else:
+        # Log a message when generated questions are returned
+        logging.info("Could not effectively perform question filtering, all generated questions are being returned")
+        return filtered_questions
+
 
 
 
