@@ -16,8 +16,8 @@ class Dataset(StrEnum):
 @dataclass
 class GenerateDatasetArguments:
     dataset: Dataset = field(metadata={"help": "Name of the dataset"})
-    seed: int = field(default=42, metadata={"help": "Random seed"})
     data_dir: str = field(default="data", metadata={"help": "Output data directory"})
+    seed: int = field(default=42, metadata={"help": "Random seed"})
 
 def contain_question_mark(data):
     return data["target"][-1].rstrip() == "?"
@@ -76,7 +76,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import datasets
-
-    datasets.logging.set_verbosity_debug()
     main()
