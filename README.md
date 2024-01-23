@@ -50,7 +50,7 @@ The datasets used in the research can be generated using the `generate_dataset.p
 
 Datasets used:
 - `baseline_train` (SQuAD 1.1)
-- `augument_train` (SQuAD 1.1 + Spoken-SQuAD)
+- `augmented_squad_train` (SQuAD 1.1 + Spoken-SQuAD)
 - `reading_comprehension_eval` (MRQA test split)
 - `spoken_noise_eval` (Spoken-SQuAD WER54)
 
@@ -58,7 +58,7 @@ Example usage:
 
 ```shell
 python data/generate_dataset.py \
-    --dataset {baseline_train,augment_train,reading_comprehension_eval,spoken_noise_eval} \
+    --dataset {baseline_train,augmented_squad_train,reading_comprehension_eval,spoken_noise_eval} \
     --data_dir data \
     --seed 42
 ```
