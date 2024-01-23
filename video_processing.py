@@ -76,7 +76,4 @@ def slide_chunking(video_path, slides_path):
     return slide_chunks
 
 if __name__ == "__main__":
-    """
-    Uncomment below code for debugging purposes, can change sample data used
-    """
-    # chunks = slide_chunking("sample_data/lecture.mp4", "sample_data/hai_lecture_slides.pdf")
+    chunks = slide_chunking("sample_data/lecture.mp4", "sample_data/hai_lecture_slides.pdf")

@@ -15,10 +15,6 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
     return cosine_sim
 
 def get_similarity_scores(duration, transcript_chunks, video_path, slide_path):
-    # Check if required inputs are provided
-    if not all([duration, transcript_chunks, video_path, slide_path]):
-        raise ValueError("Missing required input(s).")
-
     slide_chunks = slide_chunking(video_path, slide_path)
 
     i = 0
