@@ -50,6 +50,17 @@ class EvaluateMetricArguments:
     )
 
 
+@dataclass
+class EvaluateDataArguments:
+    """
+    Arguments pertaining to what data we are going use for the evaluation.
+    """
+
+    data_dir: str = field(
+        default="data", metadata={"help": "Path of directory with cached dataset"}
+    )
+
+
 def contain_question_mark_token(data):
     return data["question_tokens"]["tokens"][-1] == "?"
 
@@ -66,20 +77,19 @@ def normalise(data):
 
 
 def main():
-    parser = HfArgumentParser((EvaluateModelArguments, EvaluateMetricArguments))
-    model_args, metric_args = parser.parse_args_into_dataclasses()
+    parser = HfArgumentParser(
+        (EvaluateModelArguments, EvaluateMetricArguments, EvaluateDataArguments)
+    )
+    model_args, metric_args, data_args = parser.parse_args_into_dataclasses()
 
     set_seed(model_args.seed)
 
     logger.info("loading dataset")
 
-    eval_dataset = (
-        load_dataset("mrqa", split="test")
-        .filter(contain_question_mark_token)
-        .select_columns(["context", "question"])
-        .rename_columns({"context": "source", "question": "target"})
-        .map(normalise)
+    dataset = load_dataset(
+        "csv", data_dir=data_args.data_dir, data_files={"test": "test.csv"}
     )
+    eval_dataset = dataset["test"]
 
     logger.info("loading model")
 
@@ -136,6 +146,7 @@ def main():
             dataset_split="test",
             dataset_name="MRQA 2019",
             metric_value=metric_value,
+            metric_name=metric_args.evaluation_module.title(),
             metric_type=metric_args.evaluation_module,
         )
 

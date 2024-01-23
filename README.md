@@ -140,10 +140,13 @@ Example usage:
 ```shell
 python eval.py \
        --pretrained_model_name_or_path path/to/model \
+       --data_dir data \
        --evaluation_module bertscore \
        --max_length 32 \
        --num_beams 4
 ```
+
+The script expects the data directory to have a `test` split (i.e. run `data/generate_dataset.py --dataset reading_comprehension_eval`).
 
 To push the metric results to the HuggingFace Hub, you need authenticate first:
 
