@@ -7,7 +7,7 @@ from utils import compute_similarity_between_source
 from chunk_filtering import get_similarity_scores
 
 
-def baseline(video_path: str, slides_path: str | None, threshold) -> list[str]:
+def baseline(video_path: str, slides_path: str | None, similarity_threshold, filtering_threshold) -> list[str]:
     qg_model = qg.Model.DISCORD
     asr_model = asr.Model.DISTIL_SMALL
     asr_pipe = ASRPipeline(asr_model)
@@ -23,11 +23,13 @@ def baseline(video_path: str, slides_path: str | None, threshold) -> list[str]:
         return generated_questions
 
     sim_scores = get_similarity_scores(duration, text_chunks, video_path, slides_path)
-    return [
-        question
-        for sim, question in zip(sim_scores, generated_questions)
-        if sim > threshold
-    ]
+
+    scores_and_questions = zip(sim_scores, generated_questions)
+    filtered_questions = [question for sim, question in scores_and_questions if sim > similarity_threshold]
+    filtering_percentage = len(filtered_questions) / len(generated_questions)
+
+    return generated_questions if filtering_percentage < filtering_threshold else filtered_questions
+
 
 
 if __name__ == "__main__":
