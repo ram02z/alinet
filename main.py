@@ -4,6 +4,7 @@ from asr import ASRPipeline
 from qg import QGPipeline
 from chunking import ChunkPipeline
 from utils import compute_similarity_between_source
+from chunk_filtering import get_similarity_scores
 
 
 def baseline(video_path: str, slides_path: str | None, threshold) -> list[str]:
@@ -21,7 +22,7 @@ def baseline(video_path: str, slides_path: str | None, threshold) -> list[str]:
     if slides_path is None:
         return generated_questions
 
-    sim_scores = compute_similarity_between_source(text_chunks, slides_path)
+    sim_scores = get_similarity_scores(duration, text_chunks, video_path, slides_path)
     return [
         question
         for sim, question in zip(sim_scores, generated_questions)
