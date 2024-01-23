@@ -46,24 +46,23 @@ python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 
 ### Dataset generation
 
-The dataset for the baseline system is generated using the `generate_dataset.py` script. 
+The datasets used in the research can be generated using the `generate_dataset.py` script. 
 
-The dataset combines the following sources:
-
-- [SquAD 1.1](https://arxiv.org/abs/1606.05250)
-- [AdversarialQA](https://doi.org/10.1162/tacl_a_00338)
-- [NarrativeQA](https://arxiv.org/abs/1712.07040)
-- [FairyTaleQA](https://arxiv.org/abs/2203.13947)
-
-The script will output the combined CSV file in the `data` directory.
+Datasets used:
+- `baseline_train` (SQuAD 1.1)
+- `reading_comprehension_eval` (MRQA test split)
 
 Example usage:
 
 ```shell
 python data/generate_dataset.py \
-    --remove_duplicate_context \
+    --dataset {baseline_train,reading_comprehension_eval} \
+    --data_dir data \
     --seed 42
 ```
+
+The script will output `train` and `validation` splits as CSV files to the
+`data` directory when dataset is set to `baseline_train`.
 
 ### Data preparation
 
