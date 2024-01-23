@@ -13,6 +13,7 @@ class Dataset(StrEnum):
     BASELINE_TRAIN = "baseline_train"
     AUGMENT_TRAIN = "augumented_squad_train"
     RC_EVAL = "reading_comprehension_eval"
+    NOISE_EVAL = "spoken_noise_eval"
 
 
 @dataclass
@@ -24,14 +25,6 @@ class GenerateDatasetArguments:
 
 def contain_question_mark(data):
     return data["target"][-1].rstrip() == "?"
-
-
-def contain_unique_question_context(data, unique_sources):
-    if data["source"] not in unique_sources:
-        unique_sources.add(data["source"])
-        return True
-    return False
-
 
 def normalise(data):
     # Lowercase the text
@@ -90,13 +83,21 @@ def main():
             .filter(contain_question_mark)
             .map(normalise)
         )
+    elif args.dataset == Dataset.NOISE_EVAL:
+        data = (
+            load_dataset("ram02/spoken_squad", split="test", name="WER54")
+            .select_columns(["context", "question"])
+            .rename_columns({"context": "source", "question": "target"})
+            .filter(contain_question_mark)
+            .map(normalise)
+        )
 
     logger.info("saving dataset")
 
     if args.dataset == Dataset.BASELINE_TRAIN or args.dataset == Dataset.AUGMENT_TRAIN:
         data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
         data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
-    elif args.dataset == Dataset.RC_EVAL:
+    elif args.dataset == Dataset.RC_EVAL or args.dataset == Dataset.NOISE_EVAL:
         data.to_csv(os.path.join(args.data_dir, "test.csv"))
 
 
