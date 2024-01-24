@@ -2,7 +2,8 @@ import logging
 import os
 from dataclasses import dataclass, field
 
-from datasets import concatenate_datasets, load_dataset, DatasetDict
+import datasets
+from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import set_seed, HfArgumentParser
 from strenum import StrEnum
 
@@ -10,21 +11,19 @@ logger = logging.getLogger(__name__)
 
 
 class Dataset(StrEnum):
-    BASELINE_TRAIN = "baseline_train"
+    BASELINE = "baseline"
     AUGMENT_TRAIN = "augmented_squad_train"
-    RC_EVAL = "reading_comprehension_eval"
-    NOISE_EVAL = "spoken_noise_eval"
-
 
 @dataclass
 class GenerateDatasetArguments:
-    dataset: Dataset = field(metadata={"help": "Name of the dataset"})
+    dataset: Dataset = field(metadata={"help": "Name of the dataset to use"})
     data_dir: str = field(default="data", metadata={"help": "Output data directory"})
     seed: int = field(default=42, metadata={"help": "Random seed"})
 
 
 def contain_question_mark(data):
     return data["target"][-1].rstrip() == "?"
+
 
 def normalise(data):
     # Lowercase the text
@@ -44,7 +43,7 @@ def main():
     set_seed(args.seed)
 
     logger.info("loading datasets")
-    if args.dataset == Dataset.BASELINE_TRAIN:
+    if args.dataset == Dataset.BASELINE:
         data = (
             load_dataset("squad")
             .select_columns(["context", "question"])
@@ -74,32 +73,15 @@ def main():
             [squad_data["validation"], spoken_squad_data["validation"]]
         )
         data = DatasetDict({"train": train_data, "validation": valid_data})
-    elif args.dataset == Dataset.RC_EVAL:
-        # BUG: https://huggingface.co/datasets/mrqa/discussions/3
-        data = (
-            load_dataset("mrqa", split="test")
-            .select_columns(["context", "question"])
-            .rename_columns({"context": "source", "question": "target"})
-            .filter(contain_question_mark)
-            .map(normalise)
-        )
-    elif args.dataset == Dataset.NOISE_EVAL:
-        data = (
-            load_dataset("ram02/spoken_squad", split="test", name="WER54")
-            .select_columns(["context", "question"])
-            .rename_columns({"context": "source", "question": "target"})
-            .filter(contain_question_mark)
-            .map(normalise)
-        )
 
     logger.info("saving dataset")
 
-    if args.dataset == Dataset.BASELINE_TRAIN or args.dataset == Dataset.AUGMENT_TRAIN:
-        data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
-        data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
-    elif args.dataset == Dataset.RC_EVAL or args.dataset == Dataset.NOISE_EVAL:
-        data.to_csv(os.path.join(args.data_dir, "test.csv"))
+
+    data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
+    data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    datasets.logging.set_verbosity_info()
     main()
