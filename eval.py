@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 import evaluate
 import numpy as np
+import datasets
 from datasets import load_dataset
 from evaluate import Text2TextGenerationEvaluator
 from strenum import StrEnum
@@ -18,6 +19,19 @@ logger = logging.getLogger(__name__)
 
 class EvaluationModule(StrEnum):
     BERTSCORE = "bertscore"
+
+
+class Dataset(StrEnum):
+    RC = "reading_comprehension"
+    NOISE = "spoken_noise"
+
+
+DATASETS = {
+    Dataset.RC: {"id": "mrqa", "name": "MRQA"},
+    Dataset.NOISE: {"id": "ram02/spoken_squad", "name": "Spoken-SQuAD"},
+}
+
+METRICS = {EvaluationModule.BERTSCORE: {"id": "bertscore", "name": "BERTScore"}}
 
 
 @dataclass
@@ -52,17 +66,11 @@ class EvaluateMetricArguments:
 
 @dataclass
 class EvaluateDataArguments:
-    """
-    Arguments pertaining to what data we are going use for the evaluation.
-    """
-
-    data_dir: str = field(
-        default="data", metadata={"help": "Path of directory with cached dataset"}
-    )
+    dataset: Dataset = field(metadata={"help": "Name of the dataset to use"})
 
 
-def contain_question_mark_token(data):
-    return data["question_tokens"]["tokens"][-1] == "?"
+def contain_question_mark(data):
+    return data["target"][-1].rstrip() == "?"
 
 
 def normalise(data):
@@ -86,10 +94,22 @@ def main():
 
     logger.info("loading dataset")
 
-    dataset = load_dataset(
-        "csv", data_dir=data_args.data_dir, data_files={"test": "test.csv"}
-    )
-    eval_dataset = dataset["test"]
+    if data_args.dataset == Dataset.RC:
+        eval_data = (
+            load_dataset("mrqa", split="test")
+            .select_columns(["context", "question"])
+            .rename_columns({"context": "source", "question": "target"})
+            .filter(contain_question_mark)
+            .map(normalise)
+        )
+    elif data_args.dataset == Dataset.NOISE:
+        eval_data = (
+            load_dataset("ram02/spoken_squad", name="WER54", split="test")
+            .select_columns(["context", "question"])
+            .rename_columns({"context": "source", "question": "target"})
+            .filter(contain_question_mark)
+            .map(normalise)
+        )
 
     logger.info("loading model")
 
@@ -99,7 +119,10 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(model_args.pretrained_model_name_or_path)
 
     logger.info("loading metric")
-    metric = evaluate.load(metric_args.evaluation_module)
+    metric_meta = METRICS.get(metric_args.evaluation_module)
+    if not metric_meta:
+        raise RuntimeError("could not get metric metadata")
+    metric = evaluate.load(metric_meta["id"])
 
     logger.info("evaluating model")
     evaluator = Text2TextGenerationEvaluator()
@@ -108,7 +131,7 @@ def main():
     results = evaluator.compute(
         model_or_pipeline=model,
         tokenizer=tokenizer,
-        data=eval_dataset,
+        data=eval_data,
         metric=metric,
         input_column="source",
         label_column="target",
@@ -136,15 +159,16 @@ def main():
         logger.info(f"mean recall: {mean_recall}")
         logger.info(f"mean precision: {mean_precision}")
 
-    if metric_args.push_to_hub and metric_value:
+    dataset_meta = DATASETS.get(data_args.dataset)
+
+    if metric_args.push_to_hub and metric_value and dataset_meta:
         logger.info("pushing results to the hub")
         evaluate.push_to_hub(
             model_id=model_args.pretrained_model_name_or_path,
             task_type="text2text-generation",
             task_name="Question Generation",
-            dataset_type="mrqa",
-            dataset_split="test",
-            dataset_name="MRQA 2019",
+            dataset_type=dataset_meta["id"],
+            dataset_name=dataset_meta["name"],
             metric_value=metric_value,
             metric_name=metric_args.evaluation_module.title(),
             metric_type=metric_args.evaluation_module,
@@ -153,5 +177,6 @@ def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    datasets.logging.set_verbosity_info()
     evaluate.logging.set_verbosity_info()
     main()
