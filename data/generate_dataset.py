@@ -75,12 +75,6 @@ def main():
         .rename_columns({"content": "source"})
     )
 
-    sciq_data = (
-        load_dataset("sciq", split="train+validation+test")
-        .select_columns(["support", "question"])
-        .rename_columns({"support": "source", "question": "target"})
-    )
-
     logger.info("concatenating datasets")
 
     dataset = concatenate_datasets(
