@@ -1,10 +1,9 @@
 import asr
 import qg
-import logging
+import warnings
 from asr import ASRPipeline
 from qg import QGPipeline
 from chunking import ChunkPipeline
-from utils import compute_similarity_between_source
 from chunk_filtering import get_similarity_scores
 
 
@@ -30,10 +29,10 @@ def baseline(video_path: str, slides_path: str | None, similarity_threshold, fil
     filtering_percentage = len(filtered_questions) / len(generated_questions)
 
     if filtering_percentage < filtering_threshold:
-        return generated_questions
+         # Log a message when generated questions are returned
+        warnings.warn("Could not effectively perform question filtering, all generated questions are being returned")
+        return generated_questions  
     else:
-        # Log a message when generated questions are returned
-        logging.info("Could not effectively perform question filtering, all generated questions are being returned")
         return filtered_questions
 
 
@@ -48,7 +47,10 @@ if __name__ == "__main__":
     parser.add_argument("video", help="video file path")
     parser.add_argument("slides", nargs="?", help="slides file path", default=None)
     parser.add_argument(
-        "--threshold", type=float, help="threshold for slides filtering", default=0.5
+        "--similarity_threshold", type=float, help="threshold for slides filtering", default=0.5
+    )
+    parser.add_argument(
+        "--filtering_threshold", type=float, help="threshold for percentage of filtered questions", default=0.5
     )
     parser.add_argument(
         "-v", "--verbose", help="increase output verbosity", action="store_true"
@@ -58,6 +60,6 @@ if __name__ == "__main__":
     if args.verbose:
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
 
-    questions = baseline(args.video, args.slides, args.threshold)
+    questions = baseline(args.video, args.slides, args.similarity_threshold, args.filtering_threshold)
 
     pprint.pprint(questions)
