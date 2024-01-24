@@ -79,7 +79,7 @@ Example usage:
 
 ```shell
 python prepare_data.py \
-    --train_csv_file path/to/train/data.csv \
+    --data_dir path/to/data/dir \
     --output_dir path/to/output/dir \
     --model_type t5 \
     --max_source_length 512 \
