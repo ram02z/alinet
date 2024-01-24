@@ -170,8 +170,8 @@ def main():
             dataset_type=dataset_meta["id"],
             dataset_name=dataset_meta["name"],
             metric_value=metric_value,
-            metric_name=metric_args.evaluation_module.title(),
-            metric_type=metric_args.evaluation_module,
+            metric_name=metric_meta["name"],
+            metric_type=metric_meta["id"],
         )
 
 
