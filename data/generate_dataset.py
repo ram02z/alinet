@@ -60,7 +60,7 @@ def main():
             .map(normalise)
         )
         spoken_squad_data = (
-            load_dataset("ram02/spoken_squad")
+            load_dataset("alinet/spoken_squad")
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
             .filter(contain_question_mark)

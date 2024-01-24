@@ -28,7 +28,7 @@ class Dataset(StrEnum):
 
 DATASETS = {
     Dataset.RC: {"id": "mrqa", "name": "MRQA"},
-    Dataset.NOISE: {"id": "ram02/spoken_squad", "name": "Spoken-SQuAD"},
+    Dataset.NOISE: {"id": "alinet/spoken_squad", "name": "Spoken-SQuAD"},
 }
 
 METRICS = {EvaluationModule.BERTSCORE: {"id": "bertscore", "name": "BERTScore"}}
@@ -104,7 +104,7 @@ def main():
         )
     elif data_args.dataset == Dataset.NOISE:
         eval_data = (
-            load_dataset("ram02/spoken_squad", name="WER54", split="test")
+            load_dataset("alinet/spoken_squad", name="WER54", split="test")
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
             .filter(contain_question_mark)
