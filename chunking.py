@@ -85,7 +85,7 @@ class ChunkPipeline:
                 for sentence in sentenceArr
                 if len(sentence.split()) >= 4 and "..." not in sentence
             ]
-
+            
         # Merge consecutive sentences within a chunk when the second sentence starts with a coordinating conjunction ('CCONJ').
         for chunk in time_chunks:
             chunk_sentences = chunk["text"]
@@ -97,7 +97,6 @@ class ChunkPipeline:
                     merged_sentence = prev_sent + " " + current_sent
                     chunk_sentences[i - 1] = merged_sentence
                     chunk_sentences.pop(i)
-
 
         # Add stride to chunks
         # NOTE: In the future, look into adding right stride to potentially only the first issue.
