@@ -2,30 +2,27 @@ import logging
 import os
 from dataclasses import dataclass, field
 
-from datasets import load_dataset, concatenate_datasets
+import datasets
+from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import set_seed, HfArgumentParser
+from strenum import StrEnum
 
 logger = logging.getLogger(__name__)
 
 
+class Dataset(StrEnum):
+    BASELINE = "baseline"
+    BASELINE_NOISE = "baseline_noise"
+
 @dataclass
 class GenerateDatasetArguments:
+    dataset: Dataset = field(metadata={"help": "Name of the dataset to use"})
+    data_dir: str = field(default="data", metadata={"help": "Output data directory"})
     seed: int = field(default=42, metadata={"help": "Random seed"})
-    remove_duplicate_context: bool = field(
-        default=True,
-        metadata={"help": "Keep only one context for each question"},
-    )
 
 
 def contain_question_mark(data):
     return data["target"][-1].rstrip() == "?"
-
-
-def contain_unique_question_context(data, unique_sources):
-    if data["source"] not in unique_sources:
-        unique_sources.add(data["source"])
-        return True
-    return False
 
 
 def normalise(data):
@@ -46,58 +43,45 @@ def main():
     set_seed(args.seed)
 
     logger.info("loading datasets")
-
-    squad_data = (
-        load_dataset("squad", split="train+validation")
-        .select_columns(["context", "question"])
-        .rename_columns({"context": "source", "question": "target"})
-    )
-    adversarial_data = (
-        load_dataset("adversarial_qa", "adversarialQA", split="train+validation+test")
-        .select_columns(["context", "question"])
-        .rename_columns({"context": "source", "question": "target"})
-    )
-    narrative_data = (
-        load_dataset("narrativeqa", split="train+validation+test")
-        .select_columns(["document", "question"])
-        .map(
-            lambda x: {
-                "document": x["document"]["summary"]["text"],
-                "question": x["question"]["text"],
-            }
+    if args.dataset == Dataset.BASELINE:
+        data = (
+            load_dataset("squad")
+            .select_columns(["context", "question"])
+            .rename_columns({"context": "source", "question": "target"})
+            .filter(contain_question_mark)
+            .map(normalise)
         )
-        .rename_columns({"document": "source", "question": "target"})
-    )
-    fairytale_data = (
-        load_dataset("GEM/FairytaleQA", split="train+validation+test")
-        .filter(lambda x: x["ex_or_im"] == "explicit")
-        .select_columns(["content", "target"])
-        .rename_columns({"content": "source"})
-    )
-
-    logger.info("concatenating datasets")
-
-    dataset = concatenate_datasets(
-        [squad_data, adversarial_data, narrative_data, fairytale_data]
-    )
-
-    logger.info("filtering datasets")
-
-    dataset = dataset.filter(contain_question_mark)
-    if args.remove_duplicate_context:
-        unique_sources = set()
-        dataset = dataset.filter(
-            contain_unique_question_context,
-            fn_kwargs={"unique_sources": unique_sources},
+    elif args.dataset == Dataset.BASELINE_NOISE:
+        squad_data = (
+            load_dataset("squad")
+            .select_columns(["context", "question"])
+            .rename_columns({"context": "source", "question": "target"})
+            .filter(contain_question_mark)
+            .map(normalise)
         )
-    dataset = dataset.map(normalise)
+        spoken_squad_data = (
+            load_dataset("ram02/spoken_squad")
+            .select_columns(["context", "question"])
+            .rename_columns({"context": "source", "question": "target"})
+            .filter(contain_question_mark)
+            .map(normalise)
+        )
+        train_data = concatenate_datasets(
+            [squad_data["train"], spoken_squad_data["train"]]
+        )
+        valid_data = concatenate_datasets(
+            [squad_data["validation"], spoken_squad_data["validation"]]
+        )
+        data = DatasetDict({"train": train_data, "validation": valid_data})
 
     logger.info("saving dataset")
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    dataset.to_csv(os.path.join(script_dir, "dataset.csv"))
+    data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
+    data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    datasets.logging.set_verbosity_info()
     main()

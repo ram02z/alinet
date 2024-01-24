@@ -79,8 +79,12 @@ class ChunkPipeline:
 
         # remove sentences with < 4 words
         for chunk in time_chunks:
-            sentenceArr = chunk['text']
-            chunk['text'] = [sentence for sentence in sentenceArr if len(sentence.split()) >= 4 and "..." not in sentence] 
+            sentenceArr = chunk["text"]
+            chunk["text"] = [
+                sentence
+                for sentence in sentenceArr
+                if len(sentence.split()) >= 4 and "..." not in sentence
+            ]
 
         # Add stride to chunks
         chunks_with_stride = []
@@ -124,8 +128,4 @@ class ChunkPipeline:
                 }
             )
 
-
-        print(chunks_with_stride)
         return chunks_with_stride
-    
-
