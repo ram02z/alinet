@@ -2,7 +2,8 @@ import logging
 import os
 from dataclasses import dataclass, field
 
-from datasets import load_dataset, concatenate_datasets
+import datasets
+from datasets import load_dataset
 from transformers import set_seed, HfArgumentParser
 from strenum import StrEnum
 
@@ -10,24 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class Dataset(StrEnum):
-    BASELINE_TRAIN = "baseline_train"
-    RC_EVAL = "reading_comprehension_eval"
+    BASELINE = "baseline"
 
 @dataclass
 class GenerateDatasetArguments:
-    dataset: Dataset = field(metadata={"help": "Name of the dataset"})
+    dataset: Dataset = field(metadata={"help": "Name of the dataset to use"})
     data_dir: str = field(default="data", metadata={"help": "Output data directory"})
     seed: int = field(default=42, metadata={"help": "Random seed"})
 
 def contain_question_mark(data):
     return data["target"][-1].rstrip() == "?"
-
-
-def contain_unique_question_context(data, unique_sources):
-    if data["source"] not in unique_sources:
-        unique_sources.add(data["source"])
-        return True
-    return False
 
 
 def normalise(data):
@@ -48,18 +41,9 @@ def main():
     set_seed(args.seed)
 
     logger.info("loading datasets")
-    if args.dataset == Dataset.BASELINE_TRAIN:
+    if args.dataset == Dataset.BASELINE:
         data = (
             load_dataset("squad")
-            .select_columns(["context", "question"])
-            .rename_columns({"context": "source", "question": "target"})
-            .filter(contain_question_mark)
-            .map(normalise)
-        )
-    elif args.dataset == Dataset.RC_EVAL:
-        # BUG: https://huggingface.co/datasets/mrqa/discussions/3
-        data = (
-            load_dataset("mrqa", split="test")
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
             .filter(contain_question_mark)
@@ -68,12 +52,11 @@ def main():
 
     logger.info("saving dataset")
 
-    if args.dataset == Dataset.BASELINE_TRAIN:
-        data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
-        data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
-    elif args.dataset == Dataset.RC_EVAL:
-        data.to_csv(os.path.join(args.data_dir, "test.csv"))
+    data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
+    data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    datasets.logging.set_verbosity_info()
     main()
