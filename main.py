@@ -35,9 +35,6 @@ def baseline(video_path: str, slides_path: str | None, similarity_threshold, fil
     else:
         return filtered_questions
 
-
-
-
 if __name__ == "__main__":
     import argparse
     import pprint
