@@ -50,12 +50,13 @@ The datasets used to train and validate the models can be generated using the `g
 
 Datasets used:
 - `baseline` (SQuAD 1.1)
+- `baseline_noise` (SQuAD 1.1 + Spoken-SQuAD)
 
 Example usage:
 
 ```shell
 python data/generate_dataset.py \
-    --dataset {baseline} \
+    --dataset {baseline,baseline_noise} \
     --data_dir data \
     --seed 42
 ```

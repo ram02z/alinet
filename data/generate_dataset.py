@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class Dataset(StrEnum):
     BASELINE = "baseline"
-    AUGMENT_TRAIN = "augmented_squad_train"
+    BASELINE_NOISE = "baseline_noise"
 
 @dataclass
 class GenerateDatasetArguments:
@@ -51,7 +51,7 @@ def main():
             .filter(contain_question_mark)
             .map(normalise)
         )
-    elif args.dataset == Dataset.AUGMENT_TRAIN:
+    elif args.dataset == Dataset.BASELINE_NOISE:
         squad_data = (
             load_dataset("squad")
             .select_columns(["context", "question"])
