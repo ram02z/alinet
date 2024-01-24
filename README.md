@@ -46,23 +46,22 @@ python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 
 ### Dataset generation
 
-The datasets used in the research can be generated using the `generate_dataset.py` script. 
+The datasets used to train and validate the models can be generated using the `generate_dataset.py` script. 
 
 Datasets used:
-- `baseline_train` (SQuAD 1.1)
-- `reading_comprehension_eval` (MRQA test split)
+- `baseline` (SQuAD 1.1)
 
 Example usage:
 
 ```shell
 python data/generate_dataset.py \
-    --dataset {baseline_train,reading_comprehension_eval} \
+    --dataset {baseline} \
     --data_dir data \
     --seed 42
 ```
 
 The script will output `train` and `validation` splits as CSV files to the
-`data` directory when dataset is set to `baseline_train`.
+`data` directory when dataset is set to `baseline`.
 
 ### Data preparation
 
@@ -131,21 +130,24 @@ For more information about the environment variables, refer to the [W&B document
 
 The fine-tuned model's performance can be evaluated using the `eval.py` script.
 
-The script supports the following evaluation metrics:
+The script supports the following evaluation datasets:
+- `reading_comprehension` (MRQA 2019 test split)
+- `spoken_noise` (Spoken-SQuAD WER54 test split)
+
+The script also supports the following evaluation metrics:
 - [BERTScore](https://arxiv.org/abs/1904.09675)
+
 
 Example usage:
 
 ```shell
 python eval.py \
        --pretrained_model_name_or_path path/to/model \
-       --data_dir data \
+       --dataset {reading_comprehension,spoken_noise}
        --evaluation_module bertscore \
        --max_length 32 \
        --num_beams 4
 ```
-
-The script expects the data directory to have a `test` split (i.e. run `data/generate_dataset.py --dataset reading_comprehension_eval`).
 
 To push the metric results to the HuggingFace Hub, you need authenticate first:
 

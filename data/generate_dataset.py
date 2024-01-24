@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Dataset(StrEnum):
-    BASELINE_TRAIN = "baseline_train"
+    BASELINE = "baseline"
 
 @dataclass
 class GenerateDatasetArguments:
@@ -41,7 +41,7 @@ def main():
     set_seed(args.seed)
 
     logger.info("loading datasets")
-    if args.dataset == Dataset.BASELINE_TRAIN:
+    if args.dataset == Dataset.BASELINE:
         data = (
             load_dataset("squad")
             .select_columns(["context", "question"])
