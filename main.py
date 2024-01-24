@@ -1,5 +1,4 @@
-import pickle
-
+import asr
 import qg
 import warnings
 from qg import QGPipeline
@@ -11,13 +10,9 @@ def baseline(
     video_path: str, slides_path: str | None, similarity_threshold, filtering_threshold
 ) -> list[str]:
     qg_model = qg.Model.DISCORD
-    # asr_model = asr.Model.DISTIL_SMALL
-    # asr_pipe = ASRPipeline(asr_model)
-    # whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
-    duration = 2301
-    with open("experiments/qg/comp3074_lecture_2.pkl", "rb") as file:
-        whisper_chunks = pickle.load(file)["chunks"]
-
+    asr_model = asr.Model.DISTIL_SMALL
+    asr_pipe = asr.ASRPipeline(asr_model)
+    whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = ChunkPipeline(qg_model)
     chunks = chunk_pipe(whisper_chunks, duration)
 
