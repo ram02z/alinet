@@ -219,9 +219,6 @@ def main():
 
             validate_dataset = validate_dataset.filter(remove_excess_desc_recall_validate, fn_kwargs={"countDict": countDict})
 
-            print_distribution(train_dataset)
-            print_distribution(validate_dataset)
-
             data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
 
