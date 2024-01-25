@@ -5,8 +5,6 @@ import spacy
 INPUT_TOKEN_LIMIT = {Model.DISCORD: 1024}
 
 nlp = spacy.load("en_core_web_md")
-nlp.add_pipe("sentencizer")
-
 
 class ChunkPipeline:
     def __init__(
@@ -79,28 +77,25 @@ class ChunkPipeline:
 
         # Remove sentences with < 4 words
         for chunk in time_chunks:
-            sentenceArr = chunk["text"]
-            chunk["text"] = [
-                sentence
-                for sentence in sentenceArr
-                if len(sentence.split()) >= 4 and "..." not in sentence
-            ]
+            sentenceArr = chunk['text']
+            chunk['text'] = [sentence for sentence in sentenceArr if len(sentence.split()) >= 4 and "..." not in sentence]
 
         # Merge consecutive sentences within a chunk when the second sentence starts with a coordinating conjunction ('CCONJ').
         for chunk in time_chunks:
-            chunk_sentences = chunk["text"]
+            chunk_sentences = chunk['text']
             for i in range(len(chunk_sentences) - 1, 0, -1):
                 current_sent = chunk_sentences[i]
+
                 prev_sent = chunk_sentences[i - 1]
                 doc = nlp(current_sent)
+
                 if doc[0].pos_ == "CCONJ":
                     merged_sentence = prev_sent + " " + current_sent
                     chunk_sentences[i - 1] = merged_sentence
                     chunk_sentences.pop(i)
 
-
         # Add stride to chunks
-        # NOTE: In the future, look into adding right stride to potentially only the first issue.
+        # NOTE: In the future, look into adding right stride to potentially only the first issue. 
         # Cannot add right stride to all chunks because else we cause some chunks to start with a coordinating conjunctive
         chunks_with_stride = []
         for chunk_idx in range(len(time_chunks)):
@@ -122,7 +117,9 @@ class ChunkPipeline:
             chunks_with_stride.append(
                 {
                     "timestamp": time_chunks[chunk_idx]["timestamp"],
-                    "text": " ".join(left_sents + time_chunks[chunk_idx]["text"]),
+                    "text": " ".join(
+                        left_sents + time_chunks[chunk_idx]["text"]
+                    ),
                 }
             )
 
