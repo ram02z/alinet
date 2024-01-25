@@ -37,6 +37,11 @@ def normalise(data):
     return data
 
 def categorise_dataset(data):
+    # to prevent re-categorising comparisonQA data
+    if data["category"] == "comparison":
+        return data
+
+
     if any(word in data['target'] for word in ["what"]):
         data['category'] = "description"
     elif any(word in data['target'] for word in ["where", "when", "who", "how many", "how much", "which", "how long"]):
@@ -72,19 +77,34 @@ def remove_na_category(data):
     else:
         return True
 
-def remove_excess_desc_recall(data, countDict):
-    if data['category'] == "description" and countDict['desc_count'] < 15970:
+def remove_excess_desc_recall_train(data, countDict):
+    if data['category'] == "description" and countDict['desc_count'] < 12558:
         countDict['desc_count'] += 1
         return True
-    elif data['category'] == "description" and countDict['desc_count'] >= 15970:
+    elif data['category'] == "description" and countDict['desc_count'] >= 12558:
         return False
-    elif data['category'] == "recall" and countDict['recall_count'] < 15970:
+    elif data['category'] == "recall" and countDict['recall_count'] < 12558:
         countDict['recall_count'] += 1
         return True
-    elif data['category'] == "recall" and countDict['recall_count'] >= 15970:
+    elif data['category'] == "recall" and countDict['recall_count'] >= 12558:
         return False
     else:
         return True
+    
+def remove_excess_desc_recall_validate(data, countDict):
+    if data['category'] == "description" and countDict['desc_count'] < 3413:
+        countDict['desc_count'] += 1
+        return True
+    elif data['category'] == "description" and countDict['desc_count'] >= 3413:
+        return False
+    elif data['category'] == "recall" and countDict['recall_count'] < 3413:
+        countDict['recall_count'] += 1
+        return True
+    elif data['category'] == "recall" and countDict['recall_count'] >= 3413:
+        return False
+    else:
+        return True
+    
     
 def main():
     parser = HfArgumentParser((GenerateDatasetArguments,))
@@ -125,18 +145,18 @@ def main():
         data = DatasetDict({"train": train_data, "validation": valid_data})
     elif args.dataset == Dataset.BASELINE_BALANCED:
             squad_data = (
-                load_dataset("squad", split="train+validation", trust_remote_code=True)
+                load_dataset("squad", trust_remote_code=True)
                 .select_columns(["context", "question"])
                 .rename_columns({"context": "source", "question": "target"})
             )
 
             adversarial_data = (
-                load_dataset("adversarial_qa", "adversarialQA", split="train+validation+test", trust_remote_code=True)
+                load_dataset("adversarial_qa", "adversarialQA", trust_remote_code=True)
                 .select_columns(["context", "question"])
                 .rename_columns({"context": "source", "question": "target"})
             )
             narrative_data = (
-                load_dataset("narrativeqa", split="train+validation+test", trust_remote_code=True)
+                load_dataset("narrativeqa", trust_remote_code=True)
                 .select_columns(["document", "question"])
                 .map(
                     lambda x: {
@@ -147,53 +167,66 @@ def main():
                 .rename_columns({"document": "source", "question": "target"})
             )
             fairytale_data = (
-                load_dataset("GEM/FairytaleQA", split="train+validation+test", trust_remote_code=True)
+                load_dataset("GEM/FairytaleQA", trust_remote_code=True)
                 .filter(lambda x: x["ex_or_im"] == "explicit")
                 .select_columns(["content", "target"])
                 .rename_columns({"content": "source"})
             )
 
             sciq_data = (
-                load_dataset("sciq", split="train+validation+test", trust_remote_code=True)
+                load_dataset("sciq", trust_remote_code=True)
                 .select_columns(["support", "question"])
                 .rename_columns({"support": "source", "question": "target"})
             )
 
-            dataset = concatenate_datasets(
-                [squad_data, adversarial_data, narrative_data, fairytale_data, sciq_data]
+            train_dataset = concatenate_datasets(
+            [squad_data["train"], adversarial_data["train"], narrative_data["train"], fairytale_data["train"], sciq_data["train"]]
             )
 
-            dataset = dataset.filter(contain_question_mark)
-
-            dataset = dataset.map(normalise)
-
-            dataset = dataset.add_column("category", ["NA"] * len(dataset))
-
-            dataset = dataset.map(categorise_dataset)
-
-            comparative_dataset = load_dataset("alinet/comparativeQA", split='train')
-
-            dataset = concatenate_datasets(
-                [dataset, comparative_dataset]
+            validate_dataset = concatenate_datasets(
+            [squad_data["validation"], adversarial_data["validation"], adversarial_data["test"], narrative_data["validation"], narrative_data["test"], fairytale_data["validation"], fairytale_data["test"], sciq_data["validation"], sciq_data["test"]]
             )
 
-            dataset = dataset.filter(remove_na_category)
+            train_dataset = train_dataset.filter(contain_question_mark)
+            train_dataset = train_dataset.map(normalise)
+            train_dataset = train_dataset.add_column("category", ["NA"] * len(train_dataset))
+            train_dataset = train_dataset.map(categorise_dataset)
+            train_dataset = train_dataset.filter(remove_na_category)
+
+            validate_dataset = validate_dataset.filter(contain_question_mark)
+            validate_dataset = validate_dataset.map(normalise)
+            validate_dataset = validate_dataset.add_column("category", ["NA"] * len(validate_dataset))
+            validate_dataset = validate_dataset.map(categorise_dataset)
+            validate_dataset = validate_dataset.filter(remove_na_category)
+
+            comparative_dataset = load_dataset("alinet/comparativeQA", split="train")
+            comparative_dataset = comparative_dataset.train_test_split(test_size=0.2)
+            comparative_dataset = DatasetDict({"train": comparative_dataset["train"], "validation": comparative_dataset["test"]})
+
+            train_dataset = concatenate_datasets(
+            [train_dataset, comparative_dataset['train']]
+            )
+
+            validate_dataset = concatenate_datasets(
+            [validate_dataset, comparative_dataset['validation']]
+            )
 
             countDict = {"desc_count": 0, "recall_count": 0}
 
-            dataset = dataset.filter(remove_excess_desc_recall, fn_kwargs={"countDict": countDict})
+            train_dataset = train_dataset.filter(remove_excess_desc_recall_train, fn_kwargs={"countDict": countDict})
 
-            dataset = dataset.class_encode_column("category")
+            countDict = {"desc_count": 0, "recall_count": 0}
 
-            dataset = dataset.train_test_split(test_size=0.2, stratify_by_column="category")
+            validate_dataset = validate_dataset.filter(remove_excess_desc_recall_validate, fn_kwargs={"countDict": countDict})
 
-            data = DatasetDict({"train": dataset["train"], "validation": dataset["test"]})
+            print_distribution(train_dataset)
+            print_distribution(validate_dataset)
 
-            
+            data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
+
 
 
     logger.info("saving dataset")
-
 
     data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
     data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
