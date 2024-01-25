@@ -58,7 +58,6 @@ def slide_chunking(video_path, slides_path):
                     text = doc[i].get_text()
                     # Add tuple (text, start time, end time) to the list
                     slide_chunks.append((text, timestamp, None))
-                    print("the current slide chunk is : ", slide_chunks[i])
             i += 1
         previous_frame = frame.copy()
 
@@ -71,8 +70,7 @@ def slide_chunking(video_path, slides_path):
         slide_chunks[i] = (slide_chunks[i][0], slide_chunks[i][1], next_frame_tuple[1])
 
     # Remove last element of frame_list, because last slide of most lectures is consolidation/review therefore useless
-    last = slide_chunks.pop()
-    print(last)
+    slide_chunks.pop()
     return slide_chunks
 
 if __name__ == "__main__":
