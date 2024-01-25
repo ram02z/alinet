@@ -98,7 +98,6 @@ class ChunkPipeline:
                     chunk_sentences[i - 1] = merged_sentence
                     chunk_sentences.pop(i)
 
-
         # Add stride to chunks
         # NOTE: In the future, look into adding right stride to potentially only the first issue. 
         # Cannot add right stride to all chunks because else we cause some chunks to start with a coordinating conjunctive
