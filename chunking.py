@@ -1,12 +1,10 @@
 from transformers import AutoTokenizer
 from qg import Model
-from spacy.lang.en import English
+import spacy
 
 INPUT_TOKEN_LIMIT = {Model.DISCORD: 1024}
 
-nlp = English()
-nlp.add_pipe("sentencizer")
-
+nlp = spacy.load("en_core_web_md")
 
 class ChunkPipeline:
     def __init__(
@@ -24,7 +22,7 @@ class ChunkPipeline:
         self,
         chunks: list[dict[str, str | tuple[float, float]]],
         audio_length: float,
-        stride_length=50,
+        stride_length=80,
         min_duration=120,
     ) -> list[dict[str, str | tuple[float, float]]]:
         """
@@ -77,7 +75,7 @@ class ChunkPipeline:
         if current_sentence.strip():
             process_chunk(chunks[-1])
 
-        # remove sentences with < 4 words
+        # Remove sentences with < 4 words
         for chunk in time_chunks:
             sentenceArr = chunk["text"]
             chunk["text"] = [
@@ -85,25 +83,26 @@ class ChunkPipeline:
                 for sentence in sentenceArr
                 if len(sentence.split()) >= 4 and "..." not in sentence
             ]
+            
+        # Merge consecutive sentences within a chunk when the second sentence starts with a coordinating conjunction ('CCONJ').
+        for chunk in time_chunks:
+            chunk_sentences = chunk['text']
+            for i in range(len(chunk_sentences) - 1, 0, -1):
+                current_sent = chunk_sentences[i]
+
+                prev_sent = chunk_sentences[i - 1]
+                doc = nlp(current_sent)
+
+                if doc[0].pos_ == "CCONJ":
+                    merged_sentence = prev_sent + " " + current_sent
+                    chunk_sentences[i - 1] = merged_sentence
+                    chunk_sentences.pop(i)
 
         # Add stride to chunks
+        # NOTE: In the future, look into adding right stride to potentially only the first issue. 
+        # Cannot add right stride to all chunks because else we cause some chunks to start with a coordinating conjunctive
         chunks_with_stride = []
         for chunk_idx in range(len(time_chunks)):
-            # Right stride
-            right_sents = []
-            if chunk_idx < len(time_chunks) - 1:
-                next_chunk_idx = chunk_idx + 1
-                sentence_idx = 0
-                while len(time_chunks[next_chunk_idx]["text"]) > sentence_idx:
-                    sent = time_chunks[next_chunk_idx]["text"][sentence_idx]
-                    token_count = len(
-                        self._tokenizer.tokenize("".join(right_sents) + sent)
-                    )
-                    if token_count >= stride_length:
-                        break
-                    right_sents.append(sent)
-                    sentence_idx += 1
-
             # Left stride
             left_sents = []
             if chunk_idx > 0:
@@ -123,7 +122,7 @@ class ChunkPipeline:
                 {
                     "timestamp": time_chunks[chunk_idx]["timestamp"],
                     "text": " ".join(
-                        left_sents + time_chunks[chunk_idx]["text"] + right_sents
+                        left_sents + time_chunks[chunk_idx]["text"]
                     ),
                 }
             )
