@@ -181,9 +181,6 @@ def main():
             validate_dataset = reduce_category_size(validate_dataset, 3413, "description")
             validate_dataset = reduce_category_size(validate_dataset, 3413, "recall")
 
-            print_distribution(train_dataset)
-            print_distribution(validate_dataset)
-
             data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
     logger.info("saving dataset")
