@@ -6,7 +6,7 @@ from transformers import HfArgumentParser, set_seed, T5Tokenizer, BartTokenizer
 
 import datasets
 
-from models import ModelType
+from question_generation import ModelType
 
 logger = logging.getLogger(__name__)
 

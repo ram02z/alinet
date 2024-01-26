@@ -1,9 +1,10 @@
 import asr
-import qg
+from question_generation import qg
 import warnings
-from qg import QGPipeline
+from question_generation import QGPipeline
 from chunking import ChunkPipeline
-from chunk_filtering import get_similarity_scores
+from filtering import slide_chunking, get_similarity_scores, filter_questions_by_retention_rate
+
 
 
 def baseline(
@@ -14,33 +15,26 @@ def baseline(
     asr_pipe = asr.ASRPipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = ChunkPipeline(qg_model)
-    chunks = chunk_pipe(whisper_chunks, duration)
+    transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    text_chunks = [chunk["text"] for chunk in chunks]
+    text_chunks = [chunk["text"] for chunk in transcript_chunks]
     qg_pipe = QGPipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)
 
     if slides_path is None:
         return generated_questions
 
-    sim_scores = get_similarity_scores(duration, chunks, video_path, slides_path)
+    slide_chunks = slide_chunking(video_path, slides_path)
+    sim_scores = get_similarity_scores(duration, transcript_chunks, slide_chunks)
+    filtered_questions = filter_questions_by_retention_rate(sim_scores, generated_questions, similarity_threshold, filtering_threshold)
 
-    scores_and_questions = zip(sim_scores, generated_questions)
-    filtered_questions = [
-        question for sim, question in scores_and_questions if sim > similarity_threshold
-    ]
-    filtering_percentage = len(filtered_questions) / len(generated_questions)
-    print(filtering_percentage)
-
-    if filtering_percentage < filtering_threshold:
-        # Log a message when generated questions are returned
+    if not filtered_questions:
         warnings.warn(
             "Could not effectively perform question filtering, all generated questions are being returned"
         )
         return generated_questions
     else:
         return filtered_questions
-
 
 if __name__ == "__main__":
     import argparse
