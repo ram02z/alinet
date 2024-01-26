@@ -161,10 +161,8 @@ def main():
                 .filter(remove_na_category)
             )
 
-
-            
             comparative_dataset = load_dataset("alinet/comparativeQA", split="train")
-            comparative_dataset = comparative_dataset.train_test_split(test_size=0.2, seed=42)
+            comparative_dataset = comparative_dataset.train_test_split(test_size=0.2, seed=args.seed)
             comparative_dataset = DatasetDict({"train": comparative_dataset["train"], "validation": comparative_dataset["test"]})
 
             train_dataset = concatenate_datasets(
