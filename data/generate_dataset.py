@@ -37,11 +37,6 @@ def normalise(data):
     return data
 
 def categorise_dataset(data):
-    # to prevent re-categorising comparisonQA data
-    if data["category"] == "comparison":
-        return data
-
-
     if any(word in data['target'] for word in ["what"]):
         data['category'] = "description"
     elif any(word in data['target'] for word in ["where", "when", "who", "how many", "how much", "which", "how long"]):
@@ -55,55 +50,17 @@ def categorise_dataset(data):
     
     return data
 
-def print_distribution(dataset):
-    method_ds = dataset.filter(lambda data: data["category"] == "method")
-    description_ds = dataset.filter(lambda data: data["category"] == "description")
-    explanation_ds = dataset.filter(lambda data: data["category"] == "explanation")
-    comparison_ds = dataset.filter(lambda data: data["category"] == "comparison")
-    recall_ds = dataset.filter(lambda data: data["category"] == "recall")
-
-    na_ds = dataset.filter(lambda data: data["category"] == "NA")
-
-    print("description distribution =" + str( len(description_ds) / len(dataset) * 100) + "%, count = " + str(len(description_ds)))
-    print("recall distribution = " + str( len(recall_ds) / len(dataset) * 100) + "%, count = " + str(len(recall_ds)))
-    print("explanation distribution = " + str( len(explanation_ds) / len(dataset) * 100) + "%, count = " + str(len(explanation_ds)))
-    print("method distribution = " + str( len(method_ds) / len(dataset) * 100) + "%, count = " + str(len(method_ds)))
-    print("comparison distribution = " + str( len(comparison_ds) / len(dataset) * 100) + "%, count = " + str(len(comparison_ds)))
-    print("na distribution = " + str( len(na_ds) / len(dataset) * 100) + "%, count = " + str(len(na_ds)))
-
 def remove_na_category(data):
-    if data['category'] == 'NA':
-        return False
-    else:
-        return True
-
-def remove_excess_desc_recall_train(data, countDict):
-    if data['category'] == "description" and countDict['desc_count'] < 12558:
-        countDict['desc_count'] += 1
-        return True
-    elif data['category'] == "description" and countDict['desc_count'] >= 12558:
-        return False
-    elif data['category'] == "recall" and countDict['recall_count'] < 12558:
-        countDict['recall_count'] += 1
-        return True
-    elif data['category'] == "recall" and countDict['recall_count'] >= 12558:
-        return False
-    else:
-        return True
+    return data['category'] != "NA"
     
-def remove_excess_desc_recall_validate(data, countDict):
-    if data['category'] == "description" and countDict['desc_count'] < 3413:
-        countDict['desc_count'] += 1
-        return True
-    elif data['category'] == "description" and countDict['desc_count'] >= 3413:
-        return False
-    elif data['category'] == "recall" and countDict['recall_count'] < 3413:
-        countDict['recall_count'] += 1
-        return True
-    elif data['category'] == "recall" and countDict['recall_count'] >= 3413:
-        return False
-    else:
-        return True
+def reduce_category_size(dataset, reduceTo, category):
+    filtered_dataset = dataset.filter(
+        lambda d: d["category"] == category
+    ).select(range(reduceTo))
+    print(category + "=" + str(len(filtered_dataset)))
+    rest_dataset = dataset.filter(lambda d: d["category"] != category)
+
+    return concatenate_datasets([filtered_dataset, rest_dataset])
     
     
 def main():
@@ -187,41 +144,47 @@ def main():
             [squad_data["validation"], adversarial_data["validation"], adversarial_data["test"], narrative_data["validation"], narrative_data["test"], fairytale_data["validation"], fairytale_data["test"], sciq_data["validation"], sciq_data["test"]]
             )
 
-            train_dataset = train_dataset.filter(contain_question_mark)
-            train_dataset = train_dataset.map(normalise)
             train_dataset = train_dataset.add_column("category", ["NA"] * len(train_dataset))
-            train_dataset = train_dataset.map(categorise_dataset)
-            train_dataset = train_dataset.filter(remove_na_category)
+            train_dataset = (
+                train_dataset.filter(contain_question_mark)
+                .map(normalise)
+                .map(categorise_dataset)
+                .filter(remove_na_category)
+            )
 
-            validate_dataset = validate_dataset.filter(contain_question_mark)
-            validate_dataset = validate_dataset.map(normalise)
+            
             validate_dataset = validate_dataset.add_column("category", ["NA"] * len(validate_dataset))
-            validate_dataset = validate_dataset.map(categorise_dataset)
-            validate_dataset = validate_dataset.filter(remove_na_category)
+            validate_dataset = (
+                validate_dataset.filter(contain_question_mark)
+                .map(normalise)            
+                .map(categorise_dataset)
+                .filter(remove_na_category)
+            )
 
+
+            
             comparative_dataset = load_dataset("alinet/comparativeQA", split="train")
-            comparative_dataset = comparative_dataset.train_test_split(test_size=0.2)
+            comparative_dataset = comparative_dataset.train_test_split(test_size=0.2, seed=42)
             comparative_dataset = DatasetDict({"train": comparative_dataset["train"], "validation": comparative_dataset["test"]})
 
             train_dataset = concatenate_datasets(
-            [train_dataset, comparative_dataset['train']]
+                [train_dataset, comparative_dataset['train']]
             )
 
             validate_dataset = concatenate_datasets(
-            [validate_dataset, comparative_dataset['validation']]
+                [validate_dataset, comparative_dataset['validation']]
             )
 
-            countDict = {"desc_count": 0, "recall_count": 0}
+            train_dataset = reduce_category_size(train_dataset, 12558, "description")
+            train_dataset = reduce_category_size(train_dataset, 12558, "recall")
 
-            train_dataset = train_dataset.filter(remove_excess_desc_recall_train, fn_kwargs={"countDict": countDict})
+            validate_dataset = reduce_category_size(validate_dataset, 3413, "description")
+            validate_dataset = reduce_category_size(validate_dataset, 3413, "recall")
 
-            countDict = {"desc_count": 0, "recall_count": 0}
-
-            validate_dataset = validate_dataset.filter(remove_excess_desc_recall_validate, fn_kwargs={"countDict": countDict})
+            print_distribution(train_dataset)
+            print_distribution(validate_dataset)
 
             data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
-
-
 
     logger.info("saving dataset")
 
