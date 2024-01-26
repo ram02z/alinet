@@ -60,19 +60,16 @@ def main():
             .map(normalise)
         )
         spoken_squad_data = (
-            load_dataset("alinet/spoken_squad")
+            load_dataset("alinet/spoken_squad", split="train")
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
             .filter(contain_question_mark)
             .map(normalise)
         )
         train_data = concatenate_datasets(
-            [squad_data["train"], spoken_squad_data["train"]]
+            [squad_data["train"], spoken_squad_data]
         )
-        valid_data = concatenate_datasets(
-            [squad_data["validation"], spoken_squad_data["validation"]]
-        )
-        data = DatasetDict({"train": train_data, "validation": valid_data})
+        data = DatasetDict({"train": train_data, "validation": squad_data["validation"]})
 
     logger.info("saving dataset")
 
