@@ -3,6 +3,7 @@
 > Multi-modal question generation (MMQG) utilizes video lectures and presentation slides to generate high-quality questions pertinent to the provided educational content
 
 ## Installation
+
 MMQG requires the following dependencies:
 
 - Python 3.10
@@ -46,11 +47,13 @@ python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 
 ### Dataset generation
 
-The datasets used to train and validate the models can be generated using the `generate_dataset.py` script. 
+The datasets used to train and validate the models can be generated using the `generate_dataset.py` script.
 
 Datasets used:
+
 - `baseline` (SQuAD 1.1)
 - `baseline_noise` (SQuAD 1.1 + Spoken-SQuAD)
+- `baseline_balanced` (SQuAD 1.1 + Adversarial_QA + NarrativeQA + FairytaleQA + SciQ + comparisonQA)
 
 Example usage:
 
@@ -132,12 +135,13 @@ For more information about the environment variables, refer to the [W&B document
 The fine-tuned model's performance can be evaluated using the `eval.py` script.
 
 The script supports the following evaluation datasets:
+
 - `reading_comprehension` (MRQA 2019 test split)
 - `spoken_noise` (Spoken-SQuAD WER54 test split)
 
 The script also supports the following evaluation metrics:
-- [BERTScore](https://arxiv.org/abs/1904.09675)
 
+- [BERTScore](https://arxiv.org/abs/1904.09675)
 
 Example usage:
 
