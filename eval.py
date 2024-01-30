@@ -146,6 +146,7 @@ def main():
     params = {
         "evaluation_module": metric_args.evaluation_module,
         "model": model_args.pretrained_model_name_or_path,
+        "dataset": data_args.dataset,
     }
     evaluate.save("./results/", **results, **params)
 
