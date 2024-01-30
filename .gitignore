@@ -57,3 +57,4 @@ test/
 sample_data/
 data/
 !data/*.py
+results/
