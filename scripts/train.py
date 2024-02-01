@@ -12,7 +12,7 @@ from transformers import (
     Seq2SeqTrainingArguments,
 )
 
-from models import ModelType
+from question_generation import ModelType
 
 logger = logging.getLogger(__name__)
 
