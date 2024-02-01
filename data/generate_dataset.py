@@ -161,6 +161,7 @@ def main():
             load_dataset("sciq", trust_remote_code=True)
             .select_columns(["support", "question"])
             .rename_columns({"support": "source", "question": "target"})
+            .filter(lambda x: x["source"] != "")
         )
 
         train_dataset = concatenate_datasets(
@@ -231,9 +232,6 @@ def main():
 
         validate_dataset = reduce_category_size(validate_dataset, 3413, "description")
         validate_dataset = reduce_category_size(validate_dataset, 3413, "recall")
-
-        train_dataset = train_dataset.filter(lambda x: x["source"])
-        validate_dataset = validate_dataset.filter(lambda x: x["source"])
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
