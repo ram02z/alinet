@@ -1,2 +1,1 @@
-from models import ModelType
-from qg import QGPipeline, Model
+from .qg import QGPipeline, Model
