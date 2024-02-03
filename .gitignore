@@ -57,3 +57,6 @@ test/
 sample_data/
 data/
 !data/*.py
+
+# Mac metadata
+.DS_Store
