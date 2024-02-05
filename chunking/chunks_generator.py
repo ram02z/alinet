@@ -1,5 +1,5 @@
 from transformers import AutoTokenizer
-from question_generation import Model
+from qg import Model
 import spacy
 
 INPUT_TOKEN_LIMIT = {Model.DISCORD: 1024}

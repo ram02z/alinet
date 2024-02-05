@@ -1,7 +1,7 @@
 import asr
-from question_generation import qg
+from qg import qg
 import warnings
-from question_generation import QGPipeline
+from qg import QGPipeline
 from chunking import ChunkPipeline
 from filtering import slide_chunking, get_similarity_scores, filter_questions_by_retention_rate
 
