@@ -3,10 +3,8 @@ import os
 from dataclasses import dataclass, field
 
 from transformers import HfArgumentParser, set_seed, T5Tokenizer, BartTokenizer
-
+from .models import ModelType
 import datasets
-
-from models import ModelType
 
 logger = logging.getLogger(__name__)
 
