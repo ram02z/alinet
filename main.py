@@ -1,5 +1,5 @@
 import asr
-from qg import qg
+import qg
 import warnings
 from qg import QGPipeline
 from chunking import ChunkPipeline
