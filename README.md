@@ -42,6 +42,6 @@ To filter the generated questions using the original lecture slides, pass the sl
 # If no threshold is given, the default (0.5) is used
 python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
 ```
-## Dataset preparation, Training and Evaluation
+## Fine-tuning
 
 See `/scripts` directory to learn how to generate and prepare the datasets, train the model and evaluate its performance.
