@@ -2,14 +2,19 @@ from transformers import AutoTokenizer
 from qg import Model
 import spacy
 
-INPUT_TOKEN_LIMIT = {Model.DISCORD: 1024}
+INPUT_TOKEN_LIMIT = {
+    Model.BASELINE: 512,
+    Model.BASELINE_NOISE: 512,
+    Model.BALANCED: 512,
+}
 
 nlp = spacy.load("en_core_web_md")
+
 
 class ChunkPipeline:
     def __init__(
         self,
-        model_id=Model.DISCORD,
+        model_id=Model.BASELINE,
     ):
         """
         :param model_id: name of huggingface transformers model
@@ -83,10 +88,10 @@ class ChunkPipeline:
                 for sentence in sentenceArr
                 if len(sentence.split()) >= 4 and "..." not in sentence
             ]
-            
+
         # Merge consecutive sentences within a chunk when the second sentence starts with a coordinating conjunction ('CCONJ').
         for chunk in time_chunks:
-            chunk_sentences = chunk['text']
+            chunk_sentences = chunk["text"]
             for i in range(len(chunk_sentences) - 1, 0, -1):
                 current_sent = chunk_sentences[i]
 
@@ -99,7 +104,7 @@ class ChunkPipeline:
                     chunk_sentences.pop(i)
 
         # Add stride to chunks
-        # NOTE: In the future, look into adding right stride to potentially only the first issue. 
+        # NOTE: In the future, look into adding right stride to potentially only the first issue.
         # Cannot add right stride to all chunks because else we cause some chunks to start with a coordinating conjunctive
         chunks_with_stride = []
         for chunk_idx in range(len(time_chunks)):
@@ -121,9 +126,7 @@ class ChunkPipeline:
             chunks_with_stride.append(
                 {
                     "timestamp": time_chunks[chunk_idx]["timestamp"],
-                    "text": " ".join(
-                        left_sents + time_chunks[chunk_idx]["text"]
-                    ),
+                    "text": " ".join(left_sents + time_chunks[chunk_idx]["text"]),
                 }
             )
 

@@ -9,7 +9,7 @@ from chunk_filtering import get_similarity_scores
 def baseline(
     video_path: str, slides_path: str | None, similarity_threshold, filtering_threshold
 ) -> list[str]:
-    qg_model = qg.Model.DISCORD
+    qg_model = qg.Model.BASELINE
     asr_model = asr.Model.DISTIL_SMALL
     asr_pipe = asr.ASRPipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
@@ -30,7 +30,6 @@ def baseline(
         question for sim, question in scores_and_questions if sim > similarity_threshold
     ]
     filtering_percentage = len(filtered_questions) / len(generated_questions)
-    print(filtering_percentage)
 
     if filtering_percentage < filtering_threshold:
         # Log a message when generated questions are returned
