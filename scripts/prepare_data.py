@@ -93,7 +93,7 @@ def main():
 
     logger.info("loading dataset")
 
-    csv_files = [f for f in os.listdir(args.data_dir) if f.endswith('.csv')]
+    csv_files = [f for f in os.listdir(args.data_dir) if f.endswith(".csv")]
     data_files = {os.path.splitext(csv_file)[0]: csv_file for csv_file in csv_files}
 
     dataset = datasets.load_dataset(
