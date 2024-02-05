@@ -31,16 +31,16 @@ PyTorch with CUDA support will be only be installed on Linux environments.
 ## Usage
 
 ```sh
-python main.py path/to/video/file.mp4
+python main.py --video path/to/video/file.mp4
 ```
 
 This will output all the generated questions.
 
-To filter the generated questions using the original lecture slides, pass the slides path and the similarity threshold:
+To filter the generated questions using the original lecture slides, use the slides path:
 
 ```shell
 # If no threshold is given, the default (0.5) is used
-python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
+python main.py --video path/to/video/file.mp4 --slides path/to/slides.pdf
 ```
 ## Fine-tuning
 

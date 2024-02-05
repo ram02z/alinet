@@ -1,35 +1,33 @@
 import os
 import sys
+from dataclasses import dataclass, field
+import pprint
+
+import transformers
+from transformers import HfArgumentParser
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
 
 from alinet import baseline
 
-if __name__ == "__main__":
-    import argparse
-    import pprint
-    import transformers
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("video", help="video file path")
-    parser.add_argument("slides", nargs="?", help="slides file path", default=None)
-    parser.add_argument(
-        "--similarity_threshold",
-        type=float,
-        help="threshold for slides filtering",
-        default=0.5,
+@dataclass
+class BaselineArguments:
+    video: str = field(metadata={"help": "Video file path"})
+    slides: str | None = field(default=None, metadata={"help": "Video file path"})
+    similarity_threshold: float = field(
+        default=0.5, metadata={"help": "Threshold for slides filtering"}
     )
-    parser.add_argument(
-        "--filtering_threshold",
-        type=float,
-        help="threshold for percentage of filtered questions",
-        default=0.5,
+    filtering_threshold: float = field(
+        default=0.5, metadata={"help": "Threshold for percentage of filtered questions"}
     )
-    parser.add_argument(
-        "-v", "--verbose", help="increase output verbosity", action="store_true"
-    )
-    args = parser.parse_args()
+    verbose: bool = field(default=False, metadata={"help": "Increase output verbosity"})
+
+
+if __name__ == "__main__":
+    parser = HfArgumentParser((BaselineArguments,))
+    args = parser.parse_args_into_dataclasses()[0]
 
     if args.verbose:
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
