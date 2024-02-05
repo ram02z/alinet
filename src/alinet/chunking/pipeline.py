@@ -1,5 +1,5 @@
 from transformers import AutoTokenizer
-from qg import Model
+from alinet.qg import Model
 import spacy
 
 INPUT_TOKEN_LIMIT = {

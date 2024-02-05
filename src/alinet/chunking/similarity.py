@@ -40,7 +40,7 @@ def get_similarity_scores(duration, transcript_chunks, slide_chunks):
     """
     i = 0
     similarity_scores = []
-    for j, chunk in enumerate(transcript_chunks):
+    for chunk in transcript_chunks:
         # ensure we only process transcript chunks that occur before the final slide
         if chunk["timestamp"][0] < duration:
             list_of_slide_indices = []

@@ -1,10 +1,10 @@
-# MMQG
+# AliNET
 
-> Multi-modal question generation (MMQG) utilizes video lectures and presentation slides to generate high-quality questions pertinent to the provided educational content
+> AliNET utilizes video lectures and presentation slides to generate high-quality questions pertinent to the provided educational content
 
 ## Installation
 
-MMQG requires the following dependencies:
+AliNET requires the following dependencies:
 
 - Python 3.10
 - Poetry

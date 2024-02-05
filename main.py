@@ -1,39 +1,10 @@
-import asr
-import qg
-from qg import QGPipeline
-from chunking import ChunkPipeline
-from filtering import (
-    slide_chunking,
-    get_similarity_scores,
-    filter_questions_by_retention_rate,
-)
+import os
+import sys
 
+SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
+sys.path.append(SRC_DIR)
 
-def baseline(
-    video_path: str, slides_path: str | None, similarity_threshold, filtering_threshold
-) -> list[str]:
-    qg_model = qg.Model.BASELINE
-    asr_model = asr.Model.DISTIL_SMALL
-    asr_pipe = asr.ASRPipeline(asr_model)
-    whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
-    chunk_pipe = ChunkPipeline(qg_model)
-    transcript_chunks = chunk_pipe(whisper_chunks, duration)
-
-    text_chunks = [chunk["text"] for chunk in transcript_chunks]
-    qg_pipe = QGPipeline(qg_model)
-    generated_questions = qg_pipe(text_chunks)
-
-    if slides_path is None:
-        return generated_questions
-
-    slide_chunks = slide_chunking(video_path, slides_path)
-    sim_scores = get_similarity_scores(duration, transcript_chunks, slide_chunks)
-    filtered_questions = filter_questions_by_retention_rate(
-        sim_scores, generated_questions, similarity_threshold, filtering_threshold
-    )
-
-    return filtered_questions
-
+from alinet import baseline
 
 if __name__ == "__main__":
     import argparse
