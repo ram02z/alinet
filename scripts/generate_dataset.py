@@ -6,6 +6,7 @@ import datasets
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import set_seed, HfArgumentParser
 from strenum import StrEnum
+import unicodedata
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +36,27 @@ def normalise(data):
     # Remove new line characters
     data["source"] = data["source"].replace("\n", " ")
 
+    # Resolve accented characters
+    data["source"] = "".join(
+        c
+        for c in unicodedata.normalize("NFD", data["source"])
+        if unicodedata.category(c) != "Mn"
+    )
+    data["target"] = "".join(
+        c
+        for c in unicodedata.normalize("NFD", data["source"])
+        if unicodedata.category(c) != "Mn"
+    )
+
     return data
 
 
 def categorise_dataset(data):
-    if any(word in data["target"] for word in ["what"]):
+    target = data["target"].lower()
+    if any(word in target for word in ["what"]):
         data["category"] = "description"
     elif any(
-        word in data["target"]
+        word in target
         for word in [
             "where",
             "when",
@@ -55,13 +69,13 @@ def categorise_dataset(data):
     ):
         data["category"] = "recall"
     elif any(
-        word in data["target"]
+        word in target
         for word in ["how did", "how does", "how do", "compute", "calculate"]
     ):
         data["category"] = "method"
-    elif any(word in data["target"] for word in ["why"]):
+    elif any(word in target for word in ["why"]):
         data["category"] = "explanation"
-    elif any(word in data["target"] for word in ["compare", "difference"]):
+    elif any(word in target for word in ["compare", "difference"]):
         data["category"] = "comparison"
 
     return data
@@ -97,35 +111,35 @@ def fix_encoding_errors(data):
     # See analysis in narrativeqa_encoding.ipynb
     data["source"] = (
         data["source"]
-        .replace("â", ", ")
-        .replace("â â", " -")
-        .replace("â", "-")
-        .replace("â", "'")
-        .replace("â", "")
-        .replace("â", "")
-        .replace("â˛", "")
-        .replace("ă", "e")
-        .replace("âł", "$")
-        .replace("â", "")
-        .replace("ĺ", "o")
-        .replace("âź", "€")
-        .replace("â ", "")
+        .replace("â\x80\x94", ", ")
+        .replace("Â\xa0â\x80\x93", " -")
+        .replace("â\x80\x93", "-")
+        .replace("â\x80\x99", "'")
+        .replace("â\x80\x9d", "")
+        .replace("â\x80\x9c", "")
+        .replace("Ă˛", "")
+        .replace("Ă\x89", "e")
+        .replace("ÂŁ", "$")
+        .replace("â\x80\x89", "")
+        .replace("Ĺ\x8d", "o")
+        .replace("â\x82Ź", "€")
+        .replace("Â\xa0", "")
     )
     data["target"] = (
         data["target"]
-        .replace("â", ", ")
-        .replace("â â", " -")
-        .replace("â", "-")
-        .replace("â", "'")
-        .replace("â", "")
-        .replace("â", "")
-        .replace("â˛", "")
-        .replace("ă", "e")
-        .replace("âł", "$")
-        .replace("â", "")
-        .replace("ĺ", "o")
-        .replace("âź", "€")
-        .replace("â ", "")
+        .replace("â\x80\x94", ", ")
+        .replace("Â\xa0â\x80\x93", " -")
+        .replace("â\x80\x93", "-")
+        .replace("â\x80\x99", "'")
+        .replace("â\x80\x9d", "")
+        .replace("â\x80\x9c", "")
+        .replace("Ă˛", "")
+        .replace("Ă\x89", "e")
+        .replace("ÂŁ", "$")
+        .replace("â\x80\x89", "")
+        .replace("Ĺ\x8d", "o")
+        .replace("â\x82Ź", "€")
+        .replace("Â\xa0", "")
     )
 
     return data
@@ -191,6 +205,7 @@ def main():
                 }
             )
             .rename_columns({"document": "source", "question": "target"})
+            .map(fix_encoding_errors)
         )
 
         fairytale_data = (
@@ -277,9 +292,6 @@ def main():
 
         validate_dataset = reduce_category_size(validate_dataset, 3413, "description")
         validate_dataset = reduce_category_size(validate_dataset, 3413, "recall")
-
-        train_dataset = train_dataset.map(fix_encoding_errors)
-        validate_dataset = validate_dataset.map(fix_encoding_errors)
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
