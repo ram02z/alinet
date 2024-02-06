@@ -90,6 +90,14 @@ def print_distribution(dataset):
     for d in distributions:
         print(d)
 
+def fix_encoding_errors(data):
+    data["source"] = ( data["source"]
+        .replace('â', '')
+        .replace('â˛', '')
+        .replace('âł', '$')
+    )
+
+    return data
 
 def main():
     parser = HfArgumentParser((GenerateDatasetArguments,))
@@ -140,6 +148,7 @@ def main():
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
         )
+
         narrative_data = (
             load_dataset("narrativeqa", trust_remote_code=True)
             .select_columns(["document", "question"])
@@ -151,6 +160,7 @@ def main():
             )
             .rename_columns({"document": "source", "question": "target"})
         )
+        
         fairytale_data = (
             load_dataset("GEM/FairytaleQA", trust_remote_code=True)
             .filter(lambda x: x["ex_or_im"] == "explicit")
@@ -228,11 +238,15 @@ def main():
             [validate_dataset, comparative_dataset["validation"]]
         )
 
+        train_dataset = train_dataset.map(fix_encoding_errors)
+        validate_dataset = validate_dataset.map(fix_encoding_errors)
+        
         train_dataset = reduce_category_size(train_dataset, 12558, "description")
         train_dataset = reduce_category_size(train_dataset, 12558, "recall")
 
         validate_dataset = reduce_category_size(validate_dataset, 3413, "description")
         validate_dataset = reduce_category_size(validate_dataset, 3413, "recall")
+
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
