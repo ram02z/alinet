@@ -108,6 +108,8 @@ def fix_encoding_errors(data):
         .replace("âł", "$")
         .replace("â", "")
         .replace("ĺ", "o")
+        .replace("âź", "€")
+        .replace("â ", "")
     )
     data["target"] = (
         data["target"]
@@ -122,6 +124,8 @@ def fix_encoding_errors(data):
         .replace("âł", "$")
         .replace("â", "")
         .replace("ĺ", "o")
+        .replace("âź", "€")
+        .replace("â ", "")
     )
 
     return data
