@@ -1,71 +1,51 @@
-import asr
-import qg
-import warnings
-from qg import QGPipeline
-from chunking import ChunkPipeline
-from filtering import slide_chunking, get_similarity_scores, filter_questions_by_retention_rate
+import os
+import sys
+from dataclasses import dataclass, field
+import pprint
+
+import transformers
+from transformers import HfArgumentParser
+
+SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
+sys.path.append(SRC_DIR)
+
+from alinet import baseline, qg, asr
 
 
+@dataclass
+class BaselineArguments:
+    video: str = field(metadata={"help": "Video file path"})
+    slides: str | None = field(default=None, metadata={"help": "Video file path"})
+    similarity_threshold: float = field(
+        default=0.5, metadata={"help": "Threshold for slides filtering"}
+    )
+    filtering_threshold: float = field(
+        default=0.5, metadata={"help": "Threshold for percentage of filtered questions"}
+    )
+    qg_model: qg.Model = field(
+        default=qg.Model.BASELINE, metadata={"help": "Question generation model to use"}
+    )
+    asr_model: asr.Model = field(
+        default=asr.Model.DISTIL_LARGE,
+        metadata={"help": "Automatic Speech Recongition model to use"},
+    )
+    verbose: bool = field(default=False, metadata={"help": "Increase output verbosity"})
 
-def baseline(
-    video_path: str, slides_path: str | None, similarity_threshold, filtering_threshold
-) -> list[str]:
-    qg_model = qg.Model.DISCORD
-    asr_model = asr.Model.DISTIL_SMALL
-    asr_pipe = asr.ASRPipeline(asr_model)
-    whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
-    chunk_pipe = ChunkPipeline(qg_model)
-    transcript_chunks = chunk_pipe(whisper_chunks, duration)
-
-    text_chunks = [chunk["text"] for chunk in transcript_chunks]
-    qg_pipe = QGPipeline(qg_model)
-    generated_questions = qg_pipe(text_chunks)
-
-    if slides_path is None:
-        return generated_questions
-
-    slide_chunks = slide_chunking(video_path, slides_path)
-    sim_scores = get_similarity_scores(duration, transcript_chunks, slide_chunks)
-    filtered_questions = filter_questions_by_retention_rate(sim_scores, generated_questions, similarity_threshold, filtering_threshold)
-
-    if not filtered_questions:
-        warnings.warn(
-            "Could not effectively perform question filtering, all generated questions are being returned"
-        )
-        return generated_questions
-    else:
-        return filtered_questions
 
 if __name__ == "__main__":
-    import argparse
-    import pprint
-    import transformers
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("video", help="video file path")
-    parser.add_argument("slides", nargs="?", help="slides file path", default=None)
-    parser.add_argument(
-        "--similarity_threshold",
-        type=float,
-        help="threshold for slides filtering",
-        default=0.5,
-    )
-    parser.add_argument(
-        "--filtering_threshold",
-        type=float,
-        help="threshold for percentage of filtered questions",
-        default=0.5,
-    )
-    parser.add_argument(
-        "-v", "--verbose", help="increase output verbosity", action="store_true"
-    )
-    args = parser.parse_args()
+    parser = HfArgumentParser((BaselineArguments,))
+    args = parser.parse_args_into_dataclasses()[0]
 
     if args.verbose:
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
 
     questions = baseline(
-        args.video, args.slides, args.similarity_threshold, args.filtering_threshold
+        args.video,
+        args.slides,
+        args.similarity_threshold,
+        args.filtering_threshold,
+        args.asr_model,
+        args.qg_model,
     )
 
     pprint.pprint(questions)

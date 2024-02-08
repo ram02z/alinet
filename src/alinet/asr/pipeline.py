@@ -4,7 +4,7 @@ import os
 import warnings
 from pydub import AudioSegment
 import numpy as np
-from strenum import StrEnum
+from alinet.asr import Model
 
 
 def pydub_to_np(audio_segment: AudioSegment) -> np.ndarray:
@@ -24,12 +24,6 @@ def pydub_to_np(audio_segment: AudioSegment) -> np.ndarray:
     arr = np.array(audio_segment.get_array_of_samples(), dtype=np.float32) / 32768.0
 
     return arr
-
-
-class Model(StrEnum):
-    DISTIL_SMALL = "distil-whisper/distil-small.en"
-    DISTIL_MEDIUM = "distil-whisper/distil-medium.en"
-    DISTIL_LARGE = "distil-whisper/distil-large-v2"
 
 
 class ASRPipeline:
@@ -94,10 +88,14 @@ class ASRPipeline:
 
 if __name__ == "__main__":
     import argparse
+    import json
+    from datetime import datetime
 
     parser = argparse.ArgumentParser()
     parser.add_argument("file_path", help="audio/video file")
     args = parser.parse_args()
     pipe = ASRPipeline()
     chunks, duration = pipe(file_path=args.file_path)
-    print(chunks, duration)
+    data = {"chunks": chunks, "duration": duration}
+    with open(datetime.now().strftime("%Y%m%d_%H%M%S.json"), "w") as f:
+        json.dump(data, f)
