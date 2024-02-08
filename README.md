@@ -36,11 +36,11 @@ python main.py --video path/to/video/file.mp4
 
 This will output all the generated questions.
 
-To filter the generated questions using the original lecture slides, use the slides path:
+To filter the generated questions using the original lecture slides, you can provide a similarity threshold and a retention rate (filtering) threshold:
 
-```shell
-# If no threshold is given, the default (0.5) is used
-python main.py --video path/to/video/file.mp4 --slides path/to/slides.pdf
+```sh
+# If no threshold is given, the default (0.5) is used for both
+python main.py --video path/to/video/file.mp4 --similarity_threshold 0.6 --filtering_threshold 0.4
 ```
 ## Fine-tuning
 
