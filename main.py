@@ -42,7 +42,6 @@ if __name__ == "__main__":
     questions = baseline(
         args.video,
         args.slides,
-        args.similarity_threshold,
         args.filtering_threshold,
         args.asr_model,
         args.qg_model,
