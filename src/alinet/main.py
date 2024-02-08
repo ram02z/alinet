@@ -7,10 +7,13 @@ from alinet.chunking.video import slide_chunking
 
 
 def baseline(
-    video_path: str, slides_path: str | None, similarity_threshold, filtering_threshold
+    video_path: str,
+    slides_path: str | None,
+    similarity_threshold,
+    filtering_threshold,
+    asr_model,
+    qg_model,
 ) -> list[str]:
-    qg_model = qg.Model.BASELINE
-    asr_model = asr.Model.DISTIL_SMALL
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = chunking.Pipeline(qg_model)
