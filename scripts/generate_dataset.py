@@ -135,7 +135,6 @@ def main():
         )
         data = DatasetDict({"train": train_data, "validation": valid_data})
     elif args.dataset == Dataset.BASELINE_BALANCED:
-        print("balanced")
         squad_data = (
             load_dataset("squad", trust_remote_code=True)
             .select_columns(["context", "question"])
