@@ -59,8 +59,6 @@ def categorise_dataset(data):
         data["category"] = "method"
     elif any(word in data["target"] for word in ["why"]):
         data["category"] = "explanation"
-    elif any(word in data["target"] for word in ["compare", "difference"]):
-        data["category"] = "comparison"
 
     return data
 
@@ -79,7 +77,7 @@ def reduce_category_size(dataset, reduceTo, category):
 
 
 def print_distribution(dataset):
-    categories = ["method", "description", "explanation", "comparison", "recall", "NA"]
+    categories = ["method", "description", "explanation", "recall", "NA"]
 
     distributions = []
     for category in categories:
@@ -89,6 +87,14 @@ def print_distribution(dataset):
 
     for d in distributions:
         print(d)
+
+def stratify_dataset(dataset, reduceTo):
+    categories = ["method", "description", "explanation", "recall"]
+
+    for category in categories:
+        dataset = reduce_category_size(dataset, reduceTo, category)
+
+    return dataset
 
 
 def main():
@@ -209,35 +215,12 @@ def main():
             .filter(remove_na_category)
         )
 
-        comparative_dataset = load_dataset("alinet/comparativeQA", split="train")
-        comparative_dataset = comparative_dataset.train_test_split(
-            test_size=0.2, seed=args.seed
-        )
-        comparative_dataset = DatasetDict(
-            {
-                "train": comparative_dataset["train"],
-                "validation": comparative_dataset["test"],
-            }
-        )
-
-        train_dataset = concatenate_datasets(
-            [train_dataset, comparative_dataset["train"]]
-        )
-
-        validate_dataset = concatenate_datasets(
-            [validate_dataset, comparative_dataset["validation"]]
-        )
-
-        train_dataset = reduce_category_size(train_dataset, 12558, "description")
-        train_dataset = reduce_category_size(train_dataset, 12558, "recall")
-
-        validate_dataset = reduce_category_size(validate_dataset, 3413, "description")
-        validate_dataset = reduce_category_size(validate_dataset, 3413, "recall")
+        train_dataset = stratify_dataset(train_dataset, 4122)
+        validate_dataset = stratify_dataset(validate_dataset, 1060)
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
     logger.info("saving dataset")
-
 
     data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
     data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
