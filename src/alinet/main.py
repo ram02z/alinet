@@ -8,7 +8,6 @@ from alinet.chunking.video import slide_chunking
 
 def baseline(
     video_path: str,
-    slides_path: str | None,
     similarity_threshold,
     filtering_threshold,
     asr_model,
@@ -23,10 +22,7 @@ def baseline(
     qg_pipe = qg.Pipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)
 
-    if slides_path is None:
-        return generated_questions
-
-    slide_chunks = slide_chunking(video_path, slides_path)
+    slide_chunks = slide_chunking(video_path)
     sim_scores = get_similarity_scores(duration, transcript_chunks, slide_chunks)
     filtered_questions = filter_questions_by_retention_rate(
         sim_scores, generated_questions, similarity_threshold, filtering_threshold
