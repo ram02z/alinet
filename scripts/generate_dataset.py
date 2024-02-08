@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass, field
-
+import re
 import datasets
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import set_seed, HfArgumentParser
@@ -14,6 +14,7 @@ class Dataset(StrEnum):
     BASELINE = "baseline"
     BASELINE_NOISE = "baseline_noise"
     BASELINE_BALANCED = "baseline_balanced"
+
 
 @dataclass
 class GenerateDatasetArguments:
@@ -35,6 +36,7 @@ def normalise(data):
     data["source"] = data["source"].replace("\n", " ")
 
     return data
+
 
 def categorise_dataset(data):
     if any(word in data["target"] for word in ["what"]):
@@ -59,8 +61,6 @@ def categorise_dataset(data):
         data["category"] = "method"
     elif any(word in data["target"] for word in ["why"]):
         data["category"] = "explanation"
-    elif any(word in data["target"] for word in ["compare", "difference"]):
-        data["category"] = "comparison"
 
     return data
 
@@ -79,7 +79,7 @@ def reduce_category_size(dataset, reduceTo, category):
 
 
 def print_distribution(dataset):
-    categories = ["method", "description", "explanation", "comparison", "recall", "NA"]
+    categories = ["method", "description", "explanation", "recall", "NA"]
 
     distributions = []
     for category in categories:
@@ -89,6 +89,57 @@ def print_distribution(dataset):
 
     for d in distributions:
         print(d)
+
+def stratify_dataset(dataset, reduceTo):
+    categories = ["method", "description", "explanation", "recall"]
+
+    for category in categories:
+        dataset = reduce_category_size(dataset, reduceTo, category)
+
+    return dataset
+
+
+def fix_encoding_errors(data):
+    # This pattern matches one or more digits followed by an accented 'a'
+    pattern = r'(\d+)â'  
+
+    # See analysis in narrativeqa_encoding.ipynb
+    data["source"] = (
+        data["source"]
+        .replace("â", ", ")
+        .replace("â â", " -")
+        .replace("â", "-")
+        .replace("â", "'")
+        .replace("â", "")
+        .replace("â", "")
+        .replace("â˛", "")
+        .replace("ă", "e")
+        .replace("âł", "$")
+        .replace("â", "")
+        .replace("ĺ", "o")
+        .replace("âź", "€")
+    )
+    data["source"] = re.sub(pattern, r'\1', data["source"])
+
+    data["target"] = (
+        data["target"]
+        .replace("â", ", ")
+        .replace("â â", " -")
+        .replace("â", "-")
+        .replace("â", "'")
+        .replace("â", "")
+        .replace("â", "")
+        .replace("â˛", "")
+        .replace("ă", "e")
+        .replace("âł", "$")
+        .replace("â", "")
+        .replace("ĺ", "o")
+        .replace("âź", "€")
+    )
+    data["target"] = re.sub(pattern, r'\1', data["target"])
+
+
+    return data
 
 
 def main():
@@ -140,6 +191,7 @@ def main():
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
         )
+
         narrative_data = (
             load_dataset("narrativeqa", trust_remote_code=True)
             .select_columns(["document", "question"])
@@ -151,6 +203,7 @@ def main():
             )
             .rename_columns({"document": "source", "question": "target"})
         )
+
         fairytale_data = (
             load_dataset("GEM/FairytaleQA", trust_remote_code=True)
             .filter(lambda x: x["ex_or_im"] == "explicit")
@@ -209,35 +262,16 @@ def main():
             .filter(remove_na_category)
         )
 
-        comparative_dataset = load_dataset("alinet/comparativeQA", split="train")
-        comparative_dataset = comparative_dataset.train_test_split(
-            test_size=0.2, seed=args.seed
-        )
-        comparative_dataset = DatasetDict(
-            {
-                "train": comparative_dataset["train"],
-                "validation": comparative_dataset["test"],
-            }
-        )
 
-        train_dataset = concatenate_datasets(
-            [train_dataset, comparative_dataset["train"]]
-        )
+        train_dataset = stratify_dataset(train_dataset, 4122)
+        validate_dataset = stratify_dataset(validate_dataset, 1060)
 
-        validate_dataset = concatenate_datasets(
-            [validate_dataset, comparative_dataset["validation"]]
-        )
-
-        train_dataset = reduce_category_size(train_dataset, 12558, "description")
-        train_dataset = reduce_category_size(train_dataset, 12558, "recall")
-
-        validate_dataset = reduce_category_size(validate_dataset, 3413, "description")
-        validate_dataset = reduce_category_size(validate_dataset, 3413, "recall")
+        train_dataset = train_dataset.map(fix_encoding_errors)
+        validate_dataset = validate_dataset.map(fix_encoding_errors)
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
     logger.info("saving dataset")
-
 
     data["train"].to_csv(os.path.join(args.data_dir, "train.csv"))
     data["validation"].to_csv(os.path.join(args.data_dir, "validation.csv"))
