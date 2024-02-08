@@ -34,7 +34,7 @@ def slide_chunking(video_path):
     slide_chunks = []
 
     ret, previous_frame = cap.read()
-    frame_interval = int(cap.get(cv2.CAP_PROP_FPS) * 10)
+    frame_interval = int(cap.get(cv2.CAP_PROP_FPS) * 30)
 
     i = 0
     while True:
