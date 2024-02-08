@@ -88,10 +88,14 @@ class ASRPipeline:
 
 if __name__ == "__main__":
     import argparse
+    import json
+    from datetime import datetime
 
     parser = argparse.ArgumentParser()
     parser.add_argument("file_path", help="audio/video file")
     args = parser.parse_args()
     pipe = ASRPipeline()
     chunks, duration = pipe(file_path=args.file_path)
-    print(chunks, duration)
+    data = {"chunks": chunks, "duration": duration}
+    with open(datetime.now().strftime("%Y%m%d_%H%M%S.json"), "w") as f:
+        json.dump(data, f)
