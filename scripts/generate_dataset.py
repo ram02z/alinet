@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass, field
-
+import re
 import datasets
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import set_seed, HfArgumentParser
@@ -94,6 +94,9 @@ def print_distribution(dataset):
 
 
 def fix_encoding_errors(data):
+    # This pattern matches one or more digits followed by an accented 'a'
+    pattern = r'(\d+)â'  
+
     # See analysis in narrativeqa_encoding.ipynb
     data["source"] = (
         data["source"]
@@ -109,8 +112,9 @@ def fix_encoding_errors(data):
         .replace("â", "")
         .replace("ĺ", "o")
         .replace("âź", "€")
-        .replace("â ", "")
     )
+    data["source"] = re.sub(pattern, r'\1', data["source"])
+
     data["target"] = (
         data["target"]
         .replace("â", ", ")
@@ -125,8 +129,9 @@ def fix_encoding_errors(data):
         .replace("â", "")
         .replace("ĺ", "o")
         .replace("âź", "€")
-        .replace("â ", "")
     )
+    data["target"] = re.sub(pattern, r'\1', data["target"])
+
 
     return data
 
