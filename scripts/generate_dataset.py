@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass, field
-
+import re
 import datasets
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import set_seed, HfArgumentParser
@@ -14,6 +14,7 @@ class Dataset(StrEnum):
     BASELINE = "baseline"
     BASELINE_NOISE = "baseline_noise"
     BASELINE_BALANCED = "baseline_balanced"
+
 
 @dataclass
 class GenerateDatasetArguments:
@@ -35,6 +36,7 @@ def normalise(data):
     data["source"] = data["source"].replace("\n", " ")
 
     return data
+
 
 def categorise_dataset(data):
     if any(word in data["target"] for word in ["what"]):
@@ -97,6 +99,49 @@ def stratify_dataset(dataset, reduceTo):
     return dataset
 
 
+def fix_encoding_errors(data):
+    # This pattern matches one or more digits followed by an accented 'a'
+    pattern = r'(\d+)â'  
+
+    # See analysis in narrativeqa_encoding.ipynb
+    data["source"] = (
+        data["source"]
+        .replace("â", ", ")
+        .replace("â â", " -")
+        .replace("â", "-")
+        .replace("â", "'")
+        .replace("â", "")
+        .replace("â", "")
+        .replace("â˛", "")
+        .replace("ă", "e")
+        .replace("âł", "$")
+        .replace("â", "")
+        .replace("ĺ", "o")
+        .replace("âź", "€")
+    )
+    data["source"] = re.sub(pattern, r'\1', data["source"])
+
+    data["target"] = (
+        data["target"]
+        .replace("â", ", ")
+        .replace("â â", " -")
+        .replace("â", "-")
+        .replace("â", "'")
+        .replace("â", "")
+        .replace("â", "")
+        .replace("â˛", "")
+        .replace("ă", "e")
+        .replace("âł", "$")
+        .replace("â", "")
+        .replace("ĺ", "o")
+        .replace("âź", "€")
+    )
+    data["target"] = re.sub(pattern, r'\1', data["target"])
+
+
+    return data
+
+
 def main():
     parser = HfArgumentParser((GenerateDatasetArguments,))
     args = parser.parse_args_into_dataclasses()[0]
@@ -146,6 +191,7 @@ def main():
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
         )
+
         narrative_data = (
             load_dataset("narrativeqa", trust_remote_code=True)
             .select_columns(["document", "question"])
@@ -157,6 +203,7 @@ def main():
             )
             .rename_columns({"document": "source", "question": "target"})
         )
+
         fairytale_data = (
             load_dataset("GEM/FairytaleQA", trust_remote_code=True)
             .filter(lambda x: x["ex_or_im"] == "explicit")
@@ -215,8 +262,12 @@ def main():
             .filter(remove_na_category)
         )
 
+
         train_dataset = stratify_dataset(train_dataset, 4122)
         validate_dataset = stratify_dataset(validate_dataset, 1060)
+
+        train_dataset = train_dataset.map(fix_encoding_errors)
+        validate_dataset = validate_dataset.map(fix_encoding_errors)
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
