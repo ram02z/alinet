@@ -8,7 +8,7 @@ from filtering import slide_chunking, get_similarity_scores, filter_questions_by
 
 
 def baseline(
-    video_path: str, slides_path: str | None, similarity_threshold, filtering_threshold
+    video_path: str | None, similarity_threshold, filtering_threshold
 ) -> list[str]:
     qg_model = qg.Model.DISCORD
     asr_model = asr.Model.DISTIL_SMALL
@@ -21,10 +21,7 @@ def baseline(
     qg_pipe = QGPipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)
 
-    if slides_path is None:
-        return generated_questions
-
-    slide_chunks = slide_chunking(video_path, slides_path)
+    slide_chunks = slide_chunking(video_path)
     sim_scores = get_similarity_scores(duration, transcript_chunks, slide_chunks)
     filtered_questions = filter_questions_by_retention_rate(sim_scores, generated_questions, similarity_threshold, filtering_threshold)
 
@@ -43,7 +40,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("video", help="video file path")
-    parser.add_argument("slides", nargs="?", help="slides file path", default=None)
     parser.add_argument(
         "--similarity_threshold",
         type=float,
@@ -65,7 +61,7 @@ if __name__ == "__main__":
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
 
     questions = baseline(
-        args.video, args.slides, args.similarity_threshold, args.filtering_threshold
+        args.video, args.similarity_threshold, args.filtering_threshold
     )
 
     pprint.pprint(questions)

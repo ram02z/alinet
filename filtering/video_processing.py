@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from fitz import fitz
+import pytesseract
 import logging
 
 def is_frame_different(frame1, frame2, threshold=0.9):
@@ -14,7 +14,7 @@ def convert_millis_to_seconds(millis):
     seconds = int(millis / 1000)
     return seconds
 
-def slide_chunking(video_path, slides_path):
+def slide_chunking(video_path):
     """
     Extract slide chunks from a video based on frame differences and slide timestamps.
 
@@ -30,10 +30,6 @@ def slide_chunking(video_path, slides_path):
     if not cap.isOpened():
         raise RuntimeError("Error: Could not open video file.")
 
-    slide_num = -1
-    with fitz.open(slides_path, filetype="pdf") as doc:
-        slide_num = len(doc)
-
     # Initialize list to store tuples (text, start time, end time)
     slide_chunks = []
 
@@ -41,7 +37,7 @@ def slide_chunking(video_path, slides_path):
     frame_interval = int(cap.get(cv2.CAP_PROP_FPS) * 10)
 
     i = 0
-    while i <= slide_num:
+    while True:
         for _ in range(frame_interval - 1): 
             ret, _ = cap.read()  # Skip frames
             if not ret:
@@ -62,11 +58,8 @@ def slide_chunking(video_path, slides_path):
             """
             # cv2.putText(frame, str(timestamp), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             # cv2.imshow('Original Frame', frame)
-            with fitz.open(slides_path, filetype="pdf") as doc:
-                if i < slide_num:
-                    text = doc[i].get_text()
-                    # Add tuple (text, start time, end time) to the list
-                    slide_chunks.append((text, timestamp, None))
+            text = pytesseract.image_to_string(frame)
+            slide_chunks.append((text, timestamp, None))
             i += 1
         previous_frame = frame.copy()
 
@@ -83,4 +76,4 @@ def slide_chunking(video_path, slides_path):
     return slide_chunks
 
 if __name__ == "__main__":
-    chunks = slide_chunking("sample_data/lecture.mp4", "sample_data/hai_lecture_slides.pdf")
+    chunks = slide_chunking("sample_data/lecture.mp4")
