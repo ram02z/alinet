@@ -1,6 +1,6 @@
 # AliNET
 
-> AliNET utilizes video lectures and presentation slides to generate high-quality questions pertinent to the provided educational content
+> AliNET utilizes video lectures to generate high-quality questions pertinent to the provided educational content
 
 ## Installation
 
@@ -36,7 +36,8 @@ python main.py --video path/to/video/file.mp4
 
 This will output all the generated questions.
 
-To filter the generated questions using the original lecture slides, you can provide a similarity threshold and a retention rate (filtering) threshold:
+To filter the generated questions using the lecture slides (from the video), you
+can provide a similarity threshold and a retention rate (filtering) threshold:
 
 ```sh
 # If no threshold is given, the default (0.5) is used for both

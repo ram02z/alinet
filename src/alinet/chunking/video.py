@@ -20,7 +20,6 @@ def slide_chunking(video_path):
 
     Parameters:
     - video_path (str): Path to the video file.
-    - slides_path (str): Path to the slides file (PDF).
 
     Returns:
     list: A list of tuples representing slide chunks with (text, start time, end time).
@@ -38,7 +37,7 @@ def slide_chunking(video_path):
 
     i = 0
     while True:
-        for _ in range(frame_interval - 1): 
+        for _ in range(frame_interval - 1):
             ret, _ = cap.read()  # Skip frames
             if not ret:
                 logging.info("End of video")

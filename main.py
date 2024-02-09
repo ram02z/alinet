@@ -15,7 +15,6 @@ from alinet import baseline, qg, asr
 @dataclass
 class BaselineArguments:
     video: str = field(metadata={"help": "Video file path"})
-    slides: str | None = field(default=None, metadata={"help": "Video file path"})
     similarity_threshold: float = field(
         default=0.5, metadata={"help": "Threshold for slides filtering"}
     )
