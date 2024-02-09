@@ -29,10 +29,6 @@ def contain_question_mark(data):
 
 
 def normalise(data):
-    # Lowercase the text
-    data["source"] = data["source"].lower()
-    data["target"] = data["target"].lower()
-
     # Remove new line characters
     data["source"] = data["source"].replace("\n", " ")
 
@@ -188,10 +184,7 @@ def main():
         train_data = concatenate_datasets(
             [squad_data["train"], spoken_squad_data["train"]]
         )
-        valid_data = concatenate_datasets(
-            [squad_data["validation"], spoken_squad_data["validation"]]
-        )
-        data = DatasetDict({"train": train_data, "validation": valid_data})
+        data = DatasetDict({"train": train_data, "validation": squad_data["validation"]})
     elif args.dataset == Dataset.BASELINE_BALANCED:
         squad_data = (
             load_dataset("squad", trust_remote_code=True)
