@@ -53,11 +53,13 @@ docs/_templates/
 docs/*.rst
 !docs/index.rst
 
+# Our project stuff
 test/
 sample_data/
 data/
 !data/*.py
 results/
+content/
 
 # Mac metadata
 .DS_Store
