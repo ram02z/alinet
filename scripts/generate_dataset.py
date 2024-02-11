@@ -3,7 +3,13 @@ import os
 from dataclasses import dataclass, field
 import re
 import datasets
-from datasets import load_dataset, concatenate_datasets, DatasetDict
+import pandas as pd
+from datasets import (
+    load_dataset,
+    concatenate_datasets,
+    DatasetDict,
+)
+import numpy as np
 from transformers import set_seed, HfArgumentParser
 from strenum import StrEnum
 import unicodedata
@@ -104,6 +110,7 @@ def print_distribution(dataset):
     for d in distributions:
         print(d)
 
+
 def stratify_dataset(dataset, reduceTo):
     categories = ["method", "description", "explanation", "recall"]
 
@@ -115,7 +122,7 @@ def stratify_dataset(dataset, reduceTo):
 
 def fix_encoding_errors(data):
     # This pattern matches one or more digits followed by an accented 'a'
-    pattern = r'(\d+)Â'
+    pattern = r"(\d+)Â"
 
     # See analysis in narrativeqa_encoding.ipynb
     data["source"] = (
@@ -133,7 +140,7 @@ def fix_encoding_errors(data):
         .replace("Ĺ\x8d", "o")
         .replace("â\x82Ź", "€")
     )
-    data["source"] = re.sub(pattern, r'\1', data["source"])
+    data["source"] = re.sub(pattern, r"\1", data["source"])
 
     data["target"] = (
         data["target"]
@@ -150,9 +157,40 @@ def fix_encoding_errors(data):
         .replace("Ĺ\x8d", "o")
         .replace("â\x82Ź", "€")
     )
-    data["target"] = re.sub(pattern, r'\1', data["target"])
+    data["target"] = re.sub(pattern, r"\1", data["target"])
 
     return data
+
+
+def add_dataset_name(data, name):
+    data["dataset"] = name
+
+    return data
+
+
+def interleave_datasets(datasets):
+    # To interleave the datasets, we concatenate them and then we re-order the indices
+    concatenated_datasets = concatenate_datasets(datasets)
+
+    # Build the indices to pass to .select()
+    lengths = [len(dset) for dset in datasets]
+    offsets = np.cumsum([0] + lengths[:-1])
+
+    # Oversampling situation with cycling between each sources
+    # Then the resulting indices should be [0, 3, 7, 1, 4, 8, 2, 5, 9, 0, 6, 10, 1, 3, 11]
+    # Note that we have 5 examples per dataset with a rolling window since the longest dataset has 5 samples
+
+    # Reasoning behind the following operation: for each dataset indices (i.e column) repeat the indices to have max_length indices per dataset
+    # For example, if the max_length is 5 and the i-th dataset has 3 samples, the i-th column will be [0,1,2,0,1]
+    indices = np.mod(
+        np.arange(max(lengths)).reshape(-1, 1), np.array(lengths).reshape(1, -1)
+    )
+    # We have to keep the indices to their respective dataset offsets and to flatten to effectively interleave the datasets
+    indices = (indices + offsets).flatten()
+    # Keep unique indices based on order of appearance
+    indices = pd.unique(indices).tolist()
+
+    return concatenated_datasets.select(indices)
 
 
 def main():
@@ -197,12 +235,14 @@ def main():
             load_dataset("squad", trust_remote_code=True)
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
+            .map(add_dataset_name, fn_kwargs={"name": "squad"})
         )
 
         adversarial_data = (
             load_dataset("adversarial_qa", "adversarialQA", trust_remote_code=True)
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
+            .map(add_dataset_name, fn_kwargs={"name": "adversarial"})
         )
 
         narrative_data = (
@@ -216,6 +256,7 @@ def main():
             )
             .rename_columns({"document": "source", "question": "target"})
             .map(fix_encoding_errors)
+            .map(add_dataset_name, fn_kwargs={"name": "narrative"})
         )
 
         fairytale_data = (
@@ -223,6 +264,7 @@ def main():
             .filter(lambda x: x["ex_or_im"] == "explicit")
             .select_columns(["content", "target"])
             .rename_columns({"content": "source"})
+            .map(add_dataset_name, fn_kwargs={"name": "fairytale"})
         )
 
         sciq_data = (
@@ -230,30 +272,33 @@ def main():
             .select_columns(["support", "question"])
             .rename_columns({"support": "source", "question": "target"})
             .filter(lambda x: x["source"] != "")
+            .map(add_dataset_name, fn_kwargs={"name": "sciq"})
         )
 
-        train_dataset = concatenate_datasets(
+        train_dataset = interleave_datasets(
             [
                 squad_data["train"],
                 adversarial_data["train"],
                 narrative_data["train"],
                 fairytale_data["train"],
                 sciq_data["train"],
-            ]
+            ],
         )
 
-        validate_dataset = concatenate_datasets(
+        validate_dataset = interleave_datasets(
             [
                 squad_data["validation"],
-                adversarial_data["validation"],
-                adversarial_data["test"],
-                narrative_data["validation"],
-                narrative_data["test"],
-                fairytale_data["validation"],
-                fairytale_data["test"],
-                sciq_data["validation"],
-                sciq_data["test"],
-            ]
+                concatenate_datasets(
+                    [adversarial_data["validation"], adversarial_data["test"]]
+                ),
+                concatenate_datasets(
+                    [narrative_data["validation"], narrative_data["test"]]
+                ),
+                concatenate_datasets(
+                    [fairytale_data["validation"], fairytale_data["test"]]
+                ),
+                concatenate_datasets([sciq_data["validation"], sciq_data["test"]]),
+            ],
         )
 
         train_dataset = train_dataset.add_column(
@@ -275,7 +320,6 @@ def main():
             .map(categorise_dataset)
             .filter(remove_na_category)
         )
-
 
         train_dataset = stratify_dataset(train_dataset, 4122)
         validate_dataset = stratify_dataset(validate_dataset, 1060)
