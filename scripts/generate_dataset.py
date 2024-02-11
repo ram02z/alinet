@@ -386,9 +386,6 @@ def main():
             .filter(remove_na_category)
         )
 
-        print_distribution(train_dataset)
-        print_distribution(validate_dataset)
-
         train_dataset = process(train_dataset)
         validate_dataset = process(validate_dataset)
 
