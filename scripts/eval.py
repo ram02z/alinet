@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass, field
+import unicodedata
 
 import evaluate
 import numpy as np
@@ -74,12 +75,20 @@ def contain_question_mark(data):
 
 
 def normalise(data):
-    # Lowercase the text
-    data["source"] = data["source"].lower()
-    data["target"] = data["target"].lower()
-
     # Remove new line characters
     data["source"] = data["source"].replace("\n", " ")
+
+    # Resolve accented characters
+    data["source"] = "".join(
+        c
+        for c in unicodedata.normalize("NFD", data["source"])
+        if unicodedata.category(c) != "Mn"
+    )
+    data["target"] = "".join(
+        c
+        for c in unicodedata.normalize("NFD", data["target"])
+        if unicodedata.category(c) != "Mn"
+    )
 
     return data
 
