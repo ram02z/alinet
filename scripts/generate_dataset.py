@@ -120,22 +120,20 @@ def categorise_dataset(data):
         data["category"] = "description"
     elif any(
         word in target
+        for word in ["how did", "how does", "how do", "compute", "calculate", "how can", "how should", "how would", "how will", "how to"]
+    ):
+        data["category"] = "method"
+    elif any(
+        word in target
         for word in [
             "where",
             "when",
             "who",
-            "how many",
-            "how much",
+            "how",
             "which",
-            "how long",
         ]
     ):
         data["category"] = "recall"
-    elif any(
-        word in target
-        for word in ["how did", "how does", "how do", "compute", "calculate"]
-    ):
-        data["category"] = "method"
     elif any(word in target for word in ["why"]):
         data["category"] = "explanation"
     else:
@@ -160,6 +158,7 @@ def reduce_category_size(dataset, reduceTo, category):
 def print_distribution(dataset):
     categories = ["method", "description", "explanation", "recall", "NA"]
 
+
     distributions = []
     for category in categories:
         category_ds = dataset.filter(lambda data: data["category"] == category)
@@ -169,14 +168,26 @@ def print_distribution(dataset):
     for d in distributions:
         print(d)
 
-
-def stratify_dataset(dataset, reduceTo):
+def stratify_dataset(dataset):
     categories = ["method", "description", "explanation", "recall"]
+
+    reduceTo = get_lowest_category_count(dataset, categories)
 
     for category in categories:
         dataset = reduce_category_size(dataset, reduceTo, category)
 
     return dataset
+
+def get_lowest_category_count(dataset, categories):
+    distributions = []
+
+    for category in categories:
+        category_ds = dataset.filter(lambda data: data["category"] == category)
+        distribution = len(category_ds)
+        distributions.append(distribution)
+
+    return min(distributions)
+
 
 
 def fix_encoding_errors(data):
@@ -344,8 +355,8 @@ def main():
         train_dataset = process(train_dataset)
         validate_dataset = process(validate_dataset)
 
-        train_dataset = stratify_dataset(train_dataset, 2412)
-        validate_dataset = stratify_dataset(validate_dataset, 411)
+        train_dataset = stratify_dataset(train_dataset)
+        validate_dataset = stratify_dataset(validate_dataset)
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
