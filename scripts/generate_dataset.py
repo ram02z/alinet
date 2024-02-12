@@ -6,6 +6,8 @@ import datasets
 from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import BartTokenizer, T5Tokenizer, set_seed, HfArgumentParser
 from strenum import StrEnum
+import pandas as pd
+import numpy as np
 import unicodedata
 from models import ModelType
 
@@ -243,6 +245,36 @@ def fix_encoding_errors(data):
     return data
 
 
+def add_dataset_name(data, name):
+    data["dataset"] = name
+
+    return data
+
+
+def interleave_datasets(datasets):
+    # To interleave the datasets, we concatenate them and then we re-order the indices
+    concatenated_datasets = concatenate_datasets(datasets)
+
+    # Build the indices to pass to .select()
+    lengths = [len(dset) for dset in datasets]
+    offsets = np.cumsum([0] + lengths[:-1])
+
+    # Example:: If lengths of the datasets are [3, 4, 5]
+    # Then the resulting indices should be [0, 3, 7, 1, 4, 8, 2, 5, 9, 6, 10, 11]
+
+    # Reasoning behind the following operation: for each dataset indices (i.e column) repeat the indices to have max_length indices per dataset
+    # For example, if the max_length is 5 and the i-th dataset has 3 samples, the i-th column will be [0,1,2,0,1]
+    indices = np.mod(
+        np.arange(max(lengths)).reshape(-1, 1), np.array(lengths).reshape(1, -1)
+    )
+    # We have to keep the indices to their respective dataset offsets and to flatten to effectively interleave the datasets
+    indices = (indices + offsets).flatten()
+    # Keep unique indices based on order of appearance
+    indices = pd.unique(indices).tolist()
+
+    return concatenated_datasets.select(indices)
+
+
 def main():
     parser = HfArgumentParser((GenerateDatasetArguments,))
     args = parser.parse_args_into_dataclasses()[0]
@@ -290,12 +322,14 @@ def main():
             load_dataset("squad", trust_remote_code=True)
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
+            .map(add_dataset_name, fn_kwargs={"name": "squad"})
         )
 
         adversarial_data = (
             load_dataset("adversarial_qa", "adversarialQA", trust_remote_code=True)
             .select_columns(["context", "question"])
             .rename_columns({"context": "source", "question": "target"})
+            .map(add_dataset_name, fn_kwargs={"name": "adversarial"})
         )
 
         narrative_data = (
@@ -309,6 +343,7 @@ def main():
             )
             .rename_columns({"document": "source", "question": "target"})
             .map(fix_encoding_errors)
+            .map(add_dataset_name, fn_kwargs={"name": "narrative"})
         )
 
         fairytale_data = (
@@ -316,6 +351,7 @@ def main():
             .filter(lambda x: x["ex_or_im"] == "explicit")
             .select_columns(["content", "target"])
             .rename_columns({"content": "source"})
+            .map(add_dataset_name, fn_kwargs={"name": "fairytale"})
         )
 
         sciq_data = (
@@ -323,30 +359,33 @@ def main():
             .select_columns(["support", "question"])
             .rename_columns({"support": "source", "question": "target"})
             .filter(lambda x: x["source"] != "")
+            .map(add_dataset_name, fn_kwargs={"name": "sciq"})
         )
 
-        train_dataset = concatenate_datasets(
+        train_dataset = interleave_datasets(
             [
                 squad_data["train"],
                 adversarial_data["train"],
                 narrative_data["train"],
                 fairytale_data["train"],
                 sciq_data["train"],
-            ]
+            ],
         )
 
-        validate_dataset = concatenate_datasets(
+        validate_dataset = interleave_datasets(
             [
                 squad_data["validation"],
-                adversarial_data["validation"],
-                adversarial_data["test"],
-                narrative_data["validation"],
-                narrative_data["test"],
-                fairytale_data["validation"],
-                fairytale_data["test"],
-                sciq_data["validation"],
-                sciq_data["test"],
-            ]
+                concatenate_datasets(
+                    [adversarial_data["validation"], adversarial_data["test"]]
+                ),
+                concatenate_datasets(
+                    [narrative_data["validation"], narrative_data["test"]]
+                ),
+                concatenate_datasets(
+                    [fairytale_data["validation"], fairytale_data["test"]]
+                ),
+                concatenate_datasets([sciq_data["validation"], sciq_data["test"]]),
+            ],
         )
 
         train_dataset = (
