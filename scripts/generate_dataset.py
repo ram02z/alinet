@@ -29,10 +29,6 @@ def contain_question_mark(data):
 
 
 def normalise(data):
-    # Lowercase the text
-    data["source"] = data["source"].lower()
-    data["target"] = data["target"].lower()
-
     # Remove new line characters
     data["source"] = data["source"].replace("\n", " ")
 
@@ -62,10 +58,16 @@ def categorise_dataset(data):
         data["category"] = "method"
     elif any(
         word in target
+        for word in ["how did", "how does", "how do", "compute", "calculate", "how can", "how should", "how would", "how will", "how to"]
+    ):
+        data["category"] = "method"
+    elif any(
+        word in target
         for word in [
             "where",
             "when",
             "who",
+            "how",
             "how",
             "which",
         ]
@@ -91,7 +93,8 @@ def reduce_category_size(dataset, reduceTo, category):
 
 
 def print_distribution(dataset):
-    categories = ["method", "description", "explanation", "recall", "verification", "NA"]
+    categories = ["method", "description", "explanation", "recall", "NA"]
+
 
 
     distributions = []
@@ -105,15 +108,14 @@ def print_distribution(dataset):
 
 def stratify_dataset(dataset):
     categories = ["method", "description", "explanation", "recall"]
-
-    reduceTo = getLowestCategoryCount(dataset, categories)
+    reduceTo = get_lowest_category_count(dataset, categories)
 
     for category in categories:
         dataset = reduce_category_size(dataset, reduceTo, category)
 
     return dataset
 
-def getLowestCategoryCount(dataset, categories):
+def get_lowest_category_count(dataset, categories):
     distributions = []
 
     for category in categories:
@@ -200,10 +202,7 @@ def main():
         train_data = concatenate_datasets(
             [squad_data["train"], spoken_squad_data["train"]]
         )
-        valid_data = concatenate_datasets(
-            [squad_data["validation"], spoken_squad_data["validation"]]
-        )
-        data = DatasetDict({"train": train_data, "validation": valid_data})
+        data = DatasetDict({"train": train_data, "validation": squad_data["validation"]})
     elif args.dataset == Dataset.BASELINE_BALANCED:
         squad_data = (
             load_dataset("squad", trust_remote_code=True)
