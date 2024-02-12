@@ -58,16 +58,10 @@ def categorise_dataset(data):
         data["category"] = "method"
     elif any(
         word in target
-        for word in ["how did", "how does", "how do", "compute", "calculate", "how can", "how should", "how would", "how will", "how to"]
-    ):
-        data["category"] = "method"
-    elif any(
-        word in target
         for word in [
             "where",
             "when",
             "who",
-            "how",
             "how",
             "which",
         ]
