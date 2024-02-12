@@ -120,7 +120,18 @@ def categorise_dataset(data):
         data["category"] = "description"
     elif any(
         word in target
-        for word in ["how did", "how does", "how do", "compute", "calculate", "how can", "how should", "how would", "how will", "how to"]
+        for word in [
+            "how did",
+            "how does",
+            "how do",
+            "compute",
+            "calculate",
+            "how can",
+            "how should",
+            "how would",
+            "how will",
+            "how to",
+        ]
     ):
         data["category"] = "method"
     elif any(
@@ -158,7 +169,6 @@ def reduce_category_size(dataset, reduceTo, category):
 def print_distribution(dataset):
     categories = ["method", "description", "explanation", "recall", "NA"]
 
-
     distributions = []
     for category in categories:
         category_ds = dataset.filter(lambda data: data["category"] == category)
@@ -167,6 +177,7 @@ def print_distribution(dataset):
 
     for d in distributions:
         print(d)
+
 
 def stratify_dataset(dataset):
     categories = ["method", "description", "explanation", "recall"]
@@ -178,6 +189,7 @@ def stratify_dataset(dataset):
 
     return dataset
 
+
 def get_lowest_category_count(dataset, categories):
     distributions = []
 
@@ -187,7 +199,6 @@ def get_lowest_category_count(dataset, categories):
         distributions.append(distribution)
 
     return min(distributions)
-
 
 
 def fix_encoding_errors(data):
