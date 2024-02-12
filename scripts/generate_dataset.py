@@ -177,11 +177,13 @@ def print_distribution(dataset):
         print(d)
 
 
-def stratify_dataset(dataset, reduceTo):
-    categories = ["method", "description", "explanation", "recall"]
+def stratify_dataset(dataset):
+    categories = pd.Series(dataset["category"])
+    value_counts = categories.value_counts()
+    min_count = value_counts.min()
 
-    for category in categories:
-        dataset = reduce_category_size(dataset, reduceTo, category)
+    for category in value_counts.keys().tolist():
+        dataset = reduce_category_size(dataset, min_count, category)
 
     return dataset
 
@@ -388,8 +390,8 @@ def main():
         train_dataset = process(train_dataset)
         validate_dataset = process(validate_dataset)
 
-        train_dataset = stratify_dataset(train_dataset, 2412)
-        validate_dataset = stratify_dataset(validate_dataset, 411)
+        train_dataset = stratify_dataset(train_dataset)
+        validate_dataset = stratify_dataset(validate_dataset)
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
 
