@@ -3,16 +3,11 @@ import os
 from dataclasses import dataclass, field
 import re
 import datasets
-import pandas as pd
-from datasets import (
-    load_dataset,
-    concatenate_datasets,
-    DatasetDict,
-)
-import numpy as np
-from transformers import set_seed, HfArgumentParser
+from datasets import load_dataset, concatenate_datasets, DatasetDict
 from transformers import BartTokenizer, T5Tokenizer, set_seed, HfArgumentParser
 from strenum import StrEnum
+import pandas as pd
+import numpy as np
 import unicodedata
 from models import ModelType
 
@@ -128,21 +123,30 @@ def categorise_dataset(data):
     elif any(
         word in target
         for word in [
+            "how did",
+            "how does",
+            "how do",
+            "compute",
+            "calculate",
+            "how can",
+            "how should",
+            "how would",
+            "how will",
+            "how to",
+        ]
+    ):
+        data["category"] = "method"
+    elif any(
+        word in target
+        for word in [
             "where",
             "when",
             "who",
-            "how many",
-            "how much",
+            "how",
             "which",
-            "how long",
         ]
     ):
         data["category"] = "recall"
-    elif any(
-        word in target
-        for word in ["how did", "how does", "how do", "compute", "calculate"]
-    ):
-        data["category"] = "method"
     elif any(word in target for word in ["why"]):
         data["category"] = "explanation"
     else:
@@ -178,14 +182,25 @@ def print_distribution(dataset):
 
 
 def stratify_dataset(dataset):
-    categories = pd.Series(dataset["category"])
-    value_counts = categories.value_counts()
-    min_count = value_counts.min()
+    categories = ["method", "description", "explanation", "recall"]
 
-    for category in value_counts.keys().tolist():
-        dataset = reduce_category_size(dataset, min_count, category)
+    reduceTo = get_lowest_category_count(dataset, categories)
+
+    for category in categories:
+        dataset = reduce_category_size(dataset, reduceTo, category)
 
     return dataset
+
+
+def get_lowest_category_count(dataset, categories):
+    distributions = []
+
+    for category in categories:
+        category_ds = dataset.filter(lambda data: data["category"] == category)
+        distribution = len(category_ds)
+        distributions.append(distribution)
+
+    return min(distributions)
 
 
 def fix_encoding_errors(data):
