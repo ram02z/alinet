@@ -91,7 +91,7 @@ def reduce_category_size(dataset, reduceTo, category):
 
 
 def print_distribution(dataset):
-    categories = ["method", "description", "explanation", "recall", "verification", "NA"]
+    categories = ["method", "description", "explanation", "recall", "NA"]
 
 
     distributions = []
