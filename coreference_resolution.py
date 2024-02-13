@@ -74,7 +74,6 @@ def collect_question_contexts(dataset):
     return question_context
 
 
-# TODO: ADD SEEKING SO THAT IN THE QUESTION_CONTEXT STORED FILE WE CONTINUE FROM WHERE WE LEFT OFF
 def extract_new_questions(question_context):
     
     entries = get_last_entries()
