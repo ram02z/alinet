@@ -60,6 +60,7 @@ data/
 !data/*.py
 results/
 content/
+questions.json
 
 # Mac metadata
 .DS_Store
