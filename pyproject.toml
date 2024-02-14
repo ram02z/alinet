@@ -10,6 +10,9 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
+packages = [
+    { include = "alinet", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10, <4.0"
@@ -31,6 +34,7 @@ en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/down
 evaluate = "^0.4.1"
 bert-score = "^0.3.13"
 protobuf = "^4.25.1"
+pytesseract = "^0.3.10"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"

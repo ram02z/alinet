@@ -1,10 +1,10 @@
-# MMQG
+# AliNET
 
-> Multi-modal question generation (MMQG) utilizes video lectures and presentation slides to generate high-quality questions pertinent to the provided educational content
+> AliNET utilizes video lectures to generate high-quality questions pertinent to the provided educational content
 
 ## Installation
 
-MMQG requires the following dependencies:
+AliNET requires the following dependencies:
 
 - Python 3.10
 - Poetry
@@ -31,16 +31,17 @@ PyTorch with CUDA support will be only be installed on Linux environments.
 ## Usage
 
 ```sh
-python main.py path/to/video/file.mp4
+python main.py --video path/to/video/file.mp4
 ```
 
 This will output all the generated questions.
 
-To filter the generated questions using the original lecture slides, pass the slides path and the similarity threshold:
+To filter the generated questions using the lecture slides (from the video), you
+can provide a similarity threshold and a retention rate (filtering) threshold:
 
-```shell
-# If no threshold is given, the default (0.5) is used
-python main.py path/to/video/file.mp4 path/to/slides.pdf --threshold 0.6
+```sh
+# If no threshold is given, the default (0.5) is used for both
+python main.py --video path/to/video/file.mp4 --similarity_threshold 0.6 --filtering_threshold 0.4
 ```
 ## Fine-tuning
 

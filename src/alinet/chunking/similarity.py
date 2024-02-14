@@ -2,6 +2,7 @@ import spacy
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
 
+
 def compute_cosine_similarity_word_embeddings(text1, text2):
     """
     Compute the cosine similarity between the word embeddings of two texts.
@@ -24,6 +25,7 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
     cosine_sim = cosine_similarity(embeddings1, embeddings2)[0, 0]
     return cosine_sim
 
+
 def get_similarity_scores(duration, transcript_chunks, slide_chunks):
     """
     Get similarity scores between transcript chunks and corresponding slide chunks.
@@ -38,7 +40,7 @@ def get_similarity_scores(duration, transcript_chunks, slide_chunks):
     """
     i = 0
     similarity_scores = []
-    for j, chunk in enumerate(transcript_chunks):
+    for chunk in transcript_chunks:
         # ensure we only process transcript chunks that occur before the final slide
         if chunk["timestamp"][0] < duration:
             list_of_slide_indices = []
@@ -63,7 +65,10 @@ def get_similarity_scores(duration, transcript_chunks, slide_chunks):
                 i += 1
     return similarity_scores
 
-def filter_questions_by_retention_rate(sim_scores, generated_questions, similarity_threshold, filtering_threshold):
+
+def filter_questions_by_retention_rate(
+    sim_scores, generated_questions, similarity_threshold, filtering_threshold
+):
     """
     Filter questions based on the retention rate and similarity threshold.
 
@@ -89,8 +94,3 @@ def filter_questions_by_retention_rate(sim_scores, generated_questions, similari
         return generated_questions
     else:
         return filtered_questions
-
-
-
-if __name__ == "__main__":
-    filter_questions_by_retention_rate()
