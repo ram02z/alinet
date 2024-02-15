@@ -9,21 +9,24 @@ from dotenv import load_dotenv
 import os
 import openai
 from openai import OpenAI
-import requests
 
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 nlp = spacy.load("en_core_web_md")
-# client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-SYSTEM_PROMPT = """Create a new question by reducing ambiguity in the original question by replacing common nouns and pronouns with their proper nouns in the provided context.
+SYSTEM_PROMPT = """Given the context provided, generate a new question by reducing ambiguity in the original question.
 
-There are three requirements you must follow
-1. There MUST be only one question
-2. The question MUST NOT contain the answer
-3. The new question MUST come from the provided context
-4. DO NOT ANSWER THE QUESTION! """
+The structure of the input is as follows:
+
+{context} <Qsep> {original question}
+
+Ensure the following:
+1. Formulate only one question.
+2. The question should not include the answer.
+3. The new question must arise from the given context.
+4. DO NOT PROVIDE THE ANSWER!"""
 
 
 def resolve_questions(examples, fp):
@@ -57,21 +60,22 @@ def resolve_questions(examples, fp):
         if contains_proper_noun or not contains_pronoun:
             example.update({"resolved": example["target"]})
         else:
-            user_prompt = f"Context: {context}\n Question: {doc.text}"
+            user_prompt = f"{context} <Qsep> {doc.text}"
             modified_questions_count += 1
             # If there is an error we return the program and save the current dataset
             try:
                 # OpenAI API Call - Scary Stuff
                 # openai_response = client.chat.completions.create(
-                #     model="gpt-3.5-turbo",
+                #     model="gpt-4-1106-preview",
                 #     messages=[
                 #         {"role": "system", "content": SYSTEM_PROMPT},
                 #         {"role": "user", "content": user_prompt},
                 #     ],
+                #     seed=1,
+                #     temperature=0,
                 # )
                 # new_question = openai_response.choices[0].message.content
-
-                new_question = "Open AI Response"
+                new_question = "OPEN AI RESPONSE"
                 example.update({"resolved": new_question})
 
             except openai.APIError as e:
@@ -117,20 +121,20 @@ def main():
 
     args = parser.parse_args()
     data = load_dataset("csv", data_files=args.file_path, split="train")
+
     column_names: List[str] = data.column_names
     if "resolved" not in column_names:
         logger.info("'resolved' column not in dataset")
         data = data.add_column(name="resolved", column=len(data) * [""])
 
-    # TODO: add exception handling
     data = resolve_questions(data, args.file_path)
-    data = data.remove_columns("target")
-    data = data.rename_column("resolved", "target")
+    # data = data.remove_columns("target")
+    # data = data.rename_column("resolved", "target")
 
     data.to_csv(get_resolved_file_path(args.file_path))
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     datasets.logging.set_verbosity_info()
     main()
