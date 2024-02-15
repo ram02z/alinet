@@ -7,7 +7,7 @@ The datasets used to train and validate the models can be generated using the `g
 Datasets used:
 - `baseline` (SQuAD 1.1)
 - `baseline_noise` (SQuAD 1.1 + Spoken-SQuAD)
-- `baseline_balanced` (SQuAD 1.1 + AdversarialQA + NarrativeQA + FairytaleQA + SciQ)
+- `baseline_balanced` (SQuAD 1.1 + AdversarialQA + NarrativeQA + SciQ)
 
 Example usage:
 
