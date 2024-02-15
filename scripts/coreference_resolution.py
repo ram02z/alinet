@@ -7,7 +7,9 @@ import spacy
 import logging
 from dotenv import load_dotenv
 import os
+import openai
 from openai import OpenAI
+import requests
 
 
 load_dotenv()
@@ -23,7 +25,10 @@ There are three requirements you must follow
 3. The new question MUST come from the provided context
 4. DO NOT ANSWER THE QUESTION! """
 
-def resolve_questions(examples):
+
+def resolve_questions(examples, fp):
+
+    modified_questions_count = 0
     start_index = 0
     for index, example in enumerate(examples):
         if example["resolved"] == "":
@@ -37,6 +42,7 @@ def resolve_questions(examples):
         )
     )
 
+    print("Start Index:", start_index)
     new_dataset = []
     for index in range(0, start_index):
         example = examples[index]
@@ -52,19 +58,38 @@ def resolve_questions(examples):
             example.update({"resolved": example["target"]})
         else:
             user_prompt = f"Context: {context}\n Question: {doc.text}"
+            modified_questions_count += 1
+            # If there is an error we return the program and save the current dataset
+            try:
+                # OpenAI API Call - Scary Stuff
+                # openai_response = client.chat.completions.create(
+                #     model="gpt-3.5-turbo",
+                #     messages=[
+                #         {"role": "system", "content": SYSTEM_PROMPT},
+                #         {"role": "user", "content": user_prompt},
+                #     ],
+                # )
+                # new_question = openai_response.choices[0].message.content
 
-            # OpenAI API Call - Scary Stuff
-            # openai_response = client.chat.completions.create(
-            #     model="gpt-3.5-turbo",
-            #     messages=[
-            #         {"role": "system", "content": SYSTEM_PROMPT},
-            #         {"role": "user", "content": user_prompt},
-            #     ],
-            # )
-            # new_question = openai_response.choices[0].message.content
-            new_question = "openai_response"
-            example.update({"resolved": new_question})
+                new_question = "Open AI Response"
+                example.update({"resolved": new_question})
+
+            except openai.APIError as e:
+                logger.fatal(f"Open AI Error: {e.message}\nFailed at question index: {index}")
+                
+                # Leftover Examples
+                new_dataset.append(example)
+                for index in range(index+1, len(examples)):
+                    example = examples[index]
+                    new_dataset.append(example)
+
+                data = Dataset.from_list(new_dataset)
+                data.to_csv(get_resolved_file_path(fp))
+                exit(1)
+        
         new_dataset.append(example)
+        
+    print("Number of modified question:", modified_questions_count)
 
     return Dataset.from_list(new_dataset)
 
@@ -98,16 +123,10 @@ def main():
         data = data.add_column(name="resolved", column=len(data) * [""])
 
     # TODO: add exception handling
-    data = resolve_questions(data)
+    data = resolve_questions(data, args.file_path)
     data = data.remove_columns("target")
     data = data.rename_column("resolved", "target")
 
-    # TODO: refactor
-    # Assume this means all is resolved so the target column
-    # data = data.map(
-    #     lambda example, index: replace_questions(example, new_questions[index]),
-    #     with_indices=True,
-    # )
     data.to_csv(get_resolved_file_path(args.file_path))
 
 
