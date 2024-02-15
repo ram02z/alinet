@@ -7,45 +7,27 @@ The datasets used to train and validate the models can be generated using the `g
 Datasets used:
 - `baseline` (SQuAD 1.1)
 - `baseline_noise` (SQuAD 1.1 + Spoken-SQuAD)
+- `baseline_balanced` (SQuAD 1.1 + AdversarialQA + NarrativeQA + FairytaleQA + SciQ)
 
 Example usage:
 
 ```shell
 python scripts/generate_dataset.py \
-    --dataset {baseline,baseline_noise} \
-    --data_dir path/to/data/dir \
-    --seed 42
-```
-
-The script will output `train` and `validation` splits as CSV files to the
-`path/to/data/dir` directory when dataset is set to `baseline`.
-
-### Data preparation
-
-The data processor script, `prepare_data.py`, expects the training data to be in the following format:
-
-```csv
-source,target
-<context>,<question>
-```
-
-The data processor will process and cache the dataset, and save the tokenizer in the specified output directory (default is `./data/`).
-
-Example usage:
-
-```shell
-python scripts/prepare_data.py \
-    --data_dir path/to/data/dir \
-    --output_dir path/to/output/dir \
+    --dataset {baseline,baseline_noise,baseline_balanced} \
+    --output_dir path/to/data/dir \
     --model_type t5 \
     --max_source_length 512 \
     --max_target_length 32 \
     --seed 42
 ```
 
+The script will output `train` and `validation` splits as CSV files to the
+`path/to/data/dir` directory. The tokenized dataset will also be saved in the
+same directory along with the original tokenizer.
+
 ### Training
 
-The training script, `train.py`, expects the processed data directory to contain dataset splits and the `tokenizer_config.json` file (see [Data preparation usage](#data-preparation)).
+The training script, `train.py`, expects the processed data directory to contain dataset splits and the `tokenizer_config.json` file (see [Dataset generation](#dataset-generation)).
 
 To see the full list of training arguments, run `python train.py --help` or refer to HuggingFace's [TrainerArguments](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) documentation.
 
