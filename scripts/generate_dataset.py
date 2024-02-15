@@ -183,7 +183,6 @@ def print_distribution(dataset):
 
 def stratify_dataset(dataset):
     categories = ["method", "description", "explanation", "recall"]
-
     reduceTo = get_lowest_category_count(dataset, categories)
 
     for category in categories:
