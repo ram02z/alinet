@@ -26,7 +26,8 @@ Ensure the following:
 1. Formulate only one question.
 2. The question should not include the answer.
 3. The new question must arise from the given context.
-4. DO NOT PROVIDE THE ANSWER!"""
+4. Maintain the same initial word as the original question.
+5. DO NOT PROVIDE THE ANSWER!"""
 
 
 def resolve_questions(examples, fp):
@@ -65,17 +66,18 @@ def resolve_questions(examples, fp):
             # If there is an error we return the program and save the current dataset
             try:
                 # OpenAI API Call - Scary Stuff
-                # openai_response = client.chat.completions.create(
-                #     model="gpt-4-1106-preview",
-                #     messages=[
-                #         {"role": "system", "content": SYSTEM_PROMPT},
-                #         {"role": "user", "content": user_prompt},
-                #     ],
-                #     seed=1,
-                #     temperature=0,
-                # )
-                # new_question = openai_response.choices[0].message.content
-                new_question = "OPEN AI RESPONSE"
+                openai_response = client.chat.completions.create(
+                    model="gpt-4-1106-preview",
+                    messages=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    seed=1,
+                    temperature=0,
+                )
+                new_question = openai_response.choices[0].message.content
+
+                # new_question = "OPEN_AI_RESPONSE"
                 example.update({"resolved": new_question})
 
             except openai.APIError as e:
