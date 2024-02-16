@@ -39,16 +39,13 @@ asr_pipe = pipeline(
 )
 wer = load("wer")
 
-tts_cache = {}  # Cache for storing (source_text, audio_array) pairs
-asr_cache = {}  # Cache for storing (audio_array, transcribed_text)
-
+cache = {}
 
 def augment_dataset(example):
     source = example["source"]
 
-    # TTS with Cache Lookup
-    if source in tts_cache:
-        np_array = tts_cache[source]
+    if source in cache:
+        text = cache[source]
     else:
         inputs = tts_tokenizer(source, return_tensors="pt").to(device)
         with torch.no_grad():
@@ -56,16 +53,10 @@ def augment_dataset(example):
         np_array = output.to(device).numpy()
         if np_array.ndim > 1:
             np_array = np.mean(np_array, axis=0)
-        tts_cache[source] = np_array
 
-    # ASR with Cache Lookup
-    np_array_key = hash(np_array.tobytes())
-    if np_array_key in asr_cache:
-        text = asr_cache[np_array_key]
-    else:
         result = asr_pipe(np_array, batch_size=1)
         text = result["text"]
-        asr_cache[np_array_key] = text
+        cache[source] = text
 
     example["source"] = text
     return example
