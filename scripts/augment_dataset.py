@@ -13,7 +13,6 @@ import os
 
 import datasets
 from datasets import load_dataset
-import evaluate
 from evaluate import load
 
 logger = logging.getLogger(__name__)
