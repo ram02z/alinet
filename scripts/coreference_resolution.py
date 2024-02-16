@@ -5,13 +5,11 @@ from datasets import Dataset, load_dataset
 import datasets
 import spacy
 import logging
-from dotenv import load_dotenv
 import os
 import openai
 from openai import OpenAI
 
 
-load_dotenv()
 logger = logging.getLogger(__name__)
 nlp = spacy.load("en_core_web_md")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -46,7 +44,7 @@ def resolve_questions(examples, fp):
         )
     )
 
-    print("Start Index:", start_index)
+    logger.info(f"start index: {start_index}")
     new_dataset = []
     for index in range(0, start_index):
         example = examples[index]
@@ -77,13 +75,12 @@ def resolve_questions(examples, fp):
                 )
                 new_question = openai_response.choices[0].message.content
 
-                # new_question = "OPEN_AI_RESPONSE"
                 example.update({"resolved": new_question})
 
             except openai.APIError as e:
                 logger.fatal(f"Open AI Error: {e.message}\nFailed at question index: {index}")
-                
-                # Leftover Examples
+
+                # Leftover examples
                 new_dataset.append(example)
                 for index in range(index+1, len(examples)):
                     example = examples[index]
@@ -92,10 +89,10 @@ def resolve_questions(examples, fp):
                 data = Dataset.from_list(new_dataset)
                 data.to_csv(get_resolved_file_path(fp))
                 exit(1)
-        
+
         new_dataset.append(example)
-        
-    print("Number of modified question:", modified_questions_count)
+
+    logger.info(f"number of modified question: {modified_questions_count}")
 
     return Dataset.from_list(new_dataset)
 
@@ -130,8 +127,6 @@ def main():
         data = data.add_column(name="resolved", column=len(data) * [""])
 
     data = resolve_questions(data, args.file_path)
-    # data = data.remove_columns("target")
-    # data = data.rename_column("resolved", "target")
 
     data.to_csv(get_resolved_file_path(args.file_path))
 
