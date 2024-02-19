@@ -55,8 +55,7 @@ def resolve_questions(examples, fp):
         doc, context = docs[index], example["source"]
 
         contains_proper_noun = any(token.pos_ == "PROPN" for token in doc)
-        contains_pronoun = any(token.pos_ == "PRON" for token in doc)
-        if contains_proper_noun or not contains_pronoun:
+        if contains_proper_noun:
             example.update({"resolved": example["target"]})
         else:
             user_prompt = f"{context} <Qsep> {doc.text}"
