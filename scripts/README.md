@@ -25,6 +25,15 @@ The script will output `train` and `validation` splits as CSV files to the
 `path/to/data/dir` directory. The tokenized dataset will also be saved in the
 same directory along with the original tokenizer.
 
+### Coreference resolution
+
+The datasets can modified to reduce ambiguity in the questions using the `coreference_resolution.py` script.
+
+```shell
+python scripts/coreference_resolution.py path/to/data/file.csv
+```
+
+
 ### Training
 
 The training script, `train.py`, expects the processed data directory to contain dataset splits and the `tokenizer_config.json` file (see [Dataset generation](#dataset-generation)).
