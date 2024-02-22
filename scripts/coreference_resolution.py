@@ -55,7 +55,10 @@ def resolve_questions(examples, fp):
         doc, context = docs[index], example["source"]
 
         contains_proper_noun = any(token.pos_ == "PROPN" for token in doc)
-        if contains_proper_noun:
+        contains_determiner = any(token.text.lower() in ["this", "that", "these", "those"] and token.tag_ == "DT" for token in doc)
+        contains_pronoun = any(token.pos_ == "PRON" for token in doc)
+        
+        if contains_proper_noun or not (contains_pronoun or contains_determiner):
             example.update({"resolved": example["target"]})
         else:
             user_prompt = f"{context} <Qsep> {doc.text}"
@@ -73,7 +76,6 @@ def resolve_questions(examples, fp):
                     temperature=0,
                 )
                 new_question = openai_response.choices[0].message.content
-
                 example.update({"resolved": new_question})
 
             except openai.APIError as e:
