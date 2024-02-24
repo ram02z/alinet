@@ -183,7 +183,6 @@ def print_distribution(dataset):
 
 def stratify_dataset(dataset):
     categories = ["method", "description", "explanation", "recall"]
-
     reduceTo = get_lowest_category_count(dataset, categories)
 
     for category in categories:
@@ -346,14 +345,6 @@ def main():
             .map(add_dataset_name, fn_kwargs={"name": "narrative"})
         )
 
-        fairytale_data = (
-            load_dataset("GEM/FairytaleQA", trust_remote_code=True)
-            .filter(lambda x: x["ex_or_im"] == "explicit")
-            .select_columns(["content", "target"])
-            .rename_columns({"content": "source"})
-            .map(add_dataset_name, fn_kwargs={"name": "fairytale"})
-        )
-
         sciq_data = (
             load_dataset("sciq", trust_remote_code=True)
             .select_columns(["support", "question"])
@@ -367,7 +358,6 @@ def main():
                 squad_data["train"],
                 adversarial_data["train"],
                 narrative_data["train"],
-                fairytale_data["train"],
                 sciq_data["train"],
             ],
         )
@@ -380,9 +370,6 @@ def main():
                 ),
                 concatenate_datasets(
                     [narrative_data["validation"], narrative_data["test"]]
-                ),
-                concatenate_datasets(
-                    [fairytale_data["validation"], fairytale_data["test"]]
                 ),
                 concatenate_datasets([sciq_data["validation"], sciq_data["test"]]),
             ],

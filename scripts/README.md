@@ -7,7 +7,7 @@ The datasets used to train and validate the models can be generated using the `g
 Datasets used:
 - `baseline` (SQuAD 1.1)
 - `baseline_noise` (SQuAD 1.1 + Spoken-SQuAD)
-- `baseline_balanced` (SQuAD 1.1 + AdversarialQA + NarrativeQA + FairytaleQA + SciQ)
+- `baseline_balanced` (SQuAD 1.1 + AdversarialQA + NarrativeQA + SciQ)
 
 Example usage:
 
@@ -24,6 +24,15 @@ python scripts/generate_dataset.py \
 The script will output `train` and `validation` splits as CSV files to the
 `path/to/data/dir` directory. The tokenized dataset will also be saved in the
 same directory along with the original tokenizer.
+
+### Coreference resolution
+
+The datasets can modified to reduce ambiguity in the questions using the `coreference_resolution.py` script.
+
+```shell
+python scripts/coreference_resolution.py path/to/data/file.csv
+```
+
 
 ### Training
 
