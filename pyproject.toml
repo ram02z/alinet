@@ -35,6 +35,13 @@ evaluate = "^0.4.1"
 bert-score = "^0.3.13"
 protobuf = "^4.25.1"
 pytesseract = "^0.3.10"
+pypdf = "^4.0.1"
+langchain-community = "^0.0.20"
+langchain = "^0.1.7"
+instructorembedding = "^1.0.1"
+sentence-transformers = "^2.3.1"
+angle-emb = "^0.3.3"
+chromadb = "^0.4.23"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
