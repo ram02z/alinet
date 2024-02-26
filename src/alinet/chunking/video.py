@@ -1,16 +1,8 @@
+from moviepy.editor import VideoFileClip
 import cv2
 import numpy as np
 import pytesseract
 import logging
-import pickle
-from moviepy.editor import VideoFileClip
-from alinet import chunking
-from alinet import qg
-
-with open("experiments/qg/comp3074_lecture_2.pkl", "rb") as file:
-        whisper_chunks = pickle.load(file)['chunks']
-chunk_pipe = chunking.Pipeline(qg.Model.BASELINE)
-transcript_chunks = chunk_pipe(whisper_chunks, 2301)
 
 def is_frame_different(frame1, frame2, threshold=0.9):
     gray_frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
@@ -83,7 +75,7 @@ def slide_chunking(video_path):
     slide_chunks.pop()
     return slide_chunks
 
-def save_clips_locally(video_path, chunks, output_dir_path):
+def save_video_clips(video_path, chunks, output_dir_path):
     previous_end_time = 0 
     # NOTE: The 25-second estimation below is derived from our stride length in /chunking/pipeline, 
     # also we assume words are approximately 3/4 of a token, and the average human speaks at a rate of 140 words per minute.
