@@ -1,45 +1,44 @@
 import argparse
 import datasets
 from datasets import Dataset, load_dataset
-from fastcoref import spacy_component
-import spacy
-import re
-import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+
 
 def create_diff(original, new):
     diff = 0
     new_dataset = []
-    for index, info in enumerate(original):
+    for index in range(len(original)):
         example = new[index]
         example1 = original[index]
-        if example['resolved'] != example1['resolved']:
-            example['index'] = index
+        if example["resolved"] != example1["resolved"]:
+            example["index"] = index
             new_dataset.append(example)
             diff += 1
 
     data = Dataset.from_list(new_dataset)
-    data.to_csv("data/balanced/train-resolved-diff.csv")
+    logger.info(f"number of different resolved: {diff}")
+    return data
 
-    print(diff)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "original_file_path", help="Path to original CSV file"
-    )
-    parser.add_argument(
-        "new_file_path", help="Path to original CSV file"
-    )
+    parser.add_argument("original_file_path", help="Path to original CSV file")
+    parser.add_argument("new_file_path", help="Path to new CSV file")
 
     args = parser.parse_args()
     original = load_dataset("csv", data_files=args.original_file_path, split="train")
     new = load_dataset("csv", data_files=args.new_file_path, split="train")
 
-    create_diff(original, new)
+    diff_data = create_diff(original, new)
+
+    fp = args.original_file_path
+    dir = os.path.dirname(fp)
+    filename_with_ext = os.path.basename(fp)
+    filename, file_ext = os.path.splitext(filename_with_ext)
+    diff_data.to_csv(os.path.join(dir, f"{filename}-diff-{file_ext}"))
 
 
 if __name__ == "__main__":

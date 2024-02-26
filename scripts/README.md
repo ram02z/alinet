@@ -25,7 +25,7 @@ The script will output `train` and `validation` splits as CSV files to the
 `path/to/data/dir` directory. The tokenized dataset will also be saved in the
 same directory along with the original tokenizer.
 
-### Coreference resolution
+#### Coreference resolution
 
 The datasets can modified to reduce ambiguity in the questions using the `coreference_resolution.py` script.
 
@@ -33,6 +33,15 @@ The datasets can modified to reduce ambiguity in the questions using the `corefe
 python scripts/coreference_resolution.py path/to/data/file.csv
 ```
 
+#### Spoken data augmentation
+
+The dataset can also be modified to add spoken noise to the contexts using the `augment_dataset.py` script.
+
+The script uses the [mms-tts-eng](https://huggingface.co/facebook/mms-tts-eng) model for text-to-speech (TTS) and the [distil-whisper](https://huggingface.co/distil-whisper/distil-large-v2) for automatic speech recognition (ASR).
+
+```shell
+python scripts/augment_dataset.py path/to/data/file.csv
+```
 
 ### Training
 
