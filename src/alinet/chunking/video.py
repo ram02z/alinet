@@ -85,7 +85,9 @@ def slide_chunking(video_path):
 
 def save_clips_locally(video_path, chunks, output_dir_path):
     previous_end_time = 0 
-    stride_time = 15 # portion of time to add to each subclips' start
+    # NOTE: The 25-second estimation below is derived from our stride length in /chunking/pipeline, 
+    # also we assume words are approximately 3/4 of a token, and the average human speaks at a rate of 140 words per minute.
+    stride_time = 25 
 
     for i, chunk in enumerate(chunks):
         start_time, end_time = chunk["timestamp"]
