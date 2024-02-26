@@ -2,6 +2,15 @@ import cv2
 import numpy as np
 import pytesseract
 import logging
+import pickle
+from moviepy.editor import VideoFileClip
+from alinet import chunking
+from alinet import qg
+
+with open("experiments/qg/comp3074_lecture_2.pkl", "rb") as file:
+        whisper_chunks = pickle.load(file)['chunks']
+chunk_pipe = chunking.Pipeline(qg.Model.BASELINE)
+transcript_chunks = chunk_pipe(whisper_chunks, 2301)
 
 def is_frame_different(frame1, frame2, threshold=0.9):
     gray_frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
@@ -73,6 +82,21 @@ def slide_chunking(video_path):
     # Remove last element of frame_list, because the last slide of most lectures is consolidation/review, therefore, useless
     slide_chunks.pop()
     return slide_chunks
+
+def save_clips_locally(video_path, chunks, output_dir_path):
+    previous_end_time = 0 
+    stride_time = 15 # portion of time to add to each subclips' start
+
+    for i, chunk in enumerate(chunks):
+        start_time, end_time = chunk["timestamp"]
+
+        # ensure stride adjustment occurs only if possible
+        if i != 0 and previous_end_time >= stride_time:
+            start_time -= stride_time
+        
+        subclip = VideoFileClip(video_path).subclip(start_time, end_time)
+        subclip.write_videofile(f"{output_dir_path}/chunk{i}.mp4", codec='libx264', audio_codec='aac')
+        previous_end_time = end_time 
 
 if __name__ == "__main__":
     chunks = slide_chunking("sample_data/lecture.mp4")
