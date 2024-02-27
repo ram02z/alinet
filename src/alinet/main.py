@@ -14,14 +14,15 @@ def baseline(
     filtering_threshold,
     asr_model,
     qg_model,
+    video_clips_path
 ) -> list[str]:
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = chunking.Pipeline(qg_model)
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    # Uncomment the following line to save video clips locally from each chunk
-    # save_video_clips(video_path, transcript_chunks, output_dir="saved_clips")
+    if video_clips_path:
+        save_video_clips(video_path, transcript_chunks, video_clips_path)
 
     text_chunks = [chunk["text"] for chunk in transcript_chunks]
     qg_pipe = qg.Pipeline(qg_model)

@@ -24,6 +24,10 @@ class BaselineArguments:
     qg_model: qg.Model = field(
         default=qg.Model.BASELINE, metadata={"help": "Question generation model to use"}
     )
+    video_clips_path: str = field(
+        default=None,
+        metadata={"help": "Directory to save the video clips"},
+    )
     asr_model: asr.Model = field(
         default=asr.Model.DISTIL_LARGE,
         metadata={"help": "Automatic Speech Recongition model to use"},
@@ -44,6 +48,7 @@ if __name__ == "__main__":
         args.filtering_threshold,
         args.asr_model,
         args.qg_model,
+        args.video_clips_path
     )
 
     pprint.pprint(questions)

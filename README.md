@@ -43,6 +43,13 @@ can provide a similarity threshold and a retention rate (filtering) threshold:
 # If no threshold is given, the default (0.5) is used for both
 python main.py --video path/to/video/file.mp4 --similarity_threshold 0.6 --filtering_threshold 0.4
 ```
+
+To save the video clips corresponding to the system-generated chunk, you can provide a directory path for the clips to be saved to:
+
+```sh
+# If no video clips path is provided, they won't be saved.
+python main.py --video path/to/video/file.mp4 --video_clips_path directory/to/save/clips/to
+```
 ## Fine-tuning
 
 See `/scripts` directory to learn how to generate and prepare the datasets, train the model and evaluate its performance.
