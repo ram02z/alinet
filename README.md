@@ -31,7 +31,7 @@ PyTorch with CUDA support will be only be installed on Linux environments.
 ## Usage
 
 ```sh
-python main.py --video path/to/video/file.mp4
+python main.py --video path/to/video/file.mp4 --filtering_threshold 1
 ```
 
 This will output all the generated questions.
