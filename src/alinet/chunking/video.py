@@ -1,3 +1,4 @@
+from moviepy.editor import VideoFileClip
 import cv2
 import numpy as np
 import pytesseract
@@ -73,6 +74,23 @@ def slide_chunking(video_path):
     # Remove last element of frame_list, because the last slide of most lectures is consolidation/review, therefore, useless
     slide_chunks.pop()
     return slide_chunks
+
+def save_video_clips(video_path, chunks, output_dir_path):
+    previous_end_time = 0 
+    # NOTE: The 25-second estimation below is derived from our stride length in /chunking/pipeline, 
+    # also we assume words are approximately 3/4 of a token, and the average human speaks at a rate of 140 words per minute.
+    stride_time = 25 
+
+    for i, chunk in enumerate(chunks):
+        start_time, end_time = chunk["timestamp"]
+
+        # ensure stride adjustment occurs only if possible
+        if i != 0 and previous_end_time >= stride_time:
+            start_time -= stride_time
+        
+        subclip = VideoFileClip(video_path).subclip(start_time, end_time)
+        subclip.write_videofile(f"{output_dir_path}/chunk{i}.mp4", codec='libx264', audio_codec='aac')
+        previous_end_time = end_time 
 
 if __name__ == "__main__":
     chunks = slide_chunking("sample_data/lecture.mp4")

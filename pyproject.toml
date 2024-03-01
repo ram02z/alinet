@@ -37,6 +37,7 @@ protobuf = "^4.25.1"
 pytesseract = "^0.3.10"
 jiwer = "^3.0.3"
 openai = "^1.12.0"
+moviepy = "^1.0.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
