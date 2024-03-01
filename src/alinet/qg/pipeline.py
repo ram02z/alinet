@@ -31,7 +31,7 @@ class QGPipeline:
         start_word=None,
         max_tokens=32,
         num_beams=4,
-    ) -> list[str]:
+    ) -> dict[int, str]:
         """
         Generates one question per document (context)
 
@@ -74,5 +74,5 @@ class QGPipeline:
         )
 
         result_dict = {i: question for i, question in enumerate(generated_questions)}
-        
+
         return result_dict

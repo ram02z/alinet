@@ -74,12 +74,12 @@ def filter_questions_by_retention_rate(
 
     Parameters:
     - sim_scores (list): List of similarity scores.
-    - generated_questions (list): Dictionary of generated questions with respective indexes.
+    - generated_questions (dict): Dictionary of generated questions with respective indexes.
     - similarity_threshold (float): Threshold for similarity scores.
     - filtering_threshold (float): Threshold for the retention rate.
 
     Returns:
-    list: A Dictionary of filtered questions based on the retention rate and similarity threshold.
+    dict: A Dictionary of filtered questions based on the retention rate and similarity threshold.
     """
     filtered_questions = {}
 
