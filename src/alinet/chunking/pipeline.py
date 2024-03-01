@@ -27,8 +27,8 @@ class ChunkPipeline:
         self,
         chunks: list[dict[str, str | tuple[float, float]]],
         audio_length: float,
-        stride_length=80,
-        min_duration=120,
+        stride_length=90,
+        min_duration=60,
     ) -> list[dict[str, str | tuple[float, float]]]:
         """
         :param chunks: transcript chunks with chunk-level timestamps
