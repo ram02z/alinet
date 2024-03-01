@@ -74,17 +74,19 @@ def filter_questions_by_retention_rate(
 
     Parameters:
     - sim_scores (list): List of similarity scores.
-    - generated_questions (list): List of generated questions.
+    - generated_questions (list): Dictionary of generated questions with respective indexes.
     - similarity_threshold (float): Threshold for similarity scores.
     - filtering_threshold (float): Threshold for the retention rate.
 
     Returns:
-    list: A list of filtered questions based on the retention rate and similarity threshold.
+    list: A Dictionary of filtered questions based on the retention rate and similarity threshold.
     """
-    scores_and_questions = zip(sim_scores, generated_questions)
-    filtered_questions = [
-        question for sim, question in scores_and_questions if sim > similarity_threshold
-    ]
+    filtered_questions = {}
+
+    for index, question in generated_questions.items():
+        if sim_scores[index] > similarity_threshold:
+            filtered_questions[index] = question
+
     retention_rate = len(filtered_questions) / len(generated_questions)
 
     if retention_rate < filtering_threshold:

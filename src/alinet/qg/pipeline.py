@@ -73,4 +73,6 @@ class QGPipeline:
             model_output, skip_special_tokens=True
         )
 
-        return generated_questions
+        result_dict = {i: question for i, question in enumerate(generated_questions)}
+        
+        return result_dict
