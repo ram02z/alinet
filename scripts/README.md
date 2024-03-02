@@ -85,6 +85,7 @@ python run_bart_dlm_flax.py \
 To report to [W&B](https://wandb.ai/), set the following environment variables:
 
 ```shell
+export WANDB_PROJECT="mmqg"
 export WANDB_API_KEY="..."
 export WANDB_NAME="pubmed-bart-base"
 ```

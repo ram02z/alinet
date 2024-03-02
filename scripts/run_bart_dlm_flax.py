@@ -601,7 +601,7 @@ def main():
         model_args.token = model_args.use_auth_token
 
     # Initialize wandb
-    wandb.init(project="mmqg")
+    wandb.init()
     wandb.config.update(training_args.to_dict())
 
     if (
