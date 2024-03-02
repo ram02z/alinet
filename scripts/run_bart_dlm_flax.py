@@ -313,6 +313,10 @@ class DataTrainingArguments:
             "help": "Mean of Poisson distribution used to generate span-lengths to be masked"
         },
     )
+    text_column_name: str = field(
+        default="text",
+        metadata={"help": "Name of the column used for pretraining"},
+    )
 
     def __post_init__(self):
         if (
@@ -758,7 +762,7 @@ def main():
         column_names = datasets["train"].column_names
     else:
         column_names = datasets["validation"].column_names
-    text_column_name = "context" if "context" in column_names else column_names[0]
+    text_column_name = data_args.text_column_name
 
     max_seq_length = min(data_args.max_seq_length, tokenizer.model_max_length)
 
@@ -767,14 +771,14 @@ def main():
     sentence_tokenizer = nltk.data.load("tokenizers/punkt/english.pickle")
 
     def sentence_split_function(example):
-        sents = sentence_tokenizer.tokenize(example["text"])
+        sents = sentence_tokenizer.tokenize(example[text_column_name])
         # use pad token as end of sentence indicator
         new_text = (
             tokenizer.bos_token
             + f"{tokenizer.pad_token}".join(sents)
             + tokenizer.eos_token
         )
-        return {"text": new_text}
+        return {text_column_name: new_text}
 
     split_datasets = datasets.map(
         sentence_split_function,
@@ -1049,8 +1053,12 @@ def main():
                     f" {train_metric['learning_rate']})"
                 )
 
-                # Save metrics
-                wandb.log(train_metric)
+                # Log metrics
+                train_metric = {
+                    f"train/{metric_name}": value
+                    for metric_name, value in train_metric.items()
+                }
+                wandb.log(train_metric, cur_step)
 
                 train_metrics = []
 
@@ -1091,8 +1099,12 @@ def main():
                 # Update progress bar
                 epochs.desc = f"Step... ({cur_step} | Loss: {eval_metrics['loss']}, Acc: {eval_metrics['accuracy']})"
 
-                # Save metrics
-                wandb.log(eval_metrics)
+                # Log metrics
+                eval_metrics = {
+                    f"eval/{metric_name}": value
+                    for metric_name, value in eval_metrics.items()
+                }
+                wandb.log(eval_metrics, cur_step)
 
             if cur_step % training_args.save_steps == 0 and cur_step > 0:
                 # save checkpoint after each epoch and push checkpoint to the hub
@@ -1151,9 +1163,6 @@ def main():
                 f"eval_{metric_name}": value
                 for metric_name, value in eval_metrics.items()
             }
-
-            # Save metrics
-            wandb.log(eval_metrics)
 
             path = os.path.join(training_args.output_dir, "eval_results.json")
             with open(path, "w") as f:
