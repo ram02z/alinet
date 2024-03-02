@@ -45,20 +45,66 @@ python scripts/augment_dataset.py path/to/data/file.csv
 
 ### Training
 
-The training script, `train.py`, expects the processed data directory to contain dataset splits and the `tokenizer_config.json` file (see [Dataset generation](#dataset-generation)).
+#### Pre-training
+
+> BART
+
+The pre-training script, `run_bart_dlm_flax.py`, has been copied from
+[huggingface/transformers](https://github.com/huggingface/transformers/blob/831bc25d8fdb85768402f772cf65cc3d7872b211/examples/flax/language-modeling/run_bart_dlm_flax.py)
+and adapted for this project.
+
+The following changes have been made:
+- Introduced `text_column_name` argument to specify text column
+- Integrated [W&B](https://wandb.ai/) Python client library
+- Removed HuggingFace telemetry
+
+Make sure you train the tokenizer on the text data and create the model
+configuration before running the script. See [here](https://github.com/huggingface/transformers/tree/main/examples/flax/language-modeling#bart-denoising-language-modeling) for more detail.
+
+Example usage:
+
+```shell
+python run_bart_dlm_flax.py \
+    --output_dir="./pubmed-bart-base" \
+    --config_name="./pubmed-bart-base" \
+    --tokenizer_name="./pubmed-bart-base" \
+    --dataset_name="alinet/pubmed_qa" \
+    --text_column_name="context" \
+    --validation_split_percentage="1" \
+    --max_seq_length="1024" \
+    --per_device_train_batch_size="4" \
+    --per_device_eval_batch_size="4" \
+    --learning_rate="1e-4" \
+    --warmup_steps="2000" \
+    --overwrite_output_dir \
+    --logging_steps="500" \
+    --save_steps="2000" \
+    --eval_steps="2000"
+```
+
+To report to [W&B](https://wandb.ai/), set the following environment variables:
+
+```shell
+export WANDB_API_KEY="..."
+export WANDB_NAME="pubmed-bart-base"
+```
+
+#### Fine-tuning
+
+The fine-tuning script, `train.py`, expects the processed data directory to contain dataset splits and the `tokenizer_config.json` file (see [Dataset generation](#dataset-generation)).
 
 To see the full list of training arguments, run `python train.py --help` or refer to HuggingFace's [TrainerArguments](https://huggingface.co/docs/transformers/main_classes/trainer#transformers.TrainingArguments) documentation.
 
 Example usage:
 
 ```shell
-export RUN_NAME="t5-base"
+export RUN_NAME="bart-base"
 
 python scripts/train.py \
     --data_dir path/to/processed/data/dir \
     --output_dir path/to/output/dir \
-    --pretrained_model_name t5-base \
-    --model_type t5 \
+    --pretrained_model_name facebook/bart-base \
+    --model_type bart \
     --run_name $RUN_NAME \
     --per_device_train_batch_size 8 \
     --per_device_eval_batch_size 8 \
