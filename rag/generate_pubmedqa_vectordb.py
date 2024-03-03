@@ -1,18 +1,19 @@
-from transformers import HfArgumentParser
+from transformers import HfArgumentParser, BartTokenizer, set_seed
 from dataclasses import dataclass, field
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from transformers import BartTokenizer
 import chromadb
 from angle_emb import AnglE
 from datasets import load_dataset, concatenate_datasets
 
 @dataclass
-class GenerateDatasetArguments:
+class GenerateArguments:
     max_token_limit: int = field(default="512", metadata={"help": "The max token limit for each chunk of the PMC article"})
     pretrained_bart_tokenizer_name: str = field(default="alinet/bart-base-balanced-qg", metadata={"help": "The name of the Bart Tokenizer model"})
     #change this line when using on cluster
     output_dir: str = field(default="./chromadb", metadata={"help": "The output dir for the vectordb"})
-    collection_name: str = field(default="pubmedqa", metadata={"help": "The name of the collection in chromadb"})
+    collection_name: str = field(default="pubmedqa", metadata={"help": "The name of the collection in vectordb"})
+    seed: int = field(default=42, metadata={"help": "Random seed"})
+
 
 # Utility functions
 def remove_until_last_fullstop(input_string):
@@ -40,8 +41,10 @@ def filter_and_combine_context(data):
   return data
 
 def main():
-    parser = HfArgumentParser((GenerateDatasetArguments,))
+    parser = HfArgumentParser((GenerateArguments,))
     args = parser.parse_args_into_dataclasses()[0]
+
+    set_seed(args.seed)
 
     # Initialisations 
     tokenizer = BartTokenizer.from_pretrained(args.pretrained_bart_tokenizer_name)
