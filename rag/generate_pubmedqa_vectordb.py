@@ -11,7 +11,7 @@ class GenerateArguments:
     pretrained_bart_tokenizer_name: str = field(default="alinet/bart-base-balanced-qg", metadata={"help": "The name of the Bart Tokenizer model"})
     #change this line when using on cluster
     output_dir: str = field(default="./chromadb", metadata={"help": "The output dir for the vectordb"})
-    collection_name: str = field(default="pubmedqa", metadata={"help": "The name of the collection in vectordb"})
+    collection_name: str = field(default="pubmedqa_validation", metadata={"help": "The name of the collection in vectordb"})
     seed: int = field(default=42, metadata={"help": "Random seed"})
 
 
@@ -40,6 +40,20 @@ def filter_and_combine_context(data):
 
   return data
 
+# Makes sure that an old collection with the same name is deleted, so that a new one is created
+def create_collection(client, collection_name):
+  try:
+    client.delete_collection(collection_name)
+  except ValueError:
+    print(collection_name + " does not exist")
+
+  collection = client.create_collection(
+    name=collection_name,
+    metadata={"hnsw:space": "cosine"} # l2 is the default
+  )
+   
+  return collection
+   
 def main():
     parser = HfArgumentParser((GenerateArguments,))
     args = parser.parse_args_into_dataclasses()[0]
@@ -62,36 +76,14 @@ def main():
 
     # ChromaDB client and collection
     client = chromadb.PersistentClient(path=args.output_dir)
-    collection = client.get_or_create_collection(
-      name=args.collection_name,
-      metadata={"hnsw:space": "cosine"} # l2 is the default
-    )
+    collection = create_collection(client, args.collection_name)
 
     # Embedding Model
     angle = AnglE.from_pretrained('WhereIsAI/UAE-Large-V1', pooling_strategy='cls').cuda()
 
-    pubmed_art_ds = (
-      load_dataset("pubmed_qa", "pqa_artificial", split="train")
-      .select_columns(["pubid", "question", "context", "long_answer"])
-      .map(filter_and_combine_context)
-    )
-    pubmed_labeled_ds = (
-      load_dataset("pubmed_qa", "pqa_labeled", split="train")
-      .select_columns(["pubid", "question", "context", "long_answer"])
-      .map(filter_and_combine_context)
-    )
-    pubmed_unlabeled_ds = (
-      load_dataset("pubmed_qa", "pqa_unlabeled", split="train")
-      .select_columns(["pubid", "question", "context", "long_answer"])
-      .map(filter_and_combine_context)
-    )   
+    pubmed_ds = load_dataset("alinet/pubmed_qa", split="validation")
 
-    pubmed_ds = concatenate_datasets([pubmed_art_ds, pubmed_labeled_ds, pubmed_unlabeled_ds])
-
-    for idx, data in enumerate(pubmed_ds):
-      if idx == 10:
-        break
-
+    for idx, data in enumerate(pubmed_ds):  
       documents = text_splitter.create_documents([data['context']])
 
       chunk_id = ""
