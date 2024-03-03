@@ -8,7 +8,7 @@ from datasets import load_dataset, concatenate_datasets
 @dataclass
 class GenerateArguments:
     max_token_limit: int = field(default="512", metadata={"help": "The max token limit for each chunk of the PMC article"})
-    pretrained_bart_tokenizer_name: str = field(default="alinet/bart-base-balanced-qg", metadata={"help": "The name of the Bart Tokenizer model"})
+    pretrained_bart_tokenizer_name: str = field(default="alinet/bart-base-squad-qg", metadata={"help": "The name of the Bart Tokenizer model"})
     #change this line when using on cluster
     output_dir: str = field(default="./chromadb", metadata={"help": "The output dir for the vectordb"})
     collection_name: str = field(default="pubmedqa_validation", metadata={"help": "The name of the collection in vectordb"})

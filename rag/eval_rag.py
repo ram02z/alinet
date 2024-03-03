@@ -13,7 +13,7 @@ class GenerateArguments:
   seed: int = field(default=42, metadata={"help": "Random seed"})
   vectordb_path: str = field(default="./chromadb", metadata={"help": "The path to the vectordb"})
   collection_name: str = field(default="pubmedqa_validation", metadata={"help": "The name of the collection in the vectordb"})
-  pretrained_bart_model_name: str = field(default="alinet/bart-base-balanced-qg", metadata={"help": "The name of the pretrained model"})
+  pretrained_bart_model_name: str = field(default="alinet/bart-base-squad-qg", metadata={"help": "The name of the pretrained model"})
   num_beams: int = field(
     default=4,
     metadata={"help": "Number of beams to use for evaluation"},
