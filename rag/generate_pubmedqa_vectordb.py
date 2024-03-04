@@ -84,6 +84,9 @@ def main():
     pubmed_ds = load_dataset("alinet/pubmed_qa", split="validation")
 
     for idx, data in enumerate(pubmed_ds):  
+
+      if idx == 10:
+         break
       documents = text_splitter.create_documents([data['context']])
 
       chunk_id = ""
