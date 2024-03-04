@@ -66,3 +66,5 @@ results/
 .ipynb_checkpoints/
 
 rag/chromadb/*
+
+chromadb/
