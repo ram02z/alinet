@@ -65,6 +65,5 @@ results/
 # Jupyter Notebook
 .ipynb_checkpoints/
 
-rag/chromadb/*
-
 chromadb/
+chromadb/*
