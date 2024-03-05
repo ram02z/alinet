@@ -55,7 +55,7 @@ def main():
 
     # Text splitter
     text_splitter = CharacterTextSplitter.from_huggingface_tokenizer(
-        tokenizer, chunk_size=512, chunk_overlap=0
+        tokenizer, chunk_size=args.max_token_limit, chunk_overlap=0
     )
 
     # ChromaDB client and collection
