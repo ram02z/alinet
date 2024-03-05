@@ -1,14 +1,17 @@
 import datasets
 from transformers import HfArgumentParser, BartTokenizer, set_seed
 from dataclasses import dataclass, field
-from langchain.text_splitter import CharacterTextSplitter
 import chromadb
 from angle_emb import AnglE
 from datasets import load_dataset
 import logging
 from tqdm import tqdm
+from spacy.lang.en import English
 
 logger = logging.getLogger(__name__)
+nlp = English()
+nlp.add_pipe("sentencizer")
+
 
 @dataclass
 class GenerateArguments:
@@ -44,19 +47,33 @@ def create_collection(client, collection_name):
     return collection
 
 
+# Splits a document into chunks of text, aiming to respect a maximum token limit.
+def create_documents(document, tokenizer, chunk_size):
+    doc = nlp(document)
+    sentences = [span.text for span in doc.sents]
+    tokenized_sents = tokenizer(sentences)
+
+    token_i = 0
+    doc_i = 0
+    documents = [[]]
+    for sent, tokens in zip(sentences, tokenized_sents['input_ids']):
+        if token_i + len(tokens) >= chunk_size:
+            token_i = 0
+            documents.append([])
+            doc_i += 1
+        documents[doc_i].append(sent)
+        token_i += len(tokens)
+
+    return [' '.join(d) for d in documents]
+
 def main():
     parser = HfArgumentParser((GenerateArguments,))
     args = parser.parse_args_into_dataclasses()[0]
 
     set_seed(args.seed)
 
-    # Initialisations
+    # Tokenizer
     tokenizer = BartTokenizer.from_pretrained(args.pretrained_bart_tokenizer_name)
-
-    # Text splitter
-    text_splitter = CharacterTextSplitter.from_huggingface_tokenizer(
-        tokenizer, chunk_size=args.max_token_limit, chunk_overlap=0
-    )
 
     # ChromaDB client and collection
     client = chromadb.PersistentClient(path=args.output_dir)
@@ -70,15 +87,15 @@ def main():
     pubmed_ds = load_dataset("alinet/pubmed_qa", "truncated_512", split="validation")
 
     for data in tqdm(pubmed_ds):
-        documents = text_splitter.create_documents([data["context"]])
+        documents = create_documents(data["context"], tokenizer, args.max_token_limit)
 
         for id, doc in enumerate(documents):
-            embedding = angle.encode(doc.page_content, to_numpy=True)
+            embedding = angle.encode(doc, to_numpy=True)
 
             chunk_id = f"{data['pubid']}C{id}"
             collection.add(
                 embeddings=embedding,
-                documents=doc.page_content,
+                documents=doc,
                 ids=chunk_id,
             )
 
