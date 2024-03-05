@@ -42,6 +42,7 @@ instructorembedding = "^1.0.1"
 sentence-transformers = "^2.3.1"
 angle-emb = "^0.3.3"
 chromadb = "^0.4.23"
+tqdm = "^4.66.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
