@@ -26,10 +26,6 @@ class EvaluateModelArguments:
         default=32,
         metadata={"help": "The maximum total input sequence length after tokenization"},
     )
-    min_length: int = field(
-        default=0,
-        metadata={"help": "The minimum total input sequence length after tokenization"},
-    )
     seed: int = field(default=42, metadata={"help": "Random seed"})
     vectordb_path: str = field(
         default="./chromadb", metadata={"help": "The path to the vectordb"}
@@ -127,7 +123,6 @@ def main():
         random_state=args.seed,
         generation_kwargs={
             "max_new_tokens": args.max_length,
-            "min_new_tokens": args.min_length,
             "num_beams": args.num_beams,
         },
     )
@@ -135,6 +130,7 @@ def main():
     logger.info("saving results")
     params = {
         "model": args.pretrained_bart_model_name,
+        "vectordb_path": args.vectordb_path,
     }
     evaluate.save("./results/", **results, **params)
 
