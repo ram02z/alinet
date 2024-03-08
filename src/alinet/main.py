@@ -2,28 +2,9 @@ from alinet import asr, qg, chunking
 from alinet.chunking.similarity import (
     get_similarity_scores,
     filter_questions_by_retention_rate,
+    filter_similar_questions
 )
 from alinet.chunking.video import slide_chunking, save_video_clips
-
-def checkIfQuestionInDict(questionToCheck, dict):
-  isQuestionInDict = False
-
-  for idx, question in dict.items():
-     if questionToCheck == question:
-        isQuestionInDict = True
-  
-  return isQuestionInDict
-
-def filter_similar_questions(question_dict):
-    filtered_dict = {}
-    
-    for idx, question in question_dict.items():
-      isQuestionInDict = checkIfQuestionInDict(question, filtered_dict)
-    
-      if not isQuestionInDict:
-         filtered_dict[idx] = question
-
-    return filtered_dict
 
 def baseline(
     video_path: str,
