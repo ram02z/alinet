@@ -67,3 +67,29 @@ questions.json
 
 # Jupyter Notebook
 .ipynb_checkpoints/
+
+
+# Files to ignore for react
+# dependencies
+web_app/node_modules
+web_app/.pnp
+web_app.pnp.js
+
+# testing
+web_app/coverage
+
+# production
+web_app/build
+
+# misc
+web_app/.DS_Store
+web_app/.env.local
+web_app/.env.development.local
+web_app/.env.test.local
+web_app/.env.production.local
+
+web_app/npm-debug.log*
+web_app/yarn-debug.log*
+web_app/yarn-error.log*
+
+web_app/.gitignore
