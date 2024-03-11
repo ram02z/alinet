@@ -2,7 +2,7 @@ import React from 'react'
 import './App.css'
 import { useState } from 'react'
 import { MdClear } from 'react-icons/md'
-import { AiOutlineCheckCircle, AiOutlineCloudUpload } from 'react-icons/ai'
+import { AiOutlineCloudUpload } from 'react-icons/ai'  // Removed AiOutlineCheckCircle
 import DragDrop from './components/DragDrop'
 
 function App() {
@@ -10,6 +10,31 @@ function App() {
 
   const handleRemoveFile = (index: number) => {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index))
+  }
+
+  const handleUpload = async () => {
+    try {
+      const formData = new FormData()
+      files.forEach((file) => {
+        formData.append('file', file)
+      })
+
+      const response = await fetch('http://127.0.0.1:8000/video/read_video', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        console.log('Video uploaded successfully!')
+        // Add any further handling or state updates as needed
+      } else {
+        console.error('Error uploading video:', response.statusText)
+        // Handle error case
+      }
+    } catch (error: any) {  // Specify 'any' type for the catch block
+      console.error('Error uploading video:', error.message)
+      // Handle error case
+    }
   }
 
   return (
@@ -30,6 +55,12 @@ function App() {
                 </div>
               ))}
             </div>
+          )}
+
+          {files.length > 0 && (
+            <button onClick={handleUpload}>
+              Upload Video <AiOutlineCloudUpload />
+            </button>
           )}
         </div>
 
