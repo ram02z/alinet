@@ -1,0 +1,9 @@
+.body {
+  display: flex;
+  flex-direction: row;
+}
+
+.upload-section,
+.question-section {
+  flex: 1;
+}
