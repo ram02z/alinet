@@ -10,9 +10,12 @@ const DragNdrop: React.FC<DragNdropProps> = ({ onFilesSelected }) => {
   const [files, setFiles] = useState<File[]>([])
 
   const handleFileChange = (event: any) => {
+    event.preventDefault()
+    console.log('added files')
     const selectedFiles = event.target.files
     if (selectedFiles && selectedFiles.length > 0) {
       const newFiles: File[] = Array.from(selectedFiles)
+      console.log(newFiles)
       setFiles((prevFiles: File[]) => [...prevFiles, ...newFiles])
     }
   }
