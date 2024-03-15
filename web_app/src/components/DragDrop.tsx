@@ -1,74 +1,68 @@
-import React, { useEffect, useState } from 'react'
-import { AiOutlineCloudUpload } from 'react-icons/ai'
+import { Group, Text, rem } from '@mantine/core'
+import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react'
+import { Dropzone, MIME_TYPES } from '@mantine/dropzone'
+import { useEffect } from 'react'
 import './DragDrop.css'
 
-interface DragNdropProps {
-  onFilesSelected: any
+export interface DragDropProps {
+  files: File[]
+  setFiles: any
 }
 
-const DragNdrop: React.FC<DragNdropProps> = ({ onFilesSelected }) => {
-  const [files, setFiles] = useState<File[]>([])
-
-  const handleFileChange = (event: any) => {
-    event.preventDefault()
-    console.log('added files')
-    const selectedFiles = event.target.files
-    if (selectedFiles && selectedFiles.length > 0) {
-      const newFiles: File[] = Array.from(selectedFiles)
-      console.log(newFiles)
-      setFiles((prevFiles: File[]) => [...prevFiles, ...newFiles])
-    }
-  }
-
-  const handleDrop = (event: any) => {
-    event.preventDefault()
-    const droppedFiles = event.dataTransfer.files
-    if (droppedFiles.length > 0) {
-      const newFiles: File[] = Array.from(droppedFiles)
-      setFiles((prevFiles: File[]) => [...prevFiles, ...newFiles])
-    }
-  }
-
+export const DragDrop = ({ files, setFiles }: DragDropProps) => {
   useEffect(() => {
-    onFilesSelected(files)
     console.log(files)
-  }, [files, onFilesSelected])
+  }, [files])
 
   return (
-    <div
-      className={`document-uploader`}
-      onDrop={handleDrop}
-      onDragOver={(event) => {
-        event.preventDefault()
+    <Dropzone
+      className="dropzone"
+      onDrop={(files: File[]) => {
+        setFiles((prevFiles: File[]) => [...prevFiles, ...files])
       }}
+      onReject={(files) => console.log('rejected files', files)}
+      accept={[MIME_TYPES.pdf, MIME_TYPES.mp4]}
     >
-      <>
-        <div className="upload-info">
-          <AiOutlineCloudUpload />
-          <div>
-            <p>
-              Drag and drop your files here or
-              <label
-                htmlFor="browse-input"
-                className="browse-btn"
-              >
-                Browse files
-              </label>
-            </p>
-          </div>
-        </div>
+      <Group
+        className="dropzone-content"
+        style={{ minHeight: rem(300), pointerEvents: 'none' }}
+      >
+        <Dropzone.Accept>
+          <IconUpload
+            size="3.2rem"
+            stroke={1.5}
+          />
+        </Dropzone.Accept>
+        <Dropzone.Reject>
+          <IconX
+            size="3.2rem"
+            stroke={1.5}
+          />
+        </Dropzone.Reject>
+        <Dropzone.Idle>
+          <IconPhoto
+            size="3.2rem"
+            stroke={1.5}
+          />
+        </Dropzone.Idle>
 
-        <input
-          type="file"
-          hidden
-          id="browse-input"
-          onChange={handleFileChange}
-          accept="video/*"
-          multiple
-        />
-      </>
-    </div>
+        <div>
+          <Text
+            size="xl"
+            inline
+          >
+            Drag images here or click to select files
+          </Text>
+          <Text
+            size="sm"
+            color="dimmed"
+            inline
+            mt={7}
+          >
+            Attach as many files as you like, each file should not exceed 5mb
+          </Text>
+        </div>
+      </Group>
+    </Dropzone>
   )
 }
-
-export default DragNdrop

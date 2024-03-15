@@ -1,38 +1,9 @@
-.document-uploader {
-  border: 2px dashed #4282fe;
-  background-color: #f4fbff;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  border-radius: 8px;
+.dropzone:hover {
   cursor: pointer;
 }
 
-.browse-btn {
+.dropzone-content {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
-  border: 1px solid blue;
-  border-radius: 8px;
-  cursor: pointer;
-  background-color: lightblue;
-}
-
-.browse-btn:hover {
-  background-color: rgba(173, 216, 230, 0.5);
-}
-
-.upload-info {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-
-  svg {
-    font-size: 70px;
-    margin-right: 1rem;
-  }
+  width: 700px;
 }
