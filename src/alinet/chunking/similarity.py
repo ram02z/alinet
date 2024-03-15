@@ -34,19 +34,20 @@ def find_matching_slide_range(
     """
     Finds the range of slide indices corresponding to the given transcript chunk.
     """
-
     start_index = 0
-    end_index = 0
     for i, slide in enumerate(slide_chunks):
-        if chunk.start_time >= slide.start_time and chunk.end_time <= slide.end_time:
+        if chunk.start_time < slide.end_time:
             start_index = i
+            break
+
+    end_index = start_index
+    for i in range(start_index, len(slide_chunks)):
+        slide = slide_chunks[i]
+        if chunk.end_time > slide.start_time and chunk.end_time <= slide.end_time:
             end_index = i
             break
-        elif chunk.start_time < slide.end_time:
-            start_index = i
-        elif chunk.end_time > slide.end_time:
-            end_index = i
-    return start_index, end_index + 1  # Adjusted to get the correct range
+
+    return start_index, end_index + 1
 
 
 def get_similarity_scores(
