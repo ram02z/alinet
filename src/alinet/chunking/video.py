@@ -83,14 +83,15 @@ def slide_chunking(video_path: str) -> list[TimeChunk]:
     return slide_chunks
 
 
-def save_video_clips(video_path, chunks, output_dir_path):
+def save_video_clips(video_path: str, chunks: list[TimeChunk], output_dir_path: str):
     previous_end_time = 0
     # NOTE: The 25-second estimation below is derived from our stride length in /chunking/pipeline,
     # also we assume words are approximately 3/4 of a token, and the average human speaks at a rate of 140 words per minute.
     stride_time = 25
 
     for i, chunk in enumerate(chunks):
-        start_time, end_time = chunk["timestamp"]
+        start_time = chunk.start_time
+        end_time = chunk.end_time
 
         # ensure stride adjustment occurs only if possible
         if i != 0 and previous_end_time >= stride_time:
