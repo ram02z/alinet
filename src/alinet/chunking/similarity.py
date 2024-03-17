@@ -29,7 +29,7 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
 
 
 def find_matching_slide_range(
-    chunk: TimeChunk, slide_chunks: list[TimeChunk]
+    chunk: TimeChunk, slide_chunks: list[TimeChunk], overlap: float
 ) -> tuple[int, int]:
     """
     Finds the range of slide indices corresponding to the given transcript chunk.
@@ -41,9 +41,9 @@ def find_matching_slide_range(
             break
 
     end_index = start_index
-    for i in range(start_index, len(slide_chunks)):
+    for i in reversed(range(start_index, len(slide_chunks))):
         slide = slide_chunks[i]
-        if chunk.end_time > slide.start_time and chunk.end_time <= slide.end_time:
+        if slide.start_time + overlap < chunk.end_time:
             end_index = i
             break
 
@@ -51,7 +51,7 @@ def find_matching_slide_range(
 
 
 def get_similarity_scores(
-    transcript_chunks: list[TimeChunk], slide_chunks: list[TimeChunk]
+    transcript_chunks: list[TimeChunk], slide_chunks: list[TimeChunk], overlap=0.0
 ) -> list[float]:
     """
     Get similarity scores between transcript chunks and corresponding slide chunks.
@@ -59,22 +59,21 @@ def get_similarity_scores(
     Parameters:
     - transcript_chunks (list): List of transcript chunks.
     - slide_chunks (list): List of slide chunks.
+    - overlap (float): time (in seconds) allowed on slide to count as part of range
 
     Returns:
     list: A list of similarity scores between transcript chunks and corresponding slide chunks.
     """
-    duration = transcript_chunks[-1].end_time
     similarity_scores = []
 
     for chunk in transcript_chunks:
-        if chunk.start_time < duration:
-            start_index, end_index = find_matching_slide_range(chunk, slide_chunks)
-            slide_text = " ".join(
-                slide_chunks[i].text for i in range(start_index, end_index)
-            )
-            similarity_scores.append(
-                compute_cosine_similarity_word_embeddings(chunk.text, slide_text)
-            )
+        start_index, end_index = find_matching_slide_range(chunk, slide_chunks, overlap)
+        slide_text = " ".join(
+            slide_chunks[i].text for i in range(start_index, end_index)
+        )
+        similarity_scores.append(
+            compute_cosine_similarity_word_embeddings(chunk.text, slide_text)
+        )
 
     return similarity_scores
 
