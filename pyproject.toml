@@ -45,6 +45,10 @@ python-multipart = "^0.0.9"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
 jupyter = "^1.0.0"
+pytest = "^8.1.1"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["poetry-core"]
