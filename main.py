@@ -25,7 +25,7 @@ class BaselineArguments:
         default=qg.Model.BALANCED_RA,
         metadata={"help": "Question generation model to use"},
     )
-    video_clips_path: str = field(
+    video_clips_path: str | None = field(
         default=None,
         metadata={"help": "Directory to save the video clips"},
     )
