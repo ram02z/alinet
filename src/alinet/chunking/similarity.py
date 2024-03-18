@@ -41,7 +41,7 @@ def find_matching_slide_range(
             break
 
     end_index = start_index
-    for i in reversed(range(start_index, len(slide_chunks))):
+    for i in reversed(range(end_index, len(slide_chunks))):
         slide = slide_chunks[i]
         if slide.start_time + overlap < chunk.end_time:
             end_index = i
