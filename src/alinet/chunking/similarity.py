@@ -2,6 +2,8 @@ import spacy
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
 
+from alinet.chunking.model import TimeChunk
+
 
 def compute_cosine_similarity_word_embeddings(text1, text2):
     """
@@ -26,49 +28,62 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
     return cosine_sim
 
 
-def get_similarity_scores(duration, transcript_chunks, slide_chunks):
+def find_matching_slide_range(
+    chunk: TimeChunk, slide_chunks: list[TimeChunk], overlap: float
+) -> tuple[int, int]:
+    """
+    Finds the range of slide indices corresponding to the given transcript chunk.
+    """
+    start_index = 0
+    for i, slide in enumerate(slide_chunks):
+        if chunk.start_time < slide.end_time:
+            start_index = i
+            break
+
+    end_index = start_index
+    for i in reversed(range(end_index, len(slide_chunks))):
+        slide = slide_chunks[i]
+        if slide.start_time + overlap < chunk.end_time:
+            end_index = i
+            break
+
+    return start_index, end_index + 1
+
+
+def get_similarity_scores(
+    transcript_chunks: list[TimeChunk], slide_chunks: list[TimeChunk], overlap=0.0
+) -> list[float]:
     """
     Get similarity scores between transcript chunks and corresponding slide chunks.
 
     Parameters:
-    - duration (float): The duration until which transcript chunks are considered.
     - transcript_chunks (list): List of transcript chunks.
     - slide_chunks (list): List of slide chunks.
+    - overlap (float): time (in seconds) allowed on slide to count as part of range
 
     Returns:
     list: A list of similarity scores between transcript chunks and corresponding slide chunks.
     """
-    i = 0
     similarity_scores = []
+
     for chunk in transcript_chunks:
-        # ensure we only process transcript chunks that occur before the final slide
-        if chunk["timestamp"][0] < duration:
-            list_of_slide_indices = []
-            while i < len(slide_chunks):
-                list_of_slide_indices.append(i)
-                if chunk["timestamp"][1] <= slide_chunks[i][2]:
-                    transcript_chunk_text = chunk["text"]
+        start_index, end_index = find_matching_slide_range(chunk, slide_chunks, overlap)
+        slide_text = " ".join(
+            slide_chunks[i].text for i in range(start_index, end_index)
+        )
+        similarity_scores.append(
+            compute_cosine_similarity_word_embeddings(chunk.text, slide_text)
+        )
 
-                    # aggregate all the text from different slides, if more than one, into a single var
-                    slide_text = ""
-                    for index in list_of_slide_indices:
-                        slide_text += slide_chunks[index][0]
-
-                    # compute sim between the text retrieved from slide and the corresponding slide's text
-                    cosine_sim = compute_cosine_similarity_word_embeddings(
-                        transcript_chunk_text, slide_text
-                    )
-
-                    similarity_scores.append(cosine_sim)
-
-                    break
-                i += 1
     return similarity_scores
 
 
 def filter_questions_by_retention_rate(
-    sim_scores, generated_questions, similarity_threshold, filtering_threshold
-):
+    sim_scores: list[float],
+    generated_questions: list[str],
+    similarity_threshold: float,
+    filtering_threshold: float,
+) -> dict[int, str]:
     """
     Filter questions based on the retention rate and similarity threshold.
 
@@ -79,18 +94,20 @@ def filter_questions_by_retention_rate(
     - filtering_threshold (float): Threshold for the retention rate.
 
     Returns:
-    list: A list of filtered questions based on the retention rate and similarity threshold.
+    dict: A Dictionary of filtered questions based on the retention rate and similarity threshold.
     """
-    scores_and_questions = zip(sim_scores, generated_questions)
-    filtered_questions = [
-        question for sim, question in scores_and_questions if sim > similarity_threshold
-    ]
+    filtered_questions = {}
+
+    for index, (sim, question) in enumerate(zip(sim_scores, generated_questions)):
+        if sim > similarity_threshold:
+            filtered_questions[index] = question
+
     retention_rate = len(filtered_questions) / len(generated_questions)
 
     if retention_rate < filtering_threshold:
         warnings.warn(
             "Could not effectively perform question filtering, all generated questions are being returned"
         )
-        return generated_questions
+        return {idx: question for idx, question in enumerate(generated_questions)}
     else:
         return filtered_questions

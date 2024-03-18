@@ -9,7 +9,7 @@ from transformers import HfArgumentParser
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
 
-from alinet import baseline, qg, asr
+from alinet import baseline, qg, asr  # noqa: E402
 
 
 @dataclass
@@ -22,7 +22,12 @@ class BaselineArguments:
         default=0.5, metadata={"help": "Threshold for percentage of filtered questions"}
     )
     qg_model: qg.Model = field(
-        default=qg.Model.BASELINE, metadata={"help": "Question generation model to use"}
+        default=qg.Model.BALANCED_RA,
+        metadata={"help": "Question generation model to use"},
+    )
+    video_clips_path: str | None = field(
+        default=None,
+        metadata={"help": "Directory to save the video clips"},
     )
     asr_model: asr.Model = field(
         default=asr.Model.DISTIL_LARGE,
@@ -44,6 +49,7 @@ if __name__ == "__main__":
         args.filtering_threshold,
         args.asr_model,
         args.qg_model,
+        args.video_clips_path
     )
 
     pprint.pprint(questions)
