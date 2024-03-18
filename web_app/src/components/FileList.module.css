@@ -18,3 +18,11 @@
 .scrolled {
   box-shadow: var(--mantine-shadow-sm);
 }
+
+.table {
+  flex: 70%;
+}
+
+.td1st {
+  flex: 1;
+}

@@ -1,5 +1,5 @@
 import { Group, Text, rem } from '@mantine/core'
-import { IconUpload, IconPhoto, IconX } from '@tabler/icons-react'
+import { IconUpload, IconFileUpload, IconX } from '@tabler/icons-react'
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone'
 import { useEffect } from 'react'
 import './DragDrop.css'
@@ -16,7 +16,7 @@ export const DragDrop = ({ files, setFiles }: DragDropProps) => {
 
   return (
     <Dropzone
-      className="dropzone"
+      className="dragdrop"
       onDrop={(files: File[]) => {
         setFiles((prevFiles: File[]) => [...prevFiles, ...files])
       }}
@@ -24,7 +24,7 @@ export const DragDrop = ({ files, setFiles }: DragDropProps) => {
       accept={[MIME_TYPES.pdf, MIME_TYPES.mp4]}
     >
       <Group
-        className="dropzone-content"
+        className="dragdrop-content"
         style={{ minHeight: rem(300), pointerEvents: 'none' }}
       >
         <Dropzone.Accept>
@@ -40,7 +40,7 @@ export const DragDrop = ({ files, setFiles }: DragDropProps) => {
           />
         </Dropzone.Reject>
         <Dropzone.Idle>
-          <IconPhoto
+          <IconFileUpload
             size="3.2rem"
             stroke={1.5}
           />
@@ -51,7 +51,7 @@ export const DragDrop = ({ files, setFiles }: DragDropProps) => {
             size="xl"
             inline
           >
-            Drag images here or click to select files
+            Drag and drop here or click to select files
           </Text>
           <Text
             size="sm"
@@ -59,7 +59,7 @@ export const DragDrop = ({ files, setFiles }: DragDropProps) => {
             inline
             mt={7}
           >
-            Attach as many files as you like, each file should not exceed 5mb
+            Attach as many lecture videos or supplementary pdfs as you like
           </Text>
         </div>
       </Group>

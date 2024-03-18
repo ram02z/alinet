@@ -1,9 +1,15 @@
-.dropzone:hover {
+.dragdrop {
+  flex: 30%;
+  margin-right: 2rem;
+}
+
+.dragdrop:hover {
   cursor: pointer;
 }
 
-.dropzone-content {
+.dragdrop-content {
   display: flex;
   justify-content: center;
-  width: 700px;
+
+  background-color: #d3d3d3;
 }

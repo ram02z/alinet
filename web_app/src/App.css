@@ -1,3 +1,7 @@
+.body {
+  padding: 2rem 5rem 0 5rem;
+}
+
 .upload-section {
   display: flex;
   flex-direction: row;

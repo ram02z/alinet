@@ -34,4 +34,5 @@ def baseline(
         sim_scores, generated_questions, similarity_threshold, filtering_threshold
     )
 
+
     return filtered_questions
