@@ -6,29 +6,46 @@ import { FileList } from './components/FileList'
 import { useState } from 'react'
 import { Button } from '@mantine/core'
 import { IconSettingsCog } from '@tabler/icons-react'
+import { QuestionTable } from './components/QuestionTable'
+import { v4 as uuidv4 } from 'uuid'
 
 import './App.css'
 
+export interface Question {
+  id: string
+  question: string
+}
+
 export default function App() {
   const [files, setFiles] = useState<File[]>([])
+  const [selection, setSelection] = useState([] as string[])
+  const [questions, setQuestions] = useState([] as Question[])
 
   const generateQuestions = async () => {
     const formData = new FormData()
     files.forEach((file) => {
-      console.log(file)
       formData.append('files', file)
     })
 
-    console.log(files)
+    try {
+      const response = await fetch('localhost:8000', {
+        method: 'POST',
+        body: formData,
+      })
 
-    // try {
-    //   const response = await fetch('someurl', {
-    //     method: 'POST',
-    //     body: formData,
-    //   })
-    // } catch (error) {
-    //   console.error(error)
-    // }
+      if (response.ok) {
+        const data = await response.json()
+        const questionsWithId = data.questions.map((question: string) => {
+          return {
+            id: uuidv4(),
+            question,
+          }
+        })
+        setQuestions(questionsWithId)
+      }
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   return (
@@ -47,9 +64,21 @@ export default function App() {
         </div>
 
         <div className="generate-section">
-          <Button onClick={() => generateQuestions}>
+          <Button
+            onClick={() => {
+              generateQuestions()
+            }}
+          >
             <IconSettingsCog /> Generate Questions
           </Button>
+        </div>
+
+        <div className="question-section">
+          <QuestionTable
+            selection={selection}
+            setSelection={setSelection}
+            questions={questions}
+          />
         </div>
       </div>
     </MantineProvider>
