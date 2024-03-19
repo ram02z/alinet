@@ -2,6 +2,7 @@ import os
 import sys
 from dataclasses import dataclass, field
 import pprint
+from typing import List
 
 import transformers
 from transformers import HfArgumentParser
@@ -33,6 +34,10 @@ class BaselineArguments:
         default=asr.Model.DISTIL_LARGE,
         metadata={"help": "Automatic Speech Recongition model to use"},
     )
+    doc_paths: List[str] = field(
+        default_factory=list,
+        metadata={"help": "List of document paths. Add paths to documents separated by spaces"},
+    )
     verbose: bool = field(default=False, metadata={"help": "Increase output verbosity"})
 
 
@@ -44,6 +49,7 @@ if __name__ == "__main__":
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
 
     questions = baseline(
+        args.doc_paths,
         args.video,
         args.similarity_threshold,
         args.filtering_threshold,
