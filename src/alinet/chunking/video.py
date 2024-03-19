@@ -35,6 +35,7 @@ def slide_chunking(video_path: str) -> list[TimeChunk]:
     frame_interval = int(cap.get(cv2.CAP_PROP_FPS) * 30)
 
     i = 0
+    first = True
     while True:
         for _ in range(frame_interval - 1):
             ret, _ = cap.read()  # Skip frames
@@ -50,7 +51,7 @@ def slide_chunking(video_path: str) -> list[TimeChunk]:
         current_time_millis = cap.get(cv2.CAP_PROP_POS_MSEC)
         timestamp = convert_millis_to_seconds(current_time_millis)
 
-        if is_frame_different(frame, previous_frame):
+        if first or is_frame_different(frame, previous_frame):
             """
             Uncomment the 2 lines below to load a window that displays the current frames and respective timestamp
             """
@@ -61,6 +62,7 @@ def slide_chunking(video_path: str) -> list[TimeChunk]:
                 TimeChunk(text=text, start_time=timestamp, end_time=0.0)
             )
             i += 1
+            first = False
         previous_frame = frame.copy()
 
     cap.release()
@@ -105,4 +107,4 @@ def save_video_clips(video_path: str, chunks: list[TimeChunk], output_dir_path: 
 
 
 if __name__ == "__main__":
-    chunks = slide_chunking("sample_data/lecture.mp4")
+    chunks = slide_chunking("sample_data/hai5.mp4")
