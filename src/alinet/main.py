@@ -4,7 +4,7 @@ from alinet.chunking.similarity import (
     filter_questions_by_retention_rate,
 )
 from alinet.chunking.video import slide_chunking, save_video_clips
-
+import warnings
 
 def baseline(
     video_path: str,
@@ -27,6 +27,12 @@ def baseline(
     generated_questions = qg_pipe(text_chunks)
 
     slide_chunks = slide_chunking(video_path)
+    if len(slide_chunks) == 0:
+        warnings.warn(
+            "Slide chunks are empty. Question filtering step is skipped. Non-filtered questions are returned"
+        )
+        return generated_questions
+
     sim_scores = get_similarity_scores(transcript_chunks, slide_chunks)
     filtered_questions = filter_questions_by_retention_rate(
         sim_scores, generated_questions, similarity_threshold, filtering_threshold
