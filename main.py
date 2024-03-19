@@ -2,7 +2,6 @@ import os
 import sys
 from dataclasses import dataclass, field
 import pprint
-from typing import List
 
 import transformers
 from transformers import HfArgumentParser
@@ -34,7 +33,7 @@ class BaselineArguments:
         default=asr.Model.DISTIL_LARGE,
         metadata={"help": "Automatic Speech Recongition model to use"},
     )
-    doc_paths: List[str] = field(
+    doc_paths: list[str] = field(
         default_factory=list,
         metadata={"help": "List of document paths. Add paths to documents separated by spaces"},
     )

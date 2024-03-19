@@ -124,12 +124,11 @@ class Database:
 
 
 from transformers import HfArgumentParser
-from typing import List
 from dataclasses import dataclass, field
 
 @dataclass
 class EvaluateModelArguments:
-    doc_paths: List[str] = field(
+    doc_paths: list[str] = field(
         metadata={"help": "List of document paths"},
     )
 

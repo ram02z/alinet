@@ -29,14 +29,13 @@ def baseline(
         save_video_clips(video_path, transcript_chunks, video_clips_path)
 
 
-    # * We might want to move this else where put I'm just gonna put it here for now
+    # * We might want to move this instantiate of the DB elsewhere, but I'm just gonna put it here for now
     text_chunks = []
     if len(doc_paths) != 0:
         # Supplementary material
         db = Database()
         collection: Collection = db.create_collection(db.client)
         db.store_documents(collection, doc_paths=doc_paths)
-
         text_chunks = [db.add_relevant_context_to_source(context=chunk.text, collection=collection) for chunk in transcript_chunks]
     else:
         text_chunks = [chunk.text for chunk in transcript_chunks]
