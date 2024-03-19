@@ -124,30 +124,22 @@ class Database:
 
 
 from transformers import HfArgumentParser
-
+from typing import List
 from dataclasses import dataclass, field
 
 @dataclass
 class EvaluateModelArguments:
-    first_doc_path: str = field(
-        metadata={"help": "The name of the first document"},
-    )
-    second_doc_path: str = field(
-        metadata={"help": "The name of the second document"},
-    )
-    third_doc_path: str = field(
-        metadata={"help": "The name of the third document"},
+    doc_paths: List[str] = field(
+        metadata={"help": "List of document paths"},
     )
 
 if __name__ == "__main__":
     parser = HfArgumentParser((EvaluateModelArguments,))
     args = parser.parse_args_into_dataclasses()[0]
 
-    doc_paths = [args.first_doc_path, args.second_doc_path, args.third_doc_path]
-
     db = Database()
     collection = db.create_collection(db.client)
-    db.store_documents(collection, doc_paths=doc_paths)
+    db.store_documents(collection, doc_paths=args.doc_paths)
 
     context = "INPUT THE CONTEXT HERE"
     result = db.add_relevant_context_to_source(context, collection)
