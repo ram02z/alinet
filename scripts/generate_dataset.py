@@ -18,6 +18,7 @@ class Dataset(StrEnum):
     BASELINE = "baseline"
     BASELINE_NOISE = "baseline_noise"
     BASELINE_BALANCED = "baseline_balanced"
+    PUBMED_QA = "pubmed_qa"
 
 
 @dataclass
@@ -274,6 +275,11 @@ def interleave_datasets(datasets):
     return concatenated_datasets.select(indices)
 
 
+def combine_contexts(data):
+    data["context"] = " ".join(data["context"]["contexts"])
+    return data
+
+
 def main():
     parser = HfArgumentParser((GenerateDatasetArguments,))
     args = parser.parse_args_into_dataclasses()[0]
@@ -396,6 +402,22 @@ def main():
         validate_dataset = stratify_dataset(validate_dataset)
 
         data = DatasetDict({"train": train_dataset, "validation": validate_dataset})
+
+    elif args.dataset == Dataset.PUBMED_QA:
+        pubmed_ds = concatenate_datasets(
+            [
+                (
+                    load_dataset("pubmed_qa", subset, split="train")
+                    .select_columns(["pubid", "question", "context", "long_answer"])
+                    .rename_columns({"long_answer": "source", "question": "target"})
+                    .map(combine_contexts)
+                )
+                for subset in ["pqa_artificial", "pqa_labeled", "pqa_unlabeled"]
+            ]
+        )
+        data = pubmed_ds.train_test_split(test_size=0.1)
+        data = process(data)
+        data = DatasetDict({"train": data["train"], "validation": data["test"]})
 
     logger.info("saving text dataset")
 

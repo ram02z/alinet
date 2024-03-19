@@ -25,11 +25,13 @@ class EvaluationModule(StrEnum):
 class Dataset(StrEnum):
     RC = "reading_comprehension"
     NOISE = "spoken_noise"
+    PUBMED = "pubmed"
 
 
 DATASETS = {
     Dataset.RC: {"id": "mrqa", "name": "MRQA"},
     Dataset.NOISE: {"id": "alinet/spoken_squad", "name": "Spoken-SQuAD"},
+    Dataset.PUBMED: {"id": "alinet/pubmed_qa", "name": "PUBMED_QA"}
 }
 
 METRICS = {EvaluationModule.BERTSCORE: {"id": "bertscore", "name": "BERTScore"}}
@@ -45,6 +47,10 @@ class EvaluateModelArguments:
     max_length: int = field(
         default=32,
         metadata={"help": "The maximum total input sequence length after tokenization"},
+    )
+    min_length: int = field(
+        default=0,
+        metadata={"help": "The minimum total input sequence length after tokenization"},
     )
     num_beams: int = field(
         default=4,
@@ -119,6 +125,13 @@ def main():
             .filter(contain_question_mark)
             .map(normalise)
         )
+    elif data_args.dataset == Dataset.PUBMED:
+        eval_data = (
+            load_dataset("alinet/pubmed_qa", "truncated", split="validation")
+            .select_columns(["source", "target"])
+            .filter(contain_question_mark)
+            .map(normalise)
+        )
 
     logger.info("loading model")
 
@@ -147,6 +160,7 @@ def main():
         random_state=model_args.seed,
         generation_kwargs={
             "max_new_tokens": model_args.max_length,
+            "min_new_tokens": model_args.min_length,
             "num_beams": model_args.num_beams,
         },
     )
@@ -189,4 +203,5 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     datasets.logging.set_verbosity_info()
     evaluate.logging.set_verbosity_info()
+    evaluate.enable_progress_bar()
     main()
