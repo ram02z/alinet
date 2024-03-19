@@ -8,6 +8,7 @@ AliNET requires the following dependencies:
 
 - Python 3.10
 - Poetry
+- Tesseract
 - FFmpeg
 
 Using `brew` package manager as an example:
