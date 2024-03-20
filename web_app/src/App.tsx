@@ -28,7 +28,7 @@ export default function App() {
     })
 
     try {
-      const response = await fetch('localhost:8000', {
+      const response = await fetch('http://localhost:8000/generate_questions', {
         method: 'POST',
         body: formData,
       })

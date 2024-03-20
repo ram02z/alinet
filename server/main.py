@@ -27,7 +27,7 @@ app.add_middleware(
 @app.post("/generate_questions")
 async def generate_questions(files: List[UploadFile] = File(...)):  
     for file in files:
-        if file.content_type not in ["video/mp4", "application/pdf"]:
+        if file.content_type not in ["video/mp4"]:
             raise Exception(f"File type not allowed: {file.filename}")
         
     temp_file_paths = []
@@ -46,7 +46,10 @@ async def generate_questions(files: List[UploadFile] = File(...)):
     questions = []
     for temp_file_path in temp_file_paths:  
         questions_for_temp_file = baseline(temp_file_path, 0.5, 0.5, "distil-whisper/distil-medium.en", "alinet/bart-base-squad-qg", None)
-        questions = questions + questions_for_temp_file
+        print(questions_for_temp_file)
+
+        for key, value in questions_for_temp_file.items():
+            questions.append(value)
 
     return {"questions": questions}
 

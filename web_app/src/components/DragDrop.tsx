@@ -21,7 +21,7 @@ export const DragDrop = ({ files, setFiles }: DragDropProps) => {
         setFiles((prevFiles: File[]) => [...prevFiles, ...files])
       }}
       onReject={(files) => console.log('rejected files', files)}
-      accept={[MIME_TYPES.pdf, MIME_TYPES.mp4]}
+      accept={[MIME_TYPES.mp4]}
     >
       <Group
         className="dragdrop-content"

@@ -51,6 +51,21 @@ To save the video clips corresponding to the system-generated chunk, you can pro
 # If no video clips path is provided, they won't be saved.
 python main.py --video path/to/video/file.mp4 --video_clips_path directory/to/save/clips/to
 ```
+
 ## Fine-tuning
 
 See `/scripts` directory to learn how to generate and prepare the datasets, train the model and evaluate its performance.
+
+## Web App
+
+### Starting the server
+
+To start the server:
+
+- cd into server directory
+- run "uvicorn main:app --reload"
+
+To start the react application:
+
+- cd into web_app directory
+- run "npm run dev"
