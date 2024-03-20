@@ -15,6 +15,12 @@ from alinet import baseline, qg, asr  # noqa: E402
 @dataclass
 class BaselineArguments:
     video: str = field(metadata={"help": "Video file path"})
+    doc_paths: list[str] = field(
+        default_factory=list,
+        metadata={
+            "help": "List of document paths. Add paths to documents separated by spaces"
+        },
+    )
     similarity_threshold: float = field(
         default=0.5, metadata={"help": "Threshold for slides filtering"}
     )
@@ -45,11 +51,12 @@ if __name__ == "__main__":
 
     questions = baseline(
         args.video,
+        args.doc_paths,
         args.similarity_threshold,
         args.filtering_threshold,
         args.asr_model,
         args.qg_model,
-        args.video_clips_path
+        args.video_clips_path,
     )
 
     pprint.pprint(questions)
