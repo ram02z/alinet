@@ -9,16 +9,14 @@ from alinet.rag.db import Database
 from chromadb import Collection
 
 def baseline(
-    doc_paths: list[str],
     video_path: str,
+    doc_paths: list[str],
     similarity_threshold,
     filtering_threshold,
     asr_model,
     qg_model,
     video_clips_path,
 ) -> dict[int, str]:
-    
-
 
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
@@ -27,7 +25,6 @@ def baseline(
 
     if video_clips_path:
         save_video_clips(video_path, transcript_chunks, video_clips_path)
-
 
     # * We might want to move this instantiate of the DB elsewhere, but I'm just gonna put it here for now
     text_chunks = []

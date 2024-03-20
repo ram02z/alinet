@@ -1,4 +1,4 @@
-from transformers import BartTokenizer
+from transformers import BartTokenizer, HfArgumentParser
 import chromadb
 from chromadb import Client
 from chromadb import Collection
@@ -9,18 +9,23 @@ from spacy.lang.en import English
 
 from alinet.qg import Model
 
-import os
 import hashlib
 import fitz
 
+from dataclasses import dataclass, field
+import torch
+@dataclass
+class EvaluateModelArguments:
+    doc_paths: list[str] = field(
+        metadata={"help": "List of document paths"},
+    )
+
 # Helper function
-def generate_sha256_hash():
-    # Generate a random number
-    random_data = os.urandom(16)
+def generate_sha256_hash_from_text(text):
     # Create a SHA256 hash object
     sha256_hash = hashlib.sha256()
-    # Update the hash object with the random data
-    sha256_hash.update(random_data)
+    # Update the hash object with the text encoded to bytes
+    sha256_hash.update(text.encode('utf-8'))
     # Return the hexadecimal representation of the hash
     return sha256_hash.hexdigest()
 
@@ -31,24 +36,26 @@ nlp.add_pipe("sentencizer")
 
 class Database:
     def __init__(self, 
-                pretrained_bart_tokenizer_name: str = Model.BALANCED_RESOLVED, 
+                pretrained_bart_tokenizer_name: Model = Model.BALANCED_RESOLVED, 
                 output_dir: str = "./chromadb"):
         # Tokenizer
         self.tokenizer = BartTokenizer.from_pretrained(pretrained_bart_tokenizer_name)
+        
+        self.angle : AnglE
 
-        # Embedding Model
-        self.angle = AnglE.from_pretrained(
-            "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
-        ).cuda()
+        if torch.cuda.is_available():
+            self.angle = AnglE.from_pretrained("WhereIsAI/UAE-Large-V1", pooling_strategy="cls").cuda()    
+        else:
+            self.angle = AnglE.from_pretrained("WhereIsAI/UAE-Large-V1", pooling_strategy="cls")
+            
         # ChromaDB client and collection
         self.client: Client = chromadb.PersistentClient(path=output_dir)
 
     def _get_doc_text(self, path: str):
         texts = []
-        # Get Document Text
-        doc = fitz.open(path) # open a document
-        for page in doc: # iterate the document pages
-            texts.append(page.get_text()) # get plain text encoded as UT
+        doc = fitz.open(path) 
+        for page in doc: 
+            texts.append(page.get_text())
         return "".join(texts)
 
     def store_documents(self, collection: Collection, doc_paths: list[str], max_token_limit: int = 512):
@@ -64,17 +71,11 @@ class Database:
                 collection.add(
                     embeddings=embedding,
                     documents=doc,
-                    ids=generate_sha256_hash(),
+                    ids=generate_sha256_hash_from_text(doc),
                 )
 
-        # Test if its working
-        collection.peek()
-        collection.count()
-
-
     # Makes sure that an old collection with the same name is deleted, so that a new one is created
-    def create_collection(self, client, collection_name: str = "default", 
-):
+    def create_collection(self, client, collection_name: str = "default"):
         try:
             client.delete_collection(collection_name)
         except ValueError:
@@ -120,17 +121,7 @@ class Database:
         context = long_answer_with_relevant_context
 
         return context
-    
 
-
-from transformers import HfArgumentParser
-from dataclasses import dataclass, field
-
-@dataclass
-class EvaluateModelArguments:
-    doc_paths: list[str] = field(
-        metadata={"help": "List of document paths"},
-    )
 
 if __name__ == "__main__":
     parser = HfArgumentParser((EvaluateModelArguments,))

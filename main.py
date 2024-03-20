@@ -48,8 +48,8 @@ if __name__ == "__main__":
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
 
     questions = baseline(
-        args.doc_paths,
         args.video,
+        args.doc_paths,
         args.similarity_threshold,
         args.filtering_threshold,
         args.asr_model,
