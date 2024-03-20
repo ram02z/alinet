@@ -6,13 +6,14 @@ from alinet.chunking.similarity import (
 from alinet.chunking.video import slide_chunking, save_video_clips
 import warnings
 
+
 def baseline(
     video_path: str,
     similarity_threshold,
     filtering_threshold,
     asr_model,
     qg_model,
-    video_clips_path,
+    video_clips_path=None,
 ) -> dict[int, str]:
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
@@ -31,12 +32,11 @@ def baseline(
         warnings.warn(
             "Slide chunks are empty. Question filtering step is skipped. Non-filtered questions are returned"
         )
-        return generated_questions
+        return {idx: question for idx, question in enumerate(generated_questions)}
 
     sim_scores = get_similarity_scores(transcript_chunks, slide_chunks)
     filtered_questions = filter_questions_by_retention_rate(
         sim_scores, generated_questions, similarity_threshold, filtering_threshold
     )
-
 
     return filtered_questions
