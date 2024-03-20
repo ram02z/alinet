@@ -33,6 +33,10 @@ class BaselineArguments:
         default=asr.Model.DISTIL_LARGE,
         metadata={"help": "Automatic Speech Recongition model to use"},
     )
+    doc_paths: list[str] = field(
+        default_factory=list,
+        metadata={"help": "List of document paths. Add paths to documents separated by spaces"},
+    )
     verbose: bool = field(default=False, metadata={"help": "Increase output verbosity"})
 
 
@@ -45,6 +49,7 @@ if __name__ == "__main__":
 
     questions = baseline(
         args.video,
+        args.doc_paths,
         args.similarity_threshold,
         args.filtering_threshold,
         args.asr_model,
