@@ -10,6 +10,7 @@ import { QuestionTable } from './components/QuestionTable'
 import { v4 as uuidv4 } from 'uuid'
 
 import './App.css'
+import {API_URL} from "./env.ts";
 
 export interface Question {
   id: string
@@ -18,17 +19,19 @@ export interface Question {
 
 export default function App() {
   const [files, setFiles] = useState<File[]>([])
-  const [selection, setSelection] = useState([] as string[])
-  const [questions, setQuestions] = useState([] as Question[])
+  const [selection, setSelection] = useState<string[]>([])
+  const [questions, setQuestions] = useState<Question[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
 
   const generateQuestions = async () => {
+    setLoading(true)
     const formData = new FormData()
     files.forEach((file) => {
       formData.append('files', file)
     })
 
     try {
-      const response = await fetch('http://localhost:8000/generate_questions', {
+      const response = await fetch(`${API_URL}/generate_questions`, {
         method: 'POST',
         body: formData,
       })
@@ -45,6 +48,8 @@ export default function App() {
       }
     } catch (error) {
       console.error(error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -65,9 +70,9 @@ export default function App() {
 
         <div className="generate-section">
           <Button
-            onClick={() => {
-              generateQuestions()
-            }}
+            loading={loading}
+            onClick={generateQuestions}
+            disabled={files.length === 0 || loading}
           >
             <IconSettingsCog /> Generate Questions
           </Button>
