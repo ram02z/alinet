@@ -97,22 +97,11 @@ def filter_questions_by_retention_rate(
     else:
         return filtered_questions
 
-def check_if_question_in_dict(question_to_check, dict):
-  is_question_in_dict = False
-
-  for idx, question in dict.items():
-     if question_to_check == question:
-        is_question_in_dict = True
-  
-  return is_question_in_dict
 
 def filter_similar_questions(question_dict):
     filtered_dict = {}
-    
     for idx, question in question_dict.items():
-      is_question_in_dict = check_if_question_in_dict(question, filtered_dict)
-    
-      if not is_question_in_dict:
-         filtered_dict[idx] = question
-
+        if question not in filtered_dict.values():
+            filtered_dict[idx] = question
+            
     return filtered_dict
