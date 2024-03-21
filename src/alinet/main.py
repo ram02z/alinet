@@ -2,12 +2,12 @@ from alinet import asr, qg, chunking
 from alinet.chunking.similarity import (
     get_similarity_scores,
     filter_questions_by_retention_rate,
+    filter_similar_questions
 )
 from alinet.chunking.video import slide_chunking, save_video_clips
 import warnings
 from alinet.rag.db import Database
 from chromadb import Collection
-
 
 def baseline(
     video_path: str,
@@ -40,6 +40,7 @@ def baseline(
 
     qg_pipe = qg.Pipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)
+    filtered_questions = filter_similar_questions(generated_questions)
 
     slide_chunks = slide_chunking(video_path)
     if len(slide_chunks) == 0:

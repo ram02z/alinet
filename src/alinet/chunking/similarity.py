@@ -111,3 +111,12 @@ def filter_questions_by_retention_rate(
         return {idx: question for idx, question in enumerate(generated_questions)}
     else:
         return filtered_questions
+
+
+def filter_similar_questions(question_dict):
+    filtered_dict = {}
+    for idx, question in question_dict.items():
+        if question not in filtered_dict.values():
+            filtered_dict[idx] = question
+            
+    return filtered_dict
