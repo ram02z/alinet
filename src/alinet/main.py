@@ -8,6 +8,7 @@ import warnings
 from alinet.rag.db import Database
 from chromadb import Collection
 
+
 def baseline(
     video_path: str,
     doc_paths: list[str],
@@ -15,7 +16,7 @@ def baseline(
     filtering_threshold,
     asr_model,
     qg_model,
-    video_clips_path,
+    video_clips_path=None,
 ) -> dict[int, str]:
 
     asr_pipe = asr.Pipeline(asr_model)
@@ -45,7 +46,7 @@ def baseline(
         warnings.warn(
             "Slide chunks are empty. Question filtering step is skipped. Non-filtered questions are returned"
         )
-        return generated_questions
+        return {idx: question for idx, question in enumerate(generated_questions)}
 
     sim_scores = get_similarity_scores(transcript_chunks, slide_chunks)
     filtered_questions = filter_questions_by_retention_rate(
