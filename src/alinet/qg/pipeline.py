@@ -30,8 +30,7 @@ class QGPipeline:
         documents: list[str],
         start_word=None,
         max_tokens=32,
-        num_beams=4,
-    ) -> dict[int, str]:
+    ) -> list[str]:
         """
         Generates one question per document (context)
 
@@ -67,12 +66,12 @@ class QGPipeline:
             **encoder_ids,
             decoder_input_ids=decoder_input_ids,
             max_new_tokens=max_tokens,
-            num_beams=num_beams,
+            do_sample=True,
+            top_p=0.95,
         )
+
         generated_questions = self.tokenizer.batch_decode(
             model_output, skip_special_tokens=True
         )
 
-        result_dict = {i: question for i, question in enumerate(generated_questions)}
-
-        return result_dict
+        return generated_questions

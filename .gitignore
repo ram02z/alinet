@@ -67,3 +67,6 @@ questions.json
 
 # Jupyter Notebook
 .ipynb_checkpoints/
+
+chromadb/
+chromadb/*
