@@ -4,6 +4,9 @@ import numpy as np
 import pytesseract
 import logging
 
+from alinet.chunking import TimeChunk
+
+
 def is_frame_different(frame1, frame2, threshold=0.9):
     gray_frame1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
     gray_frame2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
@@ -11,32 +14,28 @@ def is_frame_different(frame1, frame2, threshold=0.9):
     mean_abs_diff = np.mean(abs_diff)
     return mean_abs_diff > threshold
 
+
 def convert_millis_to_seconds(millis):
     seconds = int(millis / 1000)
     return seconds
 
-def slide_chunking(video_path):
+
+def slide_chunking(video_path: str) -> list[TimeChunk]:
     """
     Extract slide chunks from a video based on frame differences and slide timestamps.
-
-    Parameters:
-    - video_path (str): Path to the video file.
-
-    Returns:
-    list: A list of tuples representing slide chunks with (text, start time, end time).
     """
     cap = cv2.VideoCapture(video_path)
 
     if not cap.isOpened():
         raise RuntimeError("Error: Could not open video file.")
 
-    # Initialize list to store tuples (text, start time, end time)
-    slide_chunks = []
+    slide_chunks: list[TimeChunk] = []
 
     ret, previous_frame = cap.read()
     frame_interval = int(cap.get(cv2.CAP_PROP_FPS) * 30)
 
     i = 0
+    first = True
     while True:
         for _ in range(frame_interval - 1):
             ret, _ = cap.read()  # Skip frames
@@ -52,45 +51,60 @@ def slide_chunking(video_path):
         current_time_millis = cap.get(cv2.CAP_PROP_POS_MSEC)
         timestamp = convert_millis_to_seconds(current_time_millis)
 
-        if is_frame_different(frame, previous_frame):
+        if first or is_frame_different(frame, previous_frame):
             """
             Uncomment the 2 lines below to load a window that displays the current frames and respective timestamp
             """
             # cv2.putText(frame, str(timestamp), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             # cv2.imshow('Original Frame', frame)
             text = pytesseract.image_to_string(frame)
-            slide_chunks.append((text, timestamp, None))
+            slide_chunks.append(
+                TimeChunk(text=text, start_time=timestamp, end_time=0.0)
+            )
             i += 1
+            first = False
         previous_frame = frame.copy()
 
     cap.release()
     cv2.destroyAllWindows()
 
     # Set each tuple's end time to be the next tuple's start time
-    for i in range(len(slide_chunks)-1):
-        next_frame_tuple = slide_chunks[i + 1]
-        slide_chunks[i] = (slide_chunks[i][0], slide_chunks[i][1], next_frame_tuple[1])
+    for i in range(len(slide_chunks) - 1):
+        next_frame = slide_chunks[i + 1]
+        time_chunk = slide_chunks[i]
+        slide_chunks[i] = TimeChunk(
+            text=time_chunk.text,
+            start_time=time_chunk.start_time,
+            end_time=next_frame.start_time,
+        )
 
-    # Remove last element of frame_list, because the last slide of most lectures is consolidation/review, therefore, useless
+    # Remove last element of frame_list,
+    # We assume that the last slide of most lectures is consolidation/review
     slide_chunks.pop()
+
     return slide_chunks
 
-def save_video_clips(video_path, chunks, output_dir_path):
-    previous_end_time = 0 
-    # NOTE: The 25-second estimation below is derived from our stride length in /chunking/pipeline, 
+
+def save_video_clips(video_path: str, chunks: list[TimeChunk], output_dir_path: str):
+    previous_end_time = 0
+    # NOTE: The 25-second estimation below is derived from our stride length in /chunking/pipeline,
     # also we assume words are approximately 3/4 of a token, and the average human speaks at a rate of 140 words per minute.
-    stride_time = 25 
+    stride_time = 25
 
     for i, chunk in enumerate(chunks):
-        start_time, end_time = chunk["timestamp"]
+        start_time = chunk.start_time
+        end_time = chunk.end_time
 
         # ensure stride adjustment occurs only if possible
         if i != 0 and previous_end_time >= stride_time:
             start_time -= stride_time
-        
+
         subclip = VideoFileClip(video_path).subclip(start_time, end_time)
-        subclip.write_videofile(f"{output_dir_path}/chunk{i}.mp4", codec='libx264', audio_codec='aac')
-        previous_end_time = end_time 
+        subclip.write_videofile(
+            f"{output_dir_path}/chunk{i}.mp4", codec="libx264", audio_codec="aac"
+        )
+        previous_end_time = end_time
+
 
 if __name__ == "__main__":
-    chunks = slide_chunking("sample_data/lecture.mp4")
+    chunks = slide_chunking("sample_data/hai5.mp4")

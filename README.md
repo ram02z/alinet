@@ -8,6 +8,7 @@ AliNET requires the following dependencies:
 
 - Python 3.10
 - Poetry
+- Tesseract
 - FFmpeg
 
 Using `brew` package manager as an example:
@@ -30,8 +31,10 @@ PyTorch with CUDA support will be only be installed on Linux environments.
 
 ## Usage
 
+### Command Line Interface
+
 ```sh
-python main.py --video path/to/video/file.mp4 --filtering_threshold 1
+python cli.py --video path/to/video/file.mp4 --filtering_threshold 1
 ```
 
 This will output all the generated questions.
@@ -41,15 +44,31 @@ can provide a similarity threshold and a retention rate (filtering) threshold:
 
 ```sh
 # If no threshold is given, the default (0.5) is used for both
-python main.py --video path/to/video/file.mp4 --similarity_threshold 0.6 --filtering_threshold 0.4
+python cli.py --video path/to/video/file.mp4 --similarity_threshold 0.6 --filtering_threshold 0.4
 ```
 
 To save the video clips corresponding to the system-generated chunk, you can provide a directory path for the clips to be saved to:
 
 ```sh
 # If no video clips path is provided, they won't be saved.
-python main.py --video path/to/video/file.mp4 --video_clips_path directory/to/save/clips/to
+python cli.py --video path/to/video/file.mp4 --video_clips_path directory/to/save/clips/to
 ```
+
+### Web App
+
+To start the server, run the following command:
+
+```sh
+python main.py
+```
+
+To start the React application, run the following commands:
+
+```sh
+cd web_app
+npm run dev
+```
+
 ## Fine-tuning
 
 See `/scripts` directory to learn how to generate and prepare the datasets, train the model and evaluate its performance.
