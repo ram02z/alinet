@@ -49,9 +49,15 @@ if __name__ == "__main__":
     if args.verbose:
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
 
+    pdfs_bytes: list[bytes] = []
+    for doc_path in args.doc_paths:
+        with open(doc_path, "rb") as f:
+            pdf_bytes = f.read()
+        pdfs_bytes.append(pdf_bytes)
+
     questions = baseline(
         args.video,
-        args.doc_paths,
+        pdfs_bytes,
         args.similarity_threshold,
         args.filtering_threshold,
         args.asr_model,
