@@ -1,3 +1,4 @@
+import warnings
 import spacy
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -75,6 +76,39 @@ def get_similarity_scores(
         )
 
     return similarity_scores
+
+
+def filter_questions_by_retention_rate(
+    sim_scores: list[float],
+    generated_questions: list[str],
+    similarity_threshold: float,
+    filtering_threshold: float,
+) -> dict[int, str]:
+    """
+    Filter questions based on the retention rate and similarity threshold.
+    Parameters:
+    - sim_scores (list): List of similarity scores.
+    - generated_questions (list): List of generated questions.
+    - similarity_threshold (float): Threshold for similarity scores.
+    - filtering_threshold (float): Threshold for the retention rate.
+    Returns:
+    dict: A Dictionary of filtered questions based on the retention rate and similarity threshold.
+    """
+    filtered_questions = {}
+
+    for index, (sim, question) in enumerate(zip(sim_scores, generated_questions)):
+        if sim > similarity_threshold:
+            filtered_questions[index] = question
+
+    retention_rate = len(filtered_questions) / len(generated_questions)
+
+    if retention_rate < filtering_threshold:
+        warnings.warn(
+            "Could not effectively perform question filtering, all generated questions are being returned"
+        )
+        return {idx: question for idx, question in enumerate(generated_questions)}
+    else:
+        return filtered_questions
 
 
 def filter_similar_questions(questions: list[str]) -> list[str]:

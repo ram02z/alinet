@@ -1,7 +1,6 @@
 import os
 import sys
 from dataclasses import dataclass, field
-import pprint
 
 import transformers
 from transformers import HfArgumentParser
@@ -9,17 +8,20 @@ from transformers import HfArgumentParser
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
 
-from alinet import baseline, qg, asr  # noqa: E402
+from alinet import qg, asr, create_eval_questions  # noqa: E402
 
 
 @dataclass
 class BaselineArguments:
     video: str = field(metadata={"help": "Video file path"})
-    doc_paths: list[str] = field(
-        default_factory=list,
-        metadata={
-            "help": "List of document paths. Add paths to documents separated by spaces"
-        },
+    output_dir_path: str = field(
+        metadata={"help": "Directory to save clips and questions"}
+    )
+    similarity_threshold: float = field(
+        default=0.5, metadata={"help": "Threshold for slides filtering"}
+    )
+    filtering_threshold: float = field(
+        default=0.5, metadata={"help": "Threshold for percentage of filtered questions"}
     )
     qg_model: qg.Model = field(
         default=qg.Model.BALANCED_RA,
@@ -39,17 +41,11 @@ if __name__ == "__main__":
     if args.verbose:
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
 
-    pdfs_bytes: list[bytes] = []
-    for doc_path in args.doc_paths:
-        with open(doc_path, "rb") as f:
-            pdf_bytes = f.read()
-        pdfs_bytes.append(pdf_bytes)
-
-    questions = baseline(
+    create_eval_questions(
         args.video,
-        asr_model=args.asr_model,
-        qg_model=args.qg_model,
-        pdfs_bytes=pdfs_bytes,
+        args.output_dir_path,
+        args.asr_model,
+        args.qg_model,
+        args.similarity_threshold,
+        args.filtering_threshold,
     )
-
-    pprint.pprint(questions)
