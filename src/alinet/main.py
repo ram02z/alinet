@@ -14,7 +14,7 @@ def baseline(
     video_path: str,
     asr_model: asr.Model,
     qg_model: qg.Model,
-    doc_paths: list[str],
+    pdfs_bytes: list[bytes],
 ) -> list[Question]:
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
@@ -22,11 +22,11 @@ def baseline(
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
     # TODO: We might want to move this instantiate of the DB elsewhere, but I'm just gonna put it here for now
-    if len(doc_paths) != 0:
+    if len(pdfs_bytes) != 0:
         # Supplementary material
         db = Database()
         collection: Collection = db.create_collection(db.client)
-        db.store_documents(collection, doc_paths=doc_paths)
+        db.store_documents(collection, pdfs_bytes=pdfs_bytes)
         text_chunks = [
             db.add_relevant_context_to_source(context=chunk.text, collection=collection)
             for chunk in transcript_chunks

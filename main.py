@@ -35,7 +35,7 @@ async def generate_questions(files: List[UploadFile] = File(...)) -> list[Questi
     if not videos:
         raise HTTPException(status_code=400, detail="No video files provided")
 
-    temp_file_paths = []
+    temp_video_paths = []
     try:
         for video in videos:
             file_type = os.path.splitext(video.filename)[1]
@@ -44,25 +44,29 @@ async def generate_questions(files: List[UploadFile] = File(...)) -> list[Questi
             ) as temp_file:
                 shutil.copyfileobj(video.file, temp_file)
                 logger.info(f"file '{video.filename}' saved as '{temp_file.name}'")
-                temp_file_paths.append(temp_file.name)
+                temp_video_paths.append(temp_file.name)
     except Exception as e:
-        cleanup_files(temp_file_paths)
+        cleanup_files(temp_video_paths)
         raise HTTPException(
             status_code=500,
             detail=f"An error occurred while processing files: {str(e)}",
         )
 
+    pdfs_bytes = [
+        await file.read() for file in files if file.content_type == "application/pdf"
+    ]
+
     questions = []
-    for temp_file_path in temp_file_paths:
+    for temp_video_path in temp_video_paths:
         generated_questions = baseline(
-            temp_file_path,
+            video_path=temp_video_path,
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
-            doc_paths=[],
+            pdfs_bytes=pdfs_bytes,
         )
         questions.extend(generated_questions)
 
-    cleanup_files(temp_file_paths)
+    cleanup_files(temp_video_paths)
 
     return questions
 

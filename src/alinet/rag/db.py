@@ -11,6 +11,7 @@ from alinet.qg import Model
 
 import hashlib
 import fitz
+import io
 
 from dataclasses import dataclass, field
 import torch
@@ -61,18 +62,22 @@ class Database:
         # ChromaDB client and collection
         self.client: Client = chromadb.PersistentClient(path=output_dir)
 
-    def _get_doc_text(self, path: str):
+    def _get_doc_text(self, pdf_bytes: bytes):
         texts = []
-        doc = fitz.open(path)
-        for page in doc:
-            texts.append(page.get_text())
+        with io.BytesIO(pdf_bytes) as pdf_stream:
+            doc = fitz.open(stream=pdf_stream)
+            for page in doc:
+                texts.append(page.get_text())
         return "".join(texts)
 
     def store_documents(
-        self, collection: Collection, doc_paths: list[str], max_token_limit: int = 512
+        self,
+        collection: Collection,
+        pdfs_bytes: list[bytes],
+        max_token_limit: int = 512,
     ):
-        for path in doc_paths:
-            document = self._get_doc_text(path)
+        for pdf_bytes in pdfs_bytes:
+            document = self._get_doc_text(pdf_bytes)
             chunks = self._create_document_chunks(document, max_token_limit)
 
             for doc in chunks:
@@ -137,7 +142,14 @@ if __name__ == "__main__":
 
     db = Database()
     collection = db.create_collection(db.client)
-    db.store_documents(collection, doc_paths=args.doc_paths)
+
+    pdfs_bytes: list[bytes] = []
+    for doc_path in args.doc_paths:
+        with open(doc_path, "rb") as f:
+            pdf_bytes = f.read()
+        pdfs_bytes.append(pdf_bytes)
+
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
 
     context = "INPUT THE CONTEXT HERE"
     result = db.add_relevant_context_to_source(context, collection)
