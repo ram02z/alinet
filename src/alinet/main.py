@@ -2,12 +2,13 @@ from alinet import asr, qg, chunking
 from alinet.chunking.similarity import (
     get_similarity_scores,
     filter_questions_by_retention_rate,
-    filter_similar_questions
+    filter_similar_questions,
 )
-from alinet.chunking.video import slide_chunking, save_video_clips
+from alinet.chunking.video import slide_chunking
 import warnings
 from alinet.rag.db import Database
 from chromadb import Collection
+
 
 def baseline(
     video_path: str,
@@ -16,25 +17,22 @@ def baseline(
     filtering_threshold,
     asr_model,
     qg_model,
-    video_clips_path=None,
-) -> dict[int, str]:
-
+) -> list[str]:
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = chunking.Pipeline(qg_model)
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    if video_clips_path:
-        save_video_clips(video_path, transcript_chunks, video_clips_path)
-
-    # * We might want to move this instantiate of the DB elsewhere, but I'm just gonna put it here for now
-    text_chunks = []
+    # TODO: We might want to move this instantiate of the DB elsewhere, but I'm just gonna put it here for now
     if len(doc_paths) != 0:
         # Supplementary material
         db = Database()
         collection: Collection = db.create_collection(db.client)
         db.store_documents(collection, doc_paths=doc_paths)
-        text_chunks = [db.add_relevant_context_to_source(context=chunk.text, collection=collection) for chunk in transcript_chunks]
+        text_chunks = [
+            db.add_relevant_context_to_source(context=chunk.text, collection=collection)
+            for chunk in transcript_chunks
+        ]
     else:
         text_chunks = [chunk.text for chunk in transcript_chunks]
 
@@ -47,11 +45,11 @@ def baseline(
         warnings.warn(
             "Slide chunks are empty. Question filtering step is skipped. Non-filtered questions are returned"
         )
-        return {idx: question for idx, question in enumerate(generated_questions)}
+        return filtered_questions
 
     sim_scores = get_similarity_scores(transcript_chunks, slide_chunks)
     filtered_questions = filter_questions_by_retention_rate(
-        sim_scores, generated_questions, similarity_threshold, filtering_threshold
+        sim_scores, filtered_questions, similarity_threshold, filtering_threshold
     )
 
-    return filtered_questions
+    return list(filtered_questions.values())

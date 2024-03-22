@@ -113,10 +113,10 @@ def filter_questions_by_retention_rate(
         return filtered_questions
 
 
-def filter_similar_questions(question_dict):
-    filtered_dict = {}
-    for idx, question in question_dict.items():
-        if question not in filtered_dict.values():
-            filtered_dict[idx] = question
-            
-    return filtered_dict
+def filter_similar_questions(questions: list[str]) -> list[str]:
+    filtered_questions = []
+    for question in questions:
+        if question not in filtered_questions:
+            filtered_questions.append(question)
+
+    return filtered_questions

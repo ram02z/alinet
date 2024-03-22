@@ -56,7 +56,6 @@ if __name__ == "__main__":
         args.filtering_threshold,
         args.asr_model,
         args.qg_model,
-        args.video_clips_path,
     )
 
     pprint.pprint(questions)
