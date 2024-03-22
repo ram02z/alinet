@@ -21,23 +21,13 @@ class BaselineArguments:
             "help": "List of document paths. Add paths to documents separated by spaces"
         },
     )
-    similarity_threshold: float = field(
-        default=0.5, metadata={"help": "Threshold for slides filtering"}
-    )
-    filtering_threshold: float = field(
-        default=0.5, metadata={"help": "Threshold for percentage of filtered questions"}
-    )
     qg_model: qg.Model = field(
         default=qg.Model.BALANCED_RA,
         metadata={"help": "Question generation model to use"},
     )
-    video_clips_path: str | None = field(
-        default=None,
-        metadata={"help": "Directory to save the video clips"},
-    )
     asr_model: asr.Model = field(
         default=asr.Model.DISTIL_LARGE,
-        metadata={"help": "Automatic Speech Recongition model to use"},
+        metadata={"help": "Automatic Speech Recognition model to use"},
     )
     verbose: bool = field(default=False, metadata={"help": "Increase output verbosity"})
 
@@ -51,11 +41,9 @@ if __name__ == "__main__":
 
     questions = baseline(
         args.video,
-        args.doc_paths,
-        args.similarity_threshold,
-        args.filtering_threshold,
-        args.asr_model,
-        args.qg_model,
+        asr_model=args.asr_model,
+        qg_model=args.qg_model,
+        doc_paths=args.doc_paths,
     )
 
     pprint.pprint(questions)

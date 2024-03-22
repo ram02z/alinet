@@ -10,7 +10,7 @@ import tempfile
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
-from alinet import asr, qg, baseline  # noqa: E402
+from alinet import asr, qg, baseline, Question  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ app.add_middleware(
 
 
 @app.post("/generate_questions")
-async def generate_questions(files: List[UploadFile] = File(...)):
+async def generate_questions(files: List[UploadFile] = File(...)) -> list[Question]:
     videos = [file for file in files if file.content_type == "video/mp4"]
     if not videos:
         raise HTTPException(status_code=400, detail="No video files provided")
@@ -56,16 +56,15 @@ async def generate_questions(files: List[UploadFile] = File(...)):
     for temp_file_path in temp_file_paths:
         generated_questions = baseline(
             temp_file_path,
-            similarity_threshold=0.5,
-            filtering_threshold=0.5,
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
+            doc_paths=[],
         )
         questions.extend(generated_questions)
 
     cleanup_files(temp_file_paths)
 
-    return {"questions": questions}
+    return questions
 
 
 def cleanup_files(temp_file_paths):
