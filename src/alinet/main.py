@@ -76,11 +76,8 @@ def create_eval_questions(
     qg_pipe = qg.Pipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)
 
-    __import__("pprint").pprint(generated_questions)
-
     slide_chunks = slide_chunking(video_path)
     sim_scores = get_similarity_scores(transcript_chunks, slide_chunks, overlap=15)
-    print(sim_scores)
     assert len(transcript_chunks) == len(sim_scores)
     filtered_questions = filter_questions_by_retention_rate(
         sim_scores,
