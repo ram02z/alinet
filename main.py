@@ -61,7 +61,7 @@ async def generate_questions(files: List[UploadFile] = File(...)):
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
         )
-        questions.extend(generated_questions.values())
+        questions.extend(generated_questions)
 
     cleanup_files(temp_file_paths)
 
