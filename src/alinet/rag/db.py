@@ -11,21 +11,25 @@ from alinet.qg import Model
 
 import hashlib
 import fitz
+import io
 
 from dataclasses import dataclass, field
 import torch
+
+
 @dataclass
 class EvaluateModelArguments:
     doc_paths: list[str] = field(
         metadata={"help": "List of document paths"},
     )
 
+
 # Helper function
 def generate_sha256_hash_from_text(text):
     # Create a SHA256 hash object
     sha256_hash = hashlib.sha256()
     # Update the hash object with the text encoded to bytes
-    sha256_hash.update(text.encode('utf-8'))
+    sha256_hash.update(text.encode("utf-8"))
     # Return the hexadecimal representation of the hash
     return sha256_hash.hexdigest()
 
@@ -34,35 +38,46 @@ logger = logging.getLogger(__name__)
 nlp = English()
 nlp.add_pipe("sentencizer")
 
+
 class Database:
-    def __init__(self, 
-                pretrained_bart_tokenizer_name: Model = Model.BALANCED_RESOLVED, 
-                output_dir: str = "./chromadb"):
+    def __init__(
+        self,
+        pretrained_bart_tokenizer_name: Model = Model.BALANCED_RESOLVED,
+        output_dir: str = "./chromadb",
+    ):
         # Tokenizer
         self.tokenizer = BartTokenizer.from_pretrained(pretrained_bart_tokenizer_name)
-        
-        self.angle : AnglE
+
+        self.angle: AnglE
 
         if torch.cuda.is_available():
-            self.angle = AnglE.from_pretrained("WhereIsAI/UAE-Large-V1", pooling_strategy="cls").cuda()    
+            self.angle = AnglE.from_pretrained(
+                "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
+            ).cuda()
         else:
-            self.angle = AnglE.from_pretrained("WhereIsAI/UAE-Large-V1", pooling_strategy="cls")
-            
+            self.angle = AnglE.from_pretrained(
+                "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
+            )
+
         # ChromaDB client and collection
         self.client: Client = chromadb.PersistentClient(path=output_dir)
 
-    def _get_doc_text(self, path: str):
+    def _get_doc_text(self, pdf_bytes: bytes):
         texts = []
-        doc = fitz.open(path) 
-        for page in doc: 
-            texts.append(page.get_text())
+        with io.BytesIO(pdf_bytes) as pdf_stream:
+            doc = fitz.open(stream=pdf_stream)
+            for page in doc:
+                texts.append(page.get_text())
         return "".join(texts)
 
-    def store_documents(self, collection: Collection, doc_paths: list[str], max_token_limit: int = 512):
-        
-        for path in doc_paths:
-            
-            document = self._get_doc_text(path)
+    def store_documents(
+        self,
+        collection: Collection,
+        pdfs_bytes: list[bytes],
+        max_token_limit: int = 512,
+    ):
+        for pdf_bytes in pdfs_bytes:
+            document = self._get_doc_text(pdf_bytes)
             chunks = self._create_document_chunks(document, max_token_limit)
 
             for doc in chunks:
@@ -88,7 +103,6 @@ class Database:
 
         return collection
 
-
     # Splits a document into chunks of text, aiming to respect a maximum token limit.
     def _create_document_chunks(self, document: str, chunk_size: int = 512):
         doc = nlp(document)
@@ -98,7 +112,7 @@ class Database:
         token_i = 0
         doc_i = 0
         documents = [[]]
-        for sent, tokens in zip(sentences, tokenized_sents['input_ids']):
+        for sent, tokens in zip(sentences, tokenized_sents["input_ids"]):
             if token_i + len(tokens) >= chunk_size:
                 token_i = 0
                 documents.append([])
@@ -106,8 +120,7 @@ class Database:
             documents[doc_i].append(sent)
             token_i += len(tokens)
 
-        return [' '.join(d) for d in documents]
-
+        return [" ".join(d) for d in documents]
 
     def add_relevant_context_to_source(self, context: str, collection: Collection):
         query_embedding = self.angle.encode(context, to_numpy=True)
@@ -129,10 +142,15 @@ if __name__ == "__main__":
 
     db = Database()
     collection = db.create_collection(db.client)
-    db.store_documents(collection, doc_paths=args.doc_paths)
+
+    pdfs_bytes: list[bytes] = []
+    for doc_path in args.doc_paths:
+        with open(doc_path, "rb") as f:
+            pdf_bytes = f.read()
+        pdfs_bytes.append(pdf_bytes)
+
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
 
     context = "INPUT THE CONTEXT HERE"
     result = db.add_relevant_context_to_source(context, collection)
     print(result)
-
-
