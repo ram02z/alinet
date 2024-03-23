@@ -15,8 +15,7 @@ Using `brew` package manager as an example:
 
 ```shell
 # Install system dependencies
-brew install python@3.10 ffmpeg pipx
-
+brew install python@3.10 ffmpeg tesseract pipx
 # Install poetry
 pipx ensurepath
 pipx install poetry
@@ -30,29 +29,6 @@ The virtual environment will be created locally in the `.venv` directory.
 PyTorch with CUDA support will be only be installed on Linux environments.
 
 ## Usage
-
-### Command Line Interface
-
-```sh
-python cli.py --video path/to/video/file.mp4 --filtering_threshold 1
-```
-
-This will output all the generated questions.
-
-To filter the generated questions using the lecture slides (from the video), you
-can provide a similarity threshold and a retention rate (filtering) threshold:
-
-```sh
-# If no threshold is given, the default (0.5) is used for both
-python cli.py --video path/to/video/file.mp4 --similarity_threshold 0.6 --filtering_threshold 0.4
-```
-
-To save the video clips corresponding to the system-generated chunk, you can provide a directory path for the clips to be saved to:
-
-```sh
-# If no video clips path is provided, they won't be saved.
-python cli.py --video path/to/video/file.mp4 --video_clips_path directory/to/save/clips/to
-```
 
 ### Web App
 
@@ -68,6 +44,33 @@ To start the React application, run the following commands:
 cd web_app
 npm run dev
 ```
+
+### Command Line Interface
+
+This will generate all questions and the filtered video clips. Used for our human evaluation.
+
+```sh
+python cli.py \
+  --video path/to/video/file.mp4 \
+  --similarity_threshold 0 \
+  --output_dir_path path/to/output/directory
+```
+
+This will save the questions and all video clips to `path/to/output/directory`.
+
+To filter the generated questions using the lecture slides (from the video), you
+can provide a similarity threshold and a retention rate (filtering) threshold:
+
+```sh
+# If no threshold is given, the default (0.5) is used for both
+python cli.py \
+  --video path/to/video/file.mp4 \
+  --similarity_threshold 0.6 \
+  --filtering_threshold 0.4 \
+  --output_dir_path path/to/output/directory
+```
+
+This will save only the video clips associated with the questions that have a similarity score greater than `0.6` and a retention rate greater than `0.4`.
 
 ## Fine-tuning
 
