@@ -10,7 +10,7 @@ import tempfile
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
-from alinet import asr, qg, baseline  # noqa: E402
+from alinet import asr, qg, rag, baseline  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+async def startup_event():
+    # Instantiate database singleton instance
+    rag.Database()
+
+
+app.add_event_handler("startup", startup_event)
 
 
 @app.post("/generate_questions")

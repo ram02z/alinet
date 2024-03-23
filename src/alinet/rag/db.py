@@ -40,6 +40,13 @@ nlp.add_pipe("sentencizer")
 
 
 class Database:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+        return cls._instance
+
     def __init__(
         self,
         pretrained_bart_tokenizer_name: Model = Model.BALANCED_RESOLVED,

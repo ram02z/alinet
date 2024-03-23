@@ -9,7 +9,7 @@ from transformers import HfArgumentParser
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
 
-from alinet import baseline, qg, asr  # noqa: E402
+from alinet import baseline, qg, rag, asr  # noqa: E402
 
 
 @dataclass
@@ -48,7 +48,8 @@ if __name__ == "__main__":
 
     if args.verbose:
         transformers.logging.set_verbosity(transformers.logging.DEBUG)
-
+    # Instantiate database singleton instance
+    rag.Database()
     pdfs_bytes: list[bytes] = []
     for doc_path in args.doc_paths:
         with open(doc_path, "rb") as f:
