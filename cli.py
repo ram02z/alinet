@@ -8,11 +8,7 @@ from transformers import HfArgumentParser
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
 
-<<<<<<< HEAD
-from alinet import baseline, qg, rag, asr  # noqa: E402
-=======
-from alinet import qg, asr, create_eval_questions  # noqa: E402
->>>>>>> dev
+from alinet import create_eval_questions, qg, asr  # noqa: E402
 
 
 @dataclass
