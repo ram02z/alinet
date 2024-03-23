@@ -24,12 +24,10 @@ def baseline(
     chunk_pipe = chunking.Pipeline(qg_model)
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    # TODO: We might want to move this instantiate of the DB elsewhere, but I'm just gonna put it here for now
     if len(pdfs_bytes) != 0:
         # Supplementary material
         # Get database singleton instance
         db = Database._instance
-        print(db)
         collection: Collection = db.create_collection()
         db.store_documents(collection, pdfs_bytes=pdfs_bytes)
         text_chunks = [
