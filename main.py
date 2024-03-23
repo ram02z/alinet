@@ -7,6 +7,7 @@ import shutil
 import sys
 import os
 import tempfile
+from pydantic import BaseModel
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
@@ -16,21 +17,20 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-origins = [
-    "*",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.post("/generate_questions")
-async def generate_questions(files: List[UploadFile] = File(...)) -> list[Question]:
+class QuestionsResponse(BaseModel):
+    questions: list[Question]
+
+
+@app.post("/generate_questions", response_model=QuestionsResponse)
+async def generate_questions(files: List[UploadFile] = File(...)):
     videos = [file for file in files if file.content_type == "video/mp4"]
     if not videos:
         raise HTTPException(status_code=400, detail="No video files provided")
@@ -68,7 +68,7 @@ async def generate_questions(files: List[UploadFile] = File(...)) -> list[Questi
 
     cleanup_files(temp_video_paths)
 
-    return questions
+    return QuestionsResponse(questions=questions)
 
 
 def cleanup_files(temp_file_paths):
@@ -83,4 +83,10 @@ def cleanup_files(temp_file_paths):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+        reload_excludes=["web_app"],
+    )
