@@ -66,6 +66,9 @@ def create_eval_questions(
     qg_model: qg.Model,
     similarity_threshold: float,
     filtering_threshold: float,
+    stride_time: int,
+    sample_size: int,
+    seed: int,
 ):
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
@@ -86,8 +89,8 @@ def create_eval_questions(
         filtering_threshold,
     )
 
-    random.seed(1)
-    keys_list = random.sample(list(filtered_questions.keys()), 10)
+    random.seed(seed)
+    keys_list = random.sample(list(filtered_questions.keys()), sample_size)
 
     with open(f"{output_dir_path}/questions.csv", "w", newline="") as file:
         writer = csv.writer(file)
@@ -101,9 +104,5 @@ def create_eval_questions(
             writer.writerow([idx, chunk.text, question, sim])
 
     save_video_clips(
-        video_path,
-        transcript_chunks,
-        output_dir_path,
-        keys_list,
-        10
+        video_path, transcript_chunks, output_dir_path, keys_list, stride_time
     )

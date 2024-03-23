@@ -12,7 +12,7 @@ from alinet import qg, asr, create_eval_questions  # noqa: E402
 
 
 @dataclass
-class BaselineArguments:
+class CreateEvalQuestionsArguments:
     video: str = field(metadata={"help": "Video file path"})
     output_dir_path: str = field(
         metadata={"help": "Directory to save clips and questions"}
@@ -31,11 +31,18 @@ class BaselineArguments:
         default=asr.Model.DISTIL_LARGE,
         metadata={"help": "Automatic Speech Recognition model to use"},
     )
+    stride_time: int = field(
+        default=10, metadata={"help": "Time (in seconds) add to each clip"}
+    )
+    sample_size: int = field(
+        default=10, metadata={"help": "Number of questions to sample"}
+    )
+    seed: int = field(default=1, metadata={"help": "Seed for random number generator"})
     verbose: bool = field(default=False, metadata={"help": "Increase output verbosity"})
 
 
 if __name__ == "__main__":
-    parser = HfArgumentParser((BaselineArguments,))
+    parser = HfArgumentParser((CreateEvalQuestionsArguments,))
     args = parser.parse_args_into_dataclasses()[0]
 
     if args.verbose:
@@ -48,4 +55,7 @@ if __name__ == "__main__":
         args.qg_model,
         args.similarity_threshold,
         args.filtering_threshold,
+        args.stride_time,
+        args.sample_size,
+        args.seed,
     )
