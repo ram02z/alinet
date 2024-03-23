@@ -43,7 +43,7 @@ export const QuestionTable = ({
             onChange={() => toggleRow(item.id)}
           />
         </Table.Td>
-        <Table.Td>{item.question}</Table.Td>
+        <Table.Td>{item.text}</Table.Td>
       </Table.Tr>
     )
   })

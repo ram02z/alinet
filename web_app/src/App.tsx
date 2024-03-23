@@ -3,7 +3,7 @@ import { MantineProvider } from '@mantine/core'
 import { theme } from './theme'
 import { DragDrop } from './components/DragDrop'
 import { FileList } from './components/FileList'
-import { useState } from 'react'
+import { useState} from 'react'
 import { Button } from '@mantine/core'
 import { IconSettingsCog } from '@tabler/icons-react'
 import { QuestionTable } from './components/QuestionTable'
@@ -14,7 +14,8 @@ import {API_URL} from "./env.ts";
 
 export interface Question {
   id: string
-  question: string
+  text: string
+  score: number
 }
 
 export default function App() {
@@ -38,10 +39,11 @@ export default function App() {
 
       if (response.ok) {
         const data = await response.json()
-        const questionsWithId = data.questions.map((question: string) => {
+        const questionsWithId = data.questions.map((question: { text: string; similarity_score: number }) => {
           return {
             id: uuidv4(),
-            question,
+            text: question.text,
+            score: question.similarity_score,
           }
         })
         setQuestions(questionsWithId)
@@ -77,7 +79,6 @@ export default function App() {
             <IconSettingsCog /> Generate Questions
           </Button>
         </div>
-
         <div className="question-section">
           <QuestionTable
             selection={selection}

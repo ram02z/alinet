@@ -7,29 +7,29 @@ import shutil
 import sys
 import os
 import tempfile
+from pydantic import BaseModel
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
-from alinet import asr, qg, baseline  # noqa: E402
+from alinet import asr, qg, baseline, Question  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-origins = [
-    "*",
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.post("/generate_questions")
+class QuestionsResponse(BaseModel):
+    questions: list[Question]
+
+
+@app.post("/generate_questions", response_model=QuestionsResponse)
 async def generate_questions(files: List[UploadFile] = File(...)):
     videos = [file for file in files if file.content_type == "video/mp4"]
     if not videos:
@@ -60,17 +60,15 @@ async def generate_questions(files: List[UploadFile] = File(...)):
     for temp_video_path in temp_video_paths:
         generated_questions = baseline(
             video_path=temp_video_path,
-            pdfs_bytes=pdfs_bytes,
-            similarity_threshold=0.5,
-            filtering_threshold=0.5,
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
+            pdfs_bytes=pdfs_bytes,
         )
         questions.extend(generated_questions)
 
     cleanup_files(temp_video_paths)
 
-    return {"questions": questions}
+    return QuestionsResponse(questions=questions)
 
 
 def cleanup_files(temp_file_paths):
@@ -85,4 +83,10 @@ def cleanup_files(temp_file_paths):
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host="127.0.0.1",
+        port=8000,
+        reload=True,
+        reload_excludes=["web_app"],
+    )
