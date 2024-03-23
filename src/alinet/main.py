@@ -27,7 +27,7 @@ def baseline(
     if len(pdfs_bytes) != 0:
         # Supplementary material
         db = Database()
-        collection: Collection = db.create_collection(db.client)
+        collection: Collection = db.create_collection()
         db.store_documents(collection, pdfs_bytes=pdfs_bytes)
         text_chunks = [
             db.add_relevant_context_to_source(context=chunk.text, collection=collection)
