@@ -33,7 +33,7 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
 
   const filesExpand = files.map((file, index) => (
     <Table.Tr key={file.name}>
-      <Table.Td className={cx(classes.td1st)}>
+      <Table.Td className={classes.tdName}>
         <Group>
           <Text>{file.name}</Text>
           <ActionIcon onClick={() => handleFileClick(file)} variant="light">
@@ -64,8 +64,8 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
             className={`${cx(classes.header, { [classes.scrolled]: scrolled })}`}
           >
             <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Remove</Table.Th>
+              <Table.Th className={classes.thName}>Name</Table.Th>
+              <Table.Th className={classes.thRemove}>Remove</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{filesExpand}</Table.Tbody>
