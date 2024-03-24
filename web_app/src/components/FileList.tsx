@@ -10,8 +10,7 @@ import {
   Group,
 } from "@mantine/core";
 import classes from "./FileList.module.css";
-import { Button } from "@mantine/core";
-import { IconExternalLink } from "@tabler/icons-react";
+import { IconExternalLink, IconX } from "@tabler/icons-react";
 
 export interface FileListProps {
   files: File[];
@@ -43,7 +42,13 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
         </Group>
       </Table.Td>
       <Table.Td>
-        <Button onClick={() => handleRemoveFile(index)}>X</Button>
+        <ActionIcon
+          color="red"
+          variant="filled"
+          onClick={() => handleRemoveFile(index)}
+        >
+          <IconX />
+        </ActionIcon>
       </Table.Td>
     </Table.Tr>
   ));
