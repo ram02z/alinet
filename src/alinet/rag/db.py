@@ -1,7 +1,8 @@
 from transformers import BartTokenizer, HfArgumentParser
 import chromadb
-from chromadb import Client
+from chromadb.api import ClientAPI
 from chromadb import Collection
+from chromadb.config import Settings
 
 from angle_emb import AnglE
 import logging
@@ -67,7 +68,11 @@ class Database:
             )
 
         # ChromaDB client and collection
-        self.client: Client = chromadb.PersistentClient(path=output_dir)
+        settings = Settings()
+        settings.allow_reset = True
+        self.client: ClientAPI = chromadb.PersistentClient(
+            path=output_dir, settings=settings
+        )
 
     def _get_doc_text(self, pdf_bytes: bytes):
         texts = []

@@ -1,6 +1,5 @@
 import logging
 from typing import List
-
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
@@ -8,6 +7,8 @@ import sys
 import os
 import tempfile
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
+
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
@@ -15,7 +16,20 @@ from alinet import asr, qg, rag, baseline, Question  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Instantiate database singleton instance ")
+    db = rag.Database()
+    yield
+    # Clean up the Database and release the resources
+    if not db.client.reset():
+        # Raise warning that Client could not be reset
+        logger.warning("Database collections and entries could not be deleted")
+    del db
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,14 +37,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-async def startup_event():
-    # Instantiate database singleton instance
-    rag.Database()
-
-
-app.add_event_handler("startup", startup_event)
 
 
 class QuestionsResponse(BaseModel):
