@@ -39,6 +39,16 @@ app.add_middleware(
 )
 
 
+def create_collection(pdfs_bytes: list[bytes]):
+    if len(pdfs_bytes) == 0:
+        return None
+
+    db = rag.Database._instance
+    collection = db.create_collection()
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
+    return collection
+
+
 class QuestionsResponse(BaseModel):
     questions: list[Question]
 
@@ -70,13 +80,24 @@ async def generate_questions(files: List[UploadFile] = File(...)):
         await file.read() for file in files if file.content_type == "application/pdf"
     ]
 
+    collection = create_collection(pdfs_bytes=pdfs_bytes)
+
+    def query_collection(context: str) -> str:
+        if collection:
+            db = rag.Database._instance
+            return db.add_relevant_context_to_source(
+                context=context, collection=collection
+            )
+        else:
+            return context
+
     questions = []
     for temp_video_path in temp_video_paths:
         generated_questions = baseline(
             video_path=temp_video_path,
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
-            pdfs_bytes=pdfs_bytes,
+            callback=query_collection,
         )
         questions.extend(generated_questions)
 

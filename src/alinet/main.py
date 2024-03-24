@@ -9,33 +9,22 @@ from alinet.chunking.similarity import (
 from alinet.chunking.video import save_video_clips, slide_chunking
 import warnings
 
-from alinet.rag.db import Database
 from chromadb import Collection
+from typing import Callable
 
 
 def baseline(
     video_path: str,
     asr_model: asr.Model,
     qg_model: qg.Model,
-    pdfs_bytes: list[bytes],
+    callback: Callable[[Collection, str], str],
 ) -> list[Question]:
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = chunking.Pipeline(qg_model)
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    if len(pdfs_bytes) != 0:
-        # Supplementary material
-        # Get database singleton instance
-        db = Database._instance
-        collection: Collection = db.create_collection()
-        db.store_documents(collection, pdfs_bytes=pdfs_bytes)
-        text_chunks = [
-            db.add_relevant_context_to_source(context=chunk.text, collection=collection)
-            for chunk in transcript_chunks
-        ]
-    else:
-        text_chunks = [chunk.text for chunk in transcript_chunks]
+    text_chunks = [callback(context=chunk.text) for chunk in transcript_chunks]
 
     qg_pipe = qg.Pipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)
