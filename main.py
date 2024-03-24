@@ -22,9 +22,7 @@ async def lifespan(app: FastAPI):
     logger.info("Instantiate database singleton instance ")
     db = rag.Database()
     yield
-    # Clean up the Database and release the resources
     if not db.client.reset():
-        # Raise warning that Client could not be reset
         logger.warning("Database collections and entries could not be deleted")
     del db
 
