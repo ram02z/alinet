@@ -25,7 +25,6 @@ async def lifespan(app: FastAPI):
     logger.info("Instantiate database singleton instance ")
     global db
     db = rag.Database()
-    print(db)
     yield
     if not db.client.reset():
         logger.warning("Database collections and entries could not be deleted")
@@ -45,7 +44,6 @@ app.add_middleware(
 def create_collection_with_documents(pdfs_bytes: list[bytes]):
     if len(pdfs_bytes) == 0:
         return None
-    print("Collection DB: ", db)
     collection = db.create_collection()
     db.store_documents(collection, pdfs_bytes=pdfs_bytes)
     return collection
