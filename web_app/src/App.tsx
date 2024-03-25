@@ -19,18 +19,6 @@ export interface Question {
   score: number
 }
 
-const testQuestions = [
-  { id: '2', text: 'What is the capital of Spain?', score: 0.8 },
-  { id: '4', text: 'What is the capital of Germany?', score: 0.6 },
-  { id: '1', text: 'What is the capital of France?', score: 0.9 },
-  { id: '3', text: 'What is the capital of Italy?', score: 0.7 },
-  { id: '8', text: 'What is the capital of South Korea?', score: 0.2 },
-  { id: '5', text: 'What is the capital of Russia?', score: 0.5 },
-  { id: '7', text: 'What is the capital of Japan?', score: 0.3 },
-  { id: '9', text: 'What is the capital of North Korea?', score: 0.1 },
-  { id: '6', text: 'What is the capital of China?', score: 0.4 },
-]
-
 export default function App() {
   const [files, setFiles] = useState<File[]>([])
   const [selection, setSelection] = useState<string[]>([])
@@ -69,10 +57,6 @@ export default function App() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const genTestQuestions = () => {
-    setQuestions(testQuestions)
   }
 
   return (
