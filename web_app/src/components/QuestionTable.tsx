@@ -1,5 +1,13 @@
 import cx from 'clsx'
-import { Table, Checkbox, ScrollArea, rem, Group, Center } from '@mantine/core'
+import {
+  Table,
+  Checkbox,
+  ScrollArea,
+  rem,
+  Group,
+  Center,
+  Tooltip,
+} from '@mantine/core'
 import classes from './QuestionTable.module.css'
 import { Question } from '../App'
 import { useState } from 'react'
@@ -7,6 +15,7 @@ import {
   IconSelector,
   IconChevronDown,
   IconChevronUp,
+  IconZoomQuestion,
 } from '@tabler/icons-react'
 export interface QuestionTableProps {
   selection: string[]
@@ -130,15 +139,19 @@ export const QuestionTable = ({
               </Table.Th>
               <Table.Th>Questions</Table.Th>
               <Table.Th>
-                <Group>
+                <Group gap="0">
+                  <Tooltip label="The score indicates the degree to which the context chunk, from which the question was derived, aligns with the learning material's content.">
+                    <IconZoomQuestion size={'1.2rem'} />
+                  </Tooltip>
                   Similarity Score
                   <Center>
                     <Icon
                       onClick={toggleSortDirection}
                       style={{
-                        width: rem(16),
-                        height: rem(16),
+                        width: rem(20),
+                        height: rem(20),
                         cursor: 'pointer',
+                        marginLeft: rem(5),
                       }}
                       stroke={1.5}
                     />
