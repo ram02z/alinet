@@ -11,6 +11,8 @@ import {
 } from "@mantine/core";
 import classes from "./FileList.module.css";
 import { IconExternalLink, IconX } from "@tabler/icons-react";
+import { MIME_TYPES } from "@mantine/dropzone";
+import PDFViewer from "./PDFViewer.tsx";
 
 export interface FileListProps {
   files: File[];
@@ -31,6 +33,7 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
     setIsModalOpen(true);
   };
 
+  // @ts-ignore
   const filesExpand = files.map((file, index) => (
     <Table.Tr key={file.name}>
       <Table.Td className={classes.tdName}>
@@ -79,11 +82,16 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
           size="xl"
         >
           <Paper p="md">
-            <video
-              controls
-              src={URL.createObjectURL(selectedFile)}
-              width="100%"
-            />
+            {selectedFile.type === MIME_TYPES.pdf && (
+              <PDFViewer file={selectedFile} />
+            )}
+            {selectedFile.type === MIME_TYPES.mp4 && (
+              <video
+                controls
+                src={URL.createObjectURL(selectedFile)}
+                width="100%"
+              />
+            )}
           </Paper>
         </Modal>
       )}
