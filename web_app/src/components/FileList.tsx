@@ -1,18 +1,9 @@
 import cx from "clsx";
 import { useState } from "react";
-import {
-  Table,
-  ScrollArea,
-  Modal,
-  Paper,
-  ActionIcon,
-  Text,
-  Group,
-} from "@mantine/core";
+import { Table, ScrollArea, ActionIcon, Text, Group } from "@mantine/core";
 import classes from "./FileList.module.css";
 import { IconExternalLink, IconX } from "@tabler/icons-react";
-import { MIME_TYPES } from "@mantine/dropzone";
-import PDFViewer from "./PDFViewer.tsx";
+import { FilePreviewModal } from "./FilePreviewModal.tsx";
 
 export interface FileListProps {
   files: File[];
@@ -22,7 +13,7 @@ export interface FileListProps {
 export const FileList = ({ files, setFiles }: FileListProps) => {
   const [scrolled, setScrolled] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
 
   const handleRemoveFile = (index: number) => {
     setFiles((prevFiles: File[]) => prevFiles.filter((_, i) => i !== index));
@@ -30,7 +21,7 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
 
   const handleFileClick = (file: File) => {
     setSelectedFile(file);
-    setIsModalOpen(true);
+    setPreviewModalOpen(true);
   };
 
   // @ts-ignore
@@ -75,25 +66,11 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
         </Table>
       </ScrollArea>
       {selectedFile && (
-        <Modal
-          opened={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={selectedFile.name}
-          size="xl"
-        >
-          <Paper p="md">
-            {selectedFile.type === MIME_TYPES.pdf && (
-              <PDFViewer file={selectedFile} />
-            )}
-            {selectedFile.type === MIME_TYPES.mp4 && (
-              <video
-                controls
-                src={URL.createObjectURL(selectedFile)}
-                width="100%"
-              />
-            )}
-          </Paper>
-        </Modal>
+        <FilePreviewModal
+          file={selectedFile}
+          isModalOpen={previewModalOpen}
+          setIsModalOpen={setPreviewModalOpen}
+        />
       )}
     </>
   );
