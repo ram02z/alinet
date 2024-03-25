@@ -1,33 +1,53 @@
+h2 {
+  font-size: 1.5rem;
+  text-decoration: underline;
+}
+
 .body {
   display: flex;
   flex-direction: column;
   padding: 2rem 5rem 0 5rem;
 }
 
-.upload-section {
+.upload-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+
+  .video-table-container {
+    display: flex;
+    flex-direction: row;
+  }
 }
 
-.generate-section {
-  padding: 2rem 0 2rem 0;
+.generate-container {
+  padding: 5rem 0 5rem 0;
   display: flex;
   justify-content: center;
   align-items: center;
+
+  .generate-question-btn {
+    width: 15rem;
+    height: 4rem;
+
+    font-size: 1rem;
+
+    border-radius: 0.5rem;
+
+    .setting-icon {
+      margin-right: 0.5rem;
+    }
+  }
 }
 
-.config-section {
-  padding: 0 0 3rem 0;
+.config-container {
+  padding: 0 0 1rem 0;
 
   .similarity-slider {
     width: 50rem;
   }
 
   #title {
-    font-size: 1.5rem;
+    font-size: 0.9rem;
+    font-weight: 700;
   }
-}
-
-.generate-question-btn {
-  margin: 0 0 2rem 0;
 }

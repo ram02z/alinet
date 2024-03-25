@@ -82,7 +82,7 @@ export const QuestionTable = ({
             />
           </Table.Td>
           <Table.Td>{item.text}</Table.Td>
-          <Table.Td>{item.score}</Table.Td>
+          <Table.Td>{item.score.toFixed(2)}</Table.Td>
         </Table.Tr>
       )
     }

@@ -63,7 +63,6 @@ export default function App() {
           }
         )
         setQuestions(questionsWithId)
-        // JUST TO TEST SLIDER
       }
     } catch (error) {
       console.error(error)
@@ -79,49 +78,54 @@ export default function App() {
   return (
     <MantineProvider theme={theme}>
       <div className="body">
-        <div className="upload-section">
-          <DragDrop
-            files={files}
-            setFiles={setFiles}
-          />
+        <div className="upload-container">
+          <h2>Upload videos / supplementary documents</h2>
 
-          <FileList
-            files={files}
-            setFiles={setFiles}
-          />
+          <div className="video-table-container">
+            <DragDrop
+              files={files}
+              setFiles={setFiles}
+            />
+
+            <FileList
+              files={files}
+              setFiles={setFiles}
+            />
+          </div>
         </div>
 
-        <div className="generate-section">
+        <div className="generate-container">
           <Button
             loading={loading}
-            onClick={genTestQuestions}
+            onClick={generateQuestions}
             disabled={files.length === 0 || loading}
             className="generate-question-btn"
           >
-            <IconSettingsCog /> Generate Questions
+            <IconSettingsCog className="setting-icon" /> Generate Questions
           </Button>
         </div>
 
-        <div className="config-section">
-          <div id="title">Similarity Threshold</div>
-          <Slider
-            value={similarityThreshold}
-            onChange={setSimilarityThreshold}
-            color="blue"
-            size="xl"
-            min={0}
-            max={1}
-            marks={[
-              { value: 0.25, label: '0.25' },
-              { value: 0.5, label: '0.50' },
-              { value: 0.75, label: '0.75' },
-            ]}
-            step={0.01}
-            className="similarity-slider"
-          />
-        </div>
+        <div className="question-container">
+          <h2>Generated Questions</h2>
+          <div className="config-container">
+            <div id="title">Similarity Threshold</div>
+            <Slider
+              value={similarityThreshold}
+              onChange={setSimilarityThreshold}
+              color="blue"
+              size="xl"
+              min={0}
+              max={1}
+              marks={[
+                { value: 0.25, label: '0.25' },
+                { value: 0.5, label: '0.50' },
+                { value: 0.75, label: '0.75' },
+              ]}
+              step={0.01}
+              className="similarity-slider"
+            />
+          </div>
 
-        <div className="question-section">
           <QuestionTable
             selection={selection}
             setSelection={setSelection}
