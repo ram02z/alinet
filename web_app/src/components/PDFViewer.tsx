@@ -54,7 +54,7 @@ export default function PDFViewer({ file }: { file: PDFFile }) {
       >
         <Page loading={<Loader />} pageNumber={pageNumber} width={600} />
       </Document>
-      <Group mt="md">
+      <Group mt="md" justify="center" w={600}>
         <ActionIcon
           loading={loading}
           onClick={previousPage}
