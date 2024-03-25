@@ -1,6 +1,5 @@
 import logging
 from typing import List
-
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
@@ -8,14 +7,31 @@ import sys
 import os
 import tempfile
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
+
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
-from alinet import asr, qg, baseline, Question  # noqa: E402
+from alinet import asr, qg, rag, baseline, Question  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+db = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Instantiate database singleton instance ")
+    global db
+    db = rag.Database()
+    yield
+    if not db.client.reset():
+        logger.warning("Database collections and entries could not be deleted")
+    del db
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +39,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def create_collection_with_documents(pdfs_bytes: list[bytes]):
+    if len(pdfs_bytes) == 0:
+        return None
+    collection = db.create_collection()
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
+    return collection
 
 
 class QuestionsResponse(BaseModel):
@@ -56,13 +80,23 @@ async def generate_questions(files: List[UploadFile] = File(...)):
         await file.read() for file in files if file.content_type == "application/pdf"
     ]
 
+    collection = create_collection_with_documents(pdfs_bytes=pdfs_bytes)
+
+    def query_collection(context: str) -> str:
+        if collection:
+            return db.add_relevant_context_to_source(
+                context=context, collection=collection
+            )
+        else:
+            return context
+
     questions = []
     for temp_video_path in temp_video_paths:
         generated_questions = baseline(
             video_path=temp_video_path,
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
-            pdfs_bytes=pdfs_bytes,
+            augment_context=query_collection,
         )
         questions.extend(generated_questions)
 
