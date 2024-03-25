@@ -1,7 +1,8 @@
 from transformers import BartTokenizer, HfArgumentParser
 import chromadb
-from chromadb import Client
+from chromadb.api import ClientAPI
 from chromadb import Collection
+from chromadb.config import Settings
 
 from angle_emb import AnglE
 import logging
@@ -60,7 +61,11 @@ class Database:
             )
 
         # ChromaDB client and collection
-        self.client: Client = chromadb.PersistentClient(path=output_dir)
+        settings = Settings()
+        settings.allow_reset = True
+        self.client: ClientAPI = chromadb.PersistentClient(
+            path=output_dir, settings=settings
+        )
 
     def _get_doc_text(self, pdf_bytes: bytes):
         texts = []
@@ -69,6 +74,25 @@ class Database:
             for page in doc:
                 texts.append(page.get_text())
         return "".join(texts)
+
+    # Splits a document into chunks of text, aiming to respect a maximum token limit.
+    def _create_document_chunks(self, document: str, chunk_size: int = 512):
+        doc = nlp(document)
+        sentences = [span.text for span in doc.sents]
+        tokenized_sents = self.tokenizer(sentences)
+
+        token_i = 0
+        doc_i = 0
+        documents = [[]]
+        for sent, tokens in zip(sentences, tokenized_sents["input_ids"]):
+            if token_i + len(tokens) >= chunk_size:
+                token_i = 0
+                documents.append([])
+                doc_i += 1
+            documents[doc_i].append(sent)
+            token_i += len(tokens)
+
+        return [" ".join(d) for d in documents]
 
     def store_documents(
         self,
@@ -90,37 +114,18 @@ class Database:
                 )
 
     # Makes sure that an old collection with the same name is deleted, so that a new one is created
-    def create_collection(self, client, collection_name: str = "default"):
+    def create_collection(self, collection_name: str = "default"):
         try:
-            client.delete_collection(collection_name)
+            self.client.delete_collection(collection_name)
         except ValueError:
             logger.info(f"{collection_name} does not exist")
 
-        collection: Collection = client.create_collection(
+        collection: Collection = self.client.create_collection(
             name=collection_name,
             metadata={"hnsw:space": "cosine"},  # l2 is the default
         )
 
         return collection
-
-    # Splits a document into chunks of text, aiming to respect a maximum token limit.
-    def _create_document_chunks(self, document: str, chunk_size: int = 512):
-        doc = nlp(document)
-        sentences = [span.text for span in doc.sents]
-        tokenized_sents = self.tokenizer(sentences)
-
-        token_i = 0
-        doc_i = 0
-        documents = [[]]
-        for sent, tokens in zip(sentences, tokenized_sents["input_ids"]):
-            if token_i + len(tokens) >= chunk_size:
-                token_i = 0
-                documents.append([])
-                doc_i += 1
-            documents[doc_i].append(sent)
-            token_i += len(tokens)
-
-        return [" ".join(d) for d in documents]
 
     def add_relevant_context_to_source(self, context: str, collection: Collection):
         query_embedding = self.angle.encode(context, to_numpy=True)
@@ -141,7 +146,7 @@ if __name__ == "__main__":
     args = parser.parse_args_into_dataclasses()[0]
 
     db = Database()
-    collection = db.create_collection(db.client)
+    collection = db.create_collection()
 
     pdfs_bytes: list[bytes] = []
     for doc_path in args.doc_paths:
