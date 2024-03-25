@@ -17,10 +17,15 @@ from alinet import asr, qg, rag, baseline, Question  # noqa: E402
 logger = logging.getLogger(__name__)
 
 
+db = None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Instantiate database singleton instance ")
+    global db
     db = rag.Database()
+    print(db)
     yield
     if not db.client.reset():
         logger.warning("Database collections and entries could not be deleted")
@@ -37,11 +42,10 @@ app.add_middleware(
 )
 
 
-def create_collection(pdfs_bytes: list[bytes]):
+def create_collection_with_documents(pdfs_bytes: list[bytes]):
     if len(pdfs_bytes) == 0:
         return None
-
-    db = rag.Database._instance
+    print("Collection DB: ", db)
     collection = db.create_collection()
     db.store_documents(collection, pdfs_bytes=pdfs_bytes)
     return collection
@@ -78,11 +82,10 @@ async def generate_questions(files: List[UploadFile] = File(...)):
         await file.read() for file in files if file.content_type == "application/pdf"
     ]
 
-    collection = create_collection(pdfs_bytes=pdfs_bytes)
+    collection = create_collection_with_documents(pdfs_bytes=pdfs_bytes)
 
     def query_collection(context: str) -> str:
         if collection:
-            db = rag.Database._instance
             return db.add_relevant_context_to_source(
                 context=context, collection=collection
             )
@@ -95,7 +98,7 @@ async def generate_questions(files: List[UploadFile] = File(...)):
             video_path=temp_video_path,
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
-            callback=query_collection,
+            augment_context=query_collection,
         )
         questions.extend(generated_questions)
 
