@@ -12,18 +12,20 @@ export interface QuestionTableProps {
   selection: string[]
   setSelection: any
   questions: Question[]
-  similarityThreshold: number
 }
+import { Slider } from '@mantine/core'
 
 export const QuestionTable = ({
   selection,
   setSelection,
   questions,
-  similarityThreshold,
 }: QuestionTableProps) => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(
     null
   )
+
+  const [similarityThreshold, setSimilarityThreshold] = useState(0)
+
   const Icon =
     sortDirection != null
       ? sortDirection === 'desc'
@@ -38,7 +40,7 @@ export const QuestionTable = ({
     if (sortDirection === 'desc') {
       return b.score - a.score
     }
-    return 0 // default order if not sorting
+    return 0
   })
 
   const toggleSortDirection = () => {
@@ -89,43 +91,66 @@ export const QuestionTable = ({
   })
 
   return (
-    <ScrollArea>
-      <Table verticalSpacing="md">
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th style={{ width: rem(40) }}>
-              <Checkbox
-                onChange={toggleAll}
-                checked={
-                  questions.length > 0 && selection.length === questions.length
-                }
-                indeterminate={
-                  selection.length > 0 && selection.length !== questions.length
-                }
-              />
-            </Table.Th>
-            <Table.Th>Questions</Table.Th>
-            <Table.Th>
-              <Group>
-                Similarity Score
-                <Center>
-                  <Icon
-                    onClick={toggleSortDirection}
-                    style={{
-                      width: rem(16),
-                      height: rem(16),
-                      cursor: 'pointer',
-                    }}
-                    stroke={1.5}
-                  />
-                </Center>
-              </Group>
-            </Table.Th>
-          </Table.Tr>
-        </Table.Thead>
+    <>
+      <div className={classes.config_container}>
+        <div id={classes.title}>Similarity Threshold</div>
+        <Slider
+          value={similarityThreshold}
+          onChange={setSimilarityThreshold}
+          color="blue"
+          size="xl"
+          min={0}
+          max={1}
+          marks={[
+            { value: 0.25, label: '0.25' },
+            { value: 0.5, label: '0.50' },
+            { value: 0.75, label: '0.75' },
+          ]}
+          step={0.01}
+          className={classes.similarity_slider}
+        />
+      </div>
 
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
-    </ScrollArea>
+      <ScrollArea>
+        <Table verticalSpacing="md">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th style={{ width: rem(40) }}>
+                <Checkbox
+                  onChange={toggleAll}
+                  checked={
+                    questions.length > 0 &&
+                    selection.length === questions.length
+                  }
+                  indeterminate={
+                    selection.length > 0 &&
+                    selection.length !== questions.length
+                  }
+                />
+              </Table.Th>
+              <Table.Th>Questions</Table.Th>
+              <Table.Th>
+                <Group>
+                  Similarity Score
+                  <Center>
+                    <Icon
+                      onClick={toggleSortDirection}
+                      style={{
+                        width: rem(16),
+                        height: rem(16),
+                        cursor: 'pointer',
+                      }}
+                      stroke={1.5}
+                    />
+                  </Center>
+                </Group>
+              </Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+
+          <Table.Tbody>{rows}</Table.Tbody>
+        </Table>
+      </ScrollArea>
+    </>
   )
 }

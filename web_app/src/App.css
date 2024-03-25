@@ -38,16 +38,3 @@ h2 {
     }
   }
 }
-
-.config-container {
-  padding: 0 0 1rem 0;
-
-  .similarity-slider {
-    width: 50rem;
-  }
-
-  #title {
-    font-size: 0.9rem;
-    font-weight: 700;
-  }
-}

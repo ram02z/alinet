@@ -8,7 +8,6 @@ import { Button } from '@mantine/core'
 import { IconSettingsCog } from '@tabler/icons-react'
 import { QuestionTable } from './components/QuestionTable'
 import { v4 as uuidv4 } from 'uuid'
-import { Slider } from '@mantine/core'
 
 import './App.css'
 import { API_URL } from './env.ts'
@@ -24,7 +23,6 @@ export default function App() {
   const [selection, setSelection] = useState<string[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState<boolean>(false)
-  const [similarityThreshold, setSimilarityThreshold] = useState(0)
 
   const generateQuestions = async () => {
     setLoading(true)
@@ -91,30 +89,11 @@ export default function App() {
 
         <div className="question-container">
           <h2>Generated Questions</h2>
-          <div className="config-container">
-            <div id="title">Similarity Threshold</div>
-            <Slider
-              value={similarityThreshold}
-              onChange={setSimilarityThreshold}
-              color="blue"
-              size="xl"
-              min={0}
-              max={1}
-              marks={[
-                { value: 0.25, label: '0.25' },
-                { value: 0.5, label: '0.50' },
-                { value: 0.75, label: '0.75' },
-              ]}
-              step={0.01}
-              className="similarity-slider"
-            />
-          </div>
 
           <QuestionTable
             selection={selection}
             setSelection={setSelection}
             questions={questions}
-            similarityThreshold={similarityThreshold}
           />
         </div>
       </div>
