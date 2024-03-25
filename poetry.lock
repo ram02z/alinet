@@ -481,22 +481,17 @@ transformers = ">=3.0.0"
 
 [[package]]
 name = "bitsandbytes"
-version = "0.43.0"
+version = "0.42.0"
 description = "k-bit optimizers and matrix multiplication routines."
 optional = false
 python-versions = "*"
 files = [
-    {file = "bitsandbytes-0.43.0-py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:b2626ada0ae447ae0cf3dd0be8f5b0abad7abdec7056c7fb738aa13a5a862007"},
-    {file = "bitsandbytes-0.43.0-py3-none-win_amd64.whl", hash = "sha256:6fa7f3255fe9f3e549fb110bc60794079761a4e608b5fb86ebe7b4047467dd99"},
+    {file = "bitsandbytes-0.42.0-py3-none-any.whl", hash = "sha256:63798680912cc63bb77b535a2d0860af024e290a52e157f777ad2a52e2585967"},
+    {file = "bitsandbytes-0.42.0.tar.gz", hash = "sha256:fc1505f184f0d275766f2a6c663f1a43b734c1409b5c5a406f3a6073d9f329fd"},
 ]
 
 [package.dependencies]
-numpy = "*"
-torch = "*"
-
-[package.extras]
-benchmark = ["matplotlib", "pandas"]
-test = ["scipy"]
+scipy = "*"
 
 [[package]]
 name = "bleach"
@@ -4801,6 +4796,7 @@ files = [
     {file = "PyYAML-6.0.1-cp311-cp311-win_amd64.whl", hash = "sha256:bf07ee2fef7014951eeb99f56f39c9bb4af143d8aa3c21b1677805985307da34"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:855fb52b0dc35af121542a76b9a84f8d1cd886ea97c84703eaa6d88e37a2ad28"},
     {file = "PyYAML-6.0.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:40df9b996c2b73138957fe23a16a4f0ba614f4c0efce1e9406a184b6d07fa3a9"},
+    {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a08c6f0fe150303c1c6b71ebcd7213c2858041a7e01975da3a99aed1e7a378ef"},
     {file = "PyYAML-6.0.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6c22bec3fbe2524cde73d7ada88f6566758a8f7227bfbf93a408a9d86bcc12a0"},
     {file = "PyYAML-6.0.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:8d4e9c88387b0f5c7d5f281e55304de64cf7f9c0021a3525bd3b1c542da3b0e4"},
     {file = "PyYAML-6.0.1-cp312-cp312-win32.whl", hash = "sha256:d483d2cdf104e7c9fa60c544d92981f12ad66a457afae824d146093b8c294c54"},
@@ -7477,4 +7473,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <4.0"
-content-hash = "efbce2cbeca71221200de5e3c695d47069ebd9d926910f58769b1be094fc8866"
+content-hash = "874a59b40e69cdc7857a7e3083806b9fd1f2aefebc2ca2486e1f034bdd2e487f"
