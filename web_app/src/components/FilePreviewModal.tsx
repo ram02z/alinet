@@ -1,4 +1,4 @@
-import { Modal, Paper } from "@mantine/core";
+import { Modal, Paper, Text } from "@mantine/core";
 import { MIME_TYPES } from "@mantine/dropzone";
 import PDFViewer from "./PDFViewer.tsx";
 
@@ -13,6 +13,16 @@ export const FilePreviewModal = ({
   isModalOpen,
   setIsModalOpen,
 }: FilePreviewModalProps) => {
+  const Preview = () => {
+    if (file.type === MIME_TYPES.pdf) {
+      return <PDFViewer file={file} />;
+    }
+    if (file.type === MIME_TYPES.mp4) {
+      return <video controls src={URL.createObjectURL(file)} width="100%" />;
+    }
+    return <Text>File type not supported</Text>;
+  };
+
   return (
     <Modal
       opened={isModalOpen}
@@ -21,10 +31,7 @@ export const FilePreviewModal = ({
       size="xl"
     >
       <Paper p="md">
-        {file.type === MIME_TYPES.pdf && <PDFViewer file={file} />}
-        {file.type === MIME_TYPES.mp4 && (
-          <video controls src={URL.createObjectURL(file)} width="100%" />
-        )}
+        <Preview />
       </Paper>
     </Modal>
   );
