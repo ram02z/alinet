@@ -9,6 +9,7 @@ import tempfile
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
+from alinet.rag import Database
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
@@ -16,13 +17,11 @@ from alinet import asr, qg, rag, baseline, Question  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-
-db = None
+db: Database | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Instantiate database singleton instance ")
     global db
     db = rag.Database()
     yield
@@ -45,8 +44,17 @@ def create_collection_with_documents(pdfs_bytes: list[bytes]):
     if len(pdfs_bytes) == 0:
         return None
     collection = db.create_collection()
-    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes, max_token_limit=32)
     return collection
+
+
+class RAGMixin(BaseModel):
+    top_k: int = 1
+    distance_threshold: float = 0.5
+
+
+class GenerateQuestionsRequest(RAGMixin, BaseModel):
+    files: List[UploadFile] = File(...)
 
 
 class QuestionsResponse(BaseModel):
@@ -54,7 +62,8 @@ class QuestionsResponse(BaseModel):
 
 
 @app.post("/generate_questions", response_model=QuestionsResponse)
-async def generate_questions(files: List[UploadFile] = File(...)):
+async def generate_questions(request: GenerateQuestionsRequest):
+    files = request.files
     videos = [file for file in files if file.content_type == "video/mp4"]
     if not videos:
         raise HTTPException(status_code=400, detail="No video files provided")
@@ -85,7 +94,10 @@ async def generate_questions(files: List[UploadFile] = File(...)):
     def query_collection(context: str) -> str:
         if collection:
             return db.add_relevant_context_to_source(
-                context=context, collection=collection
+                context=context,
+                collection=collection,
+                top_k=request.top_k,
+                distance_threshold=request.distance_threshold,
             )
         else:
             return context

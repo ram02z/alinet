@@ -19,9 +19,18 @@ import torch
 
 
 @dataclass
-class EvaluateModelArguments:
+class RAGDatabaseArguments:
+    context: str = field(metadata={"help": "Context to add relevant information to"})
     doc_paths: list[str] = field(
         metadata={"help": "List of document paths"},
+    )
+    top_k: int = field(
+        default=1,
+        metadata={"help": "Number of relevant contexts to retrieve"},
+    )
+    distance_threshold: float = field(
+        default=0.5,
+        metadata={"help": "Distance threshold to consider a context as relevant"},
     )
 
 
@@ -127,22 +136,30 @@ class Database:
 
         return collection
 
-    def add_relevant_context_to_source(self, context: str, collection: Collection):
+    def add_relevant_context_to_source(
+        self,
+        context: str,
+        collection: Collection,
+        distance_threshold: float = 0.5,
+        top_k: int = 1,
+    ):
         query_embedding = self.angle.encode(context, to_numpy=True)
 
-        relevant_query = collection.query(query_embeddings=query_embedding, n_results=1)
+        relevant_queries = collection.query(
+            query_embeddings=query_embedding, n_results=top_k
+        )
 
-        relevant_context = relevant_query["documents"][0][0]
+        for i in range(top_k):
+            if relevant_queries["distances"][i][0] > distance_threshold:
+                relevant_context = relevant_queries["documents"][i][0]
 
-        long_answer_with_relevant_context = f"{context} {relevant_context}"
-
-        context = long_answer_with_relevant_context
+                context = f"{context} {relevant_context}"
 
         return context
 
 
 if __name__ == "__main__":
-    parser = HfArgumentParser((EvaluateModelArguments,))
+    parser = HfArgumentParser((RAGDatabaseArguments,))
     args = parser.parse_args_into_dataclasses()[0]
 
     db = Database()
@@ -154,8 +171,10 @@ if __name__ == "__main__":
             pdf_bytes = f.read()
         pdfs_bytes.append(pdf_bytes)
 
-    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes, max_token_limit=32)
 
-    context = "INPUT THE CONTEXT HERE"
-    result = db.add_relevant_context_to_source(context, collection)
+    result = db.add_relevant_context_to_source(
+        args.context, collection, args.distance_threshold, args.top_k
+    )
     print(result)
+    db.client.reset()
