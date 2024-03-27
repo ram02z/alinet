@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import sys
@@ -48,22 +48,17 @@ def create_collection_with_documents(pdfs_bytes: list[bytes]):
     return collection
 
 
-class RAGMixin(BaseModel):
-    top_k: int = 1
-    distance_threshold: float = 0.5
-
-
-class GenerateQuestionsRequest(RAGMixin, BaseModel):
-    files: List[UploadFile] = File(...)
-
-
 class QuestionsResponse(BaseModel):
     questions: list[Question]
 
 
 @app.post("/generate_questions", response_model=QuestionsResponse)
-async def generate_questions(request: GenerateQuestionsRequest):
-    files = request.files
+async def generate_questions(
+    files: List[UploadFile] = File(...),
+    # RAG parameters
+    top_k: int = Form(...),
+    distance_threshold: float = Form(...),
+):
     videos = [file for file in files if file.content_type == "video/mp4"]
     if not videos:
         raise HTTPException(status_code=400, detail="No video files provided")
@@ -96,8 +91,8 @@ async def generate_questions(request: GenerateQuestionsRequest):
             return db.add_relevant_context_to_source(
                 context=context,
                 collection=collection,
-                top_k=request.top_k,
-                distance_threshold=request.distance_threshold,
+                top_k=top_k,
+                distance_threshold=distance_threshold,
             )
         else:
             return context
