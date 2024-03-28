@@ -88,17 +88,22 @@ export default function App() {
           <FileList files={files} setFiles={setFiles} />
         </Flex>
 
-        <Box mt="sm">
-          <Group onClick={toggleSettings} style={{ cursor: 'pointer' }}>
+        <Box my="md">
+          <Group onClick={toggleSettings} style={{ cursor: "pointer" }}>
             <ActionIcon variant="light" color="dark">
               {openedSettings ? <IconChevronUp /> : <IconChevronDown />}
             </ActionIcon>
-            <Text tt="uppercase" fw="bold" c="dark">
+            <Text tt="uppercase" fw="bold" c="dark" size="lg">
               Configure model generation settings
             </Text>
           </Group>
           <Space h={8} />
           <Collapse in={openedSettings} transitionDuration={0}>
+            <Space h={16} />
+            <Text size="md" fw="bold">
+              Retrieval Augmented Generation (RAG)
+            </Text>
+            <Space h={8} />
             <Text size="sm">Top K</Text>
             <Slider
               value={topK}
@@ -120,7 +125,7 @@ export default function App() {
           </Collapse>
         </Box>
 
-        <Stack justify="center" align="center" mt="md">
+        <Stack justify="center" align="center" mt="xl">
           <Button
             loading={loading}
             onClick={generateQuestions}
