@@ -26,7 +26,7 @@ async def lifespan(app: FastAPI):
     db = rag.Database()
     yield
     if not db.client.reset():
-        logger.warning("Database collections and entries could not be deleted")
+        logger.warning("database collections and entries could not be deleted")
     del db
 
 
@@ -62,6 +62,10 @@ async def generate_questions(
     videos = [file for file in files if file.content_type == "video/mp4"]
     if not videos:
         raise HTTPException(status_code=400, detail="No video files provided")
+
+    logger.info(
+        f"RAG parameters: top_k = {top_k}, distance_threshold = {distance_threshold}"
+    )
 
     temp_video_paths = []
     try:
