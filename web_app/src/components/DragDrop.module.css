@@ -1,15 +1,15 @@
 .dragdrop {
-  flex: 30%;
+  width: 50rem;
   margin-right: 2rem;
+  border-radius: 0.5rem;
+  background-color: #d3d3d3;
 }
 
 .dragdrop:hover {
   cursor: pointer;
 }
 
-.dragdrop-content {
+.dragdrop_content {
   display: flex;
   justify-content: center;
-
-  background-color: #d3d3d3;
 }

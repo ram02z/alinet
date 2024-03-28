@@ -22,12 +22,12 @@ import {
   IconChevronUp,
   IconSettingsCog,
 } from "@tabler/icons-react";
-import { QuestionTable } from "./components/QuestionTable";
 import { v4 as uuidv4 } from "uuid";
 
 import "./App.css";
 import { API_URL } from "./env.ts";
 import { useDisclosure } from "@mantine/hooks";
+import { GeneratedQuestions } from "./components/GeneratedQuestions.tsx";
 
 export interface Question {
   id: string;
@@ -131,18 +131,28 @@ export default function App() {
             onClick={generateQuestions}
             disabled={files.length === 0 || loading}
             leftSection={<IconSettingsCog />}
+            size="lg"
             variant="gradient"
             gradient={{ from: "blue", to: "cyan", deg: 90 }}
           >
             Generate Questions
           </Button>
           <Space h={8} />
-          <QuestionTable
-            selection={selection}
-            setSelection={setSelection}
-            questions={questions}
-          />
         </Stack>
+        <Text
+          size="xl"
+          fw={900}
+          variant="gradient"
+          gradient={{ from: "blue", to: "cyan", deg: 90 }}
+        >
+        Generated Questions
+        </Text>
+        <Space h={16} />
+        <GeneratedQuestions
+          selection={selection}
+          setSelection={setSelection}
+          questions={questions}
+        />
       </Container>
     </MantineProvider>
   );
