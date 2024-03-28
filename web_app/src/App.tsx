@@ -3,14 +3,14 @@ import { MantineProvider } from '@mantine/core'
 import { theme } from './theme'
 import { DragDrop } from './components/DragDrop'
 import { FileList } from './components/FileList'
-import { useState} from 'react'
+import { useState } from 'react'
 import { Button } from '@mantine/core'
 import { IconSettingsCog } from '@tabler/icons-react'
 import { QuestionTable } from './components/QuestionTable'
 import { v4 as uuidv4 } from 'uuid'
 
 import './App.css'
-import {API_URL} from "./env.ts";
+import { API_URL } from './env.ts'
 
 export interface Question {
   id: string
@@ -39,13 +39,15 @@ export default function App() {
 
       if (response.ok) {
         const data = await response.json()
-        const questionsWithId = data.questions.map((question: { text: string; similarity_score: number }) => {
-          return {
-            id: uuidv4(),
-            text: question.text,
-            score: question.similarity_score,
+        const questionsWithId = data.questions.map(
+          (question: { text: string; similarity_score: number }) => {
+            return {
+              id: uuidv4(),
+              text: question.text,
+              score: question.similarity_score,
+            }
           }
-        })
+        )
         setQuestions(questionsWithId)
       }
     } catch (error) {
@@ -58,28 +60,36 @@ export default function App() {
   return (
     <MantineProvider theme={theme}>
       <div className="body">
-        <div className="upload-section">
-          <DragDrop
-            files={files}
-            setFiles={setFiles}
-          />
+        <div className="upload-container">
+          <h2>Upload videos / supplementary documents</h2>
 
-          <FileList
-            files={files}
-            setFiles={setFiles}
-          />
+          <div className="video-table-container">
+            <DragDrop
+              files={files}
+              setFiles={setFiles}
+            />
+
+            <FileList
+              files={files}
+              setFiles={setFiles}
+            />
+          </div>
         </div>
 
-        <div className="generate-section">
+        <div className="generate-container">
           <Button
             loading={loading}
             onClick={generateQuestions}
             disabled={files.length === 0 || loading}
+            className="generate-question-btn"
           >
-            <IconSettingsCog /> Generate Questions
+            <IconSettingsCog className="setting-icon" /> Generate Questions
           </Button>
         </div>
-        <div className="question-section">
+
+        <div className="question-container">
+          <h2>Generated Questions</h2>
+
           <QuestionTable
             selection={selection}
             setSelection={setSelection}

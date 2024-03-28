@@ -1,19 +1,40 @@
+h2 {
+  font-size: 1.5rem;
+  text-decoration: underline;
+}
+
 .body {
   display: flex;
   flex-direction: column;
   padding: 2rem 5rem 0 5rem;
 }
 
-.upload-section {
+.upload-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+
+  .video-table-container {
+    display: flex;
+    flex-direction: row;
+  }
 }
 
-.generate-section {
+.generate-container {
+  padding: 5rem 0 5rem 0;
   display: flex;
-  height: 200px;
-
-  align-items: center;
   justify-content: center;
-  flex-direction: column;
+  align-items: center;
+
+  .generate-question-btn {
+    width: 15rem;
+    height: 4rem;
+
+    font-size: 1rem;
+
+    border-radius: 0.5rem;
+
+    .setting-icon {
+      margin-right: 0.5rem;
+    }
+  }
 }
