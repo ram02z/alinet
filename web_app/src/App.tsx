@@ -1,16 +1,30 @@
 import "@mantine/core/styles.css";
-import { MantineProvider, Slider, Text } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Collapse,
+  Group,
+  MantineProvider,
+  Slider,
+  Space,
+  Text,
+} from "@mantine/core";
 import { theme } from "./theme";
 import { DragDrop } from "./components/DragDrop";
 import { FileList } from "./components/FileList";
 import { useState } from "react";
 import { Button } from "@mantine/core";
-import { IconSettingsCog } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconChevronUp,
+  IconSettingsCog,
+} from "@tabler/icons-react";
 import { QuestionTable } from "./components/QuestionTable";
 import { v4 as uuidv4 } from "uuid";
 
 import "./App.css";
 import { API_URL } from "./env.ts";
+import { useDisclosure } from "@mantine/hooks";
 
 export interface Question {
   id: string;
@@ -25,6 +39,7 @@ export default function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [topK, setTopK] = useState<number>(1);
   const [distanceThreshold, setDistanceThreshold] = useState<number>(0.5);
+  const [openedSettings, { toggle: toggleSettings }] = useDisclosure(false);
 
   const generateQuestions = async () => {
     setLoading(true);
@@ -71,26 +86,52 @@ export default function App() {
           <FileList files={files} setFiles={setFiles} />
         </div>
 
-        <div>
-          <Text size="sm">Top K</Text>
-          <Slider value={topK} onChange={setTopK} min={1} max={16} step={1} />
-          <Text size="sm">Similarity Threshold</Text>
-          <Slider
-            value={distanceThreshold}
-            onChange={setDistanceThreshold}
-            min={0}
-            max={1}
-            step={0.1}
-          />
-        </div>
+        <Box mt="sm">
+          <Group>
+            <ActionIcon onClick={toggleSettings} variant="light" color="dark">
+              {openedSettings ? <IconChevronUp /> : <IconChevronDown />}
+            </ActionIcon>
+            <Text
+              tt="uppercase"
+              fw="bold"
+              c="dark"
+            >
+              Configure model generation settings
+            </Text>
+          </Group>
+          <Space h={8} />
+          <Collapse in={openedSettings} transitionDuration={0}>
+            <Text size="sm">Top K</Text>
+            <Slider
+              value={topK}
+              onChange={setTopK}
+              min={1}
+              max={16}
+              step={1}
+              color="cyan"
+            />
+            <Text size="sm">Similarity Threshold</Text>
+            <Slider
+              value={distanceThreshold}
+              onChange={setDistanceThreshold}
+              min={0}
+              max={1}
+              step={0.1}
+              color="cyan"
+            />
+          </Collapse>
+        </Box>
 
         <div className="generate-section">
           <Button
             loading={loading}
             onClick={generateQuestions}
             disabled={files.length === 0 || loading}
+            leftSection={<IconSettingsCog />}
+            variant="gradient"
+            gradient={{ from: "blue", to: "cyan", deg: 90 }}
           >
-            <IconSettingsCog /> Generate Questions
+            Generate Questions
           </Button>
         </div>
         <div className="question-section">
