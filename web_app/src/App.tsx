@@ -3,10 +3,13 @@ import {
   ActionIcon,
   Box,
   Collapse,
+  Container,
+  Flex,
   Group,
   MantineProvider,
   Slider,
   Space,
+  Stack,
   Text,
 } from "@mantine/core";
 import { theme } from "./theme";
@@ -79,23 +82,18 @@ export default function App() {
 
   return (
     <MantineProvider theme={theme}>
-      <div className="body">
-        <div className="upload-section">
+      <Container fluid p="md">
+        <Flex direction="row">
           <DragDrop files={files} setFiles={setFiles} />
-
           <FileList files={files} setFiles={setFiles} />
-        </div>
+        </Flex>
 
         <Box mt="sm">
-          <Group>
-            <ActionIcon onClick={toggleSettings} variant="light" color="dark">
+          <Group onClick={toggleSettings} style={{ cursor: 'pointer' }}>
+            <ActionIcon variant="light" color="dark">
               {openedSettings ? <IconChevronUp /> : <IconChevronDown />}
             </ActionIcon>
-            <Text
-              tt="uppercase"
-              fw="bold"
-              c="dark"
-            >
+            <Text tt="uppercase" fw="bold" c="dark">
               Configure model generation settings
             </Text>
           </Group>
@@ -122,7 +120,7 @@ export default function App() {
           </Collapse>
         </Box>
 
-        <div className="generate-section">
+        <Stack justify="center" align="center" mt="md">
           <Button
             loading={loading}
             onClick={generateQuestions}
@@ -133,15 +131,14 @@ export default function App() {
           >
             Generate Questions
           </Button>
-        </div>
-        <div className="question-section">
+          <Space h={8} />
           <QuestionTable
             selection={selection}
             setSelection={setSelection}
             questions={questions}
           />
-        </div>
-      </div>
+        </Stack>
+      </Container>
     </MantineProvider>
   );
 }

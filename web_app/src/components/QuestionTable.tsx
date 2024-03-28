@@ -1,12 +1,12 @@
-import cx from 'clsx'
-import { Table, Checkbox, ScrollArea, rem } from '@mantine/core'
-import classes from './QuestionTable.module.css'
-import { Question } from '../App'
+import cx from "clsx";
+import { Table, Checkbox, rem } from "@mantine/core";
+import classes from "./QuestionTable.module.css";
+import { Question } from "../App";
 
 export interface QuestionTableProps {
-  selection: string[]
-  setSelection: any
-  questions: Question[]
+  selection: string[];
+  setSelection: any;
+  questions: Question[];
 }
 
 export const QuestionTable = ({
@@ -18,20 +18,20 @@ export const QuestionTable = ({
     setSelection((current: string[]) =>
       current.includes(id)
         ? current.filter((item: string) => item !== id)
-        : [...current, id]
-    )
-  }
+        : [...current, id],
+    );
+  };
 
   const toggleAll = () => {
     setSelection((current: string[]) =>
       current.length === questions.length
         ? []
-        : questions.map((item) => item.id)
-    )
-  }
+        : questions.map((item) => item.id),
+    );
+  };
 
   const rows = questions.map((item: Question) => {
-    const selected = selection.includes(item.id)
+    const selected = selection.includes(item.id);
     return (
       <Table.Tr
         key={item.id}
@@ -45,34 +45,29 @@ export const QuestionTable = ({
         </Table.Td>
         <Table.Td>{item.text}</Table.Td>
       </Table.Tr>
-    )
-  })
+    );
+  });
 
   return (
-    <ScrollArea>
-      <Table
-        miw={800}
-        verticalSpacing="sm"
-      >
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th style={{ width: rem(40) }}>
-              <Checkbox
-                onChange={toggleAll}
-                checked={
-                  questions.length > 0 && selection.length === questions.length
-                }
-                indeterminate={
-                  selection.length > 0 && selection.length !== questions.length
-                }
-              />
-            </Table.Th>
-            <Table.Th>Questions</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
+    <Table verticalSpacing="sm">
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Th style={{ width: rem(40) }}>
+            <Checkbox
+              onChange={toggleAll}
+              checked={
+                questions.length > 0 && selection.length === questions.length
+              }
+              indeterminate={
+                selection.length > 0 && selection.length !== questions.length
+              }
+            />
+          </Table.Th>
+          <Table.Th>Questions</Table.Th>
+        </Table.Tr>
+      </Table.Thead>
 
-        <Table.Tbody>{rows}</Table.Tbody>
-      </Table>
-    </ScrollArea>
-  )
-}
+      <Table.Tbody>{rows}</Table.Tbody>
+    </Table>
+  );
+};
