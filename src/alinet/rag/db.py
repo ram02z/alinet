@@ -107,7 +107,7 @@ class Database:
         self,
         collection: Collection,
         pdfs_bytes: list[bytes],
-        max_token_limit: int = 512,
+        max_token_limit: int = 32,
     ):
         for pdf_bytes in pdfs_bytes:
             document = self._get_doc_text(pdf_bytes)

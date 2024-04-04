@@ -44,7 +44,7 @@ def create_collection_with_documents(pdfs_bytes: list[bytes]):
     if len(pdfs_bytes) == 0:
         return None
     collection = db.create_collection()
-    db.store_documents(collection, pdfs_bytes=pdfs_bytes, max_token_limit=32)
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
     return collection
 
 
