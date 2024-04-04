@@ -16,9 +16,9 @@ export const FileList = ({ filesWithId, setFilesWithId }: FileListProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
 
-  const handleRemoveFile = (id: string) => {
+  const handleRemoveFile = (idToRemove: string) => {
     setFilesWithId((prevFiles: FileWithId[]) =>
-      prevFiles.filter((fileWithId: FileWithId) => fileWithId.id !== id)
+      prevFiles.filter((fileWithId: FileWithId) => fileWithId.id !== idToRemove)
     )
   }
 
@@ -29,7 +29,7 @@ export const FileList = ({ filesWithId, setFilesWithId }: FileListProps) => {
 
   // @ts-ignore
   const filesExpand = filesWithId.map((fileWithId: FileWithId) => (
-    <Table.Tr key={fileWithId.file.name}>
+    <Table.Tr key={fileWithId.id}>
       <Table.Td className={classes.tdName}>
         <Group>
           <Text>{fileWithId.file.name}</Text>
