@@ -72,6 +72,7 @@ class Database:
         # ChromaDB client and collection
         settings = Settings()
         settings.allow_reset = True
+        settings.anonymized_telemetry = False
         self.client: ClientAPI = chromadb.PersistentClient(
             path=output_dir, settings=settings
         )
@@ -88,6 +89,8 @@ class Database:
     def _create_document_chunks(self, document: str, chunk_size: int = 512):
         doc = nlp(document)
         sentences = [span.text for span in doc.sents]
+        if not sentences:
+            return []
         tokenized_sents = self.tokenizer(sentences)
 
         token_i = 0
@@ -149,9 +152,9 @@ class Database:
             query_embeddings=query_embedding, n_results=top_k
         )
 
-        for i in range(top_k):
-            if relevant_queries["distances"][i][0] > distance_threshold:
-                relevant_context = relevant_queries["documents"][i][0]
+        for i in range(len(relevant_queries["distances"][0])):
+            if relevant_queries["distances"][0][i] > distance_threshold:
+                relevant_context = relevant_queries["documents"][0][i]
 
                 context = f"{context} {relevant_context}"
 
@@ -171,7 +174,7 @@ if __name__ == "__main__":
             pdf_bytes = f.read()
         pdfs_bytes.append(pdf_bytes)
 
-    db.store_documents(collection, pdfs_bytes=pdfs_bytes, max_token_limit=32)
+    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
 
     result = db.add_relevant_context_to_source(
         args.context, collection, args.distance_threshold, args.top_k
