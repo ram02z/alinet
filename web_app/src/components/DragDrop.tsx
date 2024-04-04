@@ -7,10 +7,10 @@ import { FileWithId } from '../App'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface DragDropProps {
-  setFilesWithId: any
+  setFiles: any
 }
 
-export const DragDrop = ({ setFilesWithId }: DragDropProps) => {
+export const DragDrop = ({ setFiles }: DragDropProps) => {
   return (
     <Dropzone
       className={cx(classes.dragdrop)}
@@ -22,7 +22,7 @@ export const DragDrop = ({ setFilesWithId }: DragDropProps) => {
           }
         })
 
-        setFilesWithId((prevFiles: FileWithId[]) => [
+        setFiles((prevFiles: FileWithId[]) => [
           ...prevFiles,
           ...filesWithId,
         ])

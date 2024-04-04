@@ -9,7 +9,6 @@ from alinet.chunking.similarity import (
 from alinet.chunking.video import save_video_clips, slide_chunking
 import warnings
 
-from chromadb import Collection
 from typing import Callable
 
 
@@ -17,14 +16,14 @@ def baseline(
     video_path: str,
     asr_model: asr.Model,
     qg_model: qg.Model,
-    augment_context: Callable[[Collection, str], str],
+    augment_context: Callable[[str], str],
 ) -> list[Question]:
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = chunking.Pipeline(qg_model)
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    text_chunks = [augment_context(context=chunk.text) for chunk in transcript_chunks]
+    text_chunks = [augment_context(chunk.text) for chunk in transcript_chunks]
 
     qg_pipe = qg.Pipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)

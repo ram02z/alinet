@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import sys
@@ -9,6 +9,7 @@ import tempfile
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
+from alinet.rag import Database
 
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
@@ -16,18 +17,16 @@ from alinet import asr, qg, rag, baseline, Question  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
-
-db = None
+db: Database | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Instantiate database singleton instance ")
     global db
     db = rag.Database()
     yield
     if not db.client.reset():
-        logger.warning("Database collections and entries could not be deleted")
+        logger.warning("database collections and entries could not be deleted")
     del db
 
 
@@ -54,10 +53,19 @@ class QuestionsResponse(BaseModel):
 
 
 @app.post("/generate_questions", response_model=QuestionsResponse)
-async def generate_questions(files: List[UploadFile] = File(...)):
+async def generate_questions(
+    files: List[UploadFile] = File(...),
+    # RAG parameters
+    top_k: int = Form(...),
+    distance_threshold: float = Form(...),
+):
     videos = [file for file in files if file.content_type == "video/mp4"]
     if not videos:
         raise HTTPException(status_code=400, detail="No video files provided")
+
+    logger.info(
+        f"RAG parameters: top_k = {top_k}, distance_threshold = {distance_threshold}"
+    )
 
     temp_video_paths = []
     try:
@@ -85,7 +93,10 @@ async def generate_questions(files: List[UploadFile] = File(...)):
     def query_collection(context: str) -> str:
         if collection:
             return db.add_relevant_context_to_source(
-                context=context, collection=collection
+                context=context,
+                collection=collection,
+                top_k=top_k,
+                distance_threshold=distance_threshold,
             )
         else:
             return context

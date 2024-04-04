@@ -7,18 +7,18 @@ import { FilePreviewModal } from './FilePreviewModal.tsx'
 import { FileWithId } from '../App.tsx'
 
 export interface FileListProps {
-  filesWithId: FileWithId[]
-  setFilesWithId: any
+  files: FileWithId[]
+  setFiles: any
 }
 
-export const FileList = ({ filesWithId, setFilesWithId }: FileListProps) => {
+export const FileList = ({ files, setFiles }: FileListProps) => {
   const [scrolled, setScrolled] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
 
   const handleRemoveFile = (idToRemove: string) => {
-    setFilesWithId((prevFiles: FileWithId[]) =>
-      prevFiles.filter((fileWithId: FileWithId) => fileWithId.id !== idToRemove)
+    setFiles((prevFiles: FileWithId[]) =>
+      prevFiles.filter((file: FileWithId) => file.id !== idToRemove)
     )
   }
 
@@ -27,14 +27,13 @@ export const FileList = ({ filesWithId, setFilesWithId }: FileListProps) => {
     setPreviewModalOpen(true)
   }
 
-  // @ts-ignore
-  const filesExpand = filesWithId.map((fileWithId: FileWithId) => (
-    <Table.Tr key={fileWithId.id}>
+  const filesExpand = files.map((file: FileWithId) => (
+    <Table.Tr key={file.id}>
       <Table.Td className={classes.tdName}>
         <Group>
-          <Text>{fileWithId.file.name}</Text>
+          <Text>{file.file.name}</Text>
           <ActionIcon
-            onClick={() => handleFileClick(fileWithId.file)}
+            onClick={() => handleFileClick(file.file)}
             variant="light"
           >
             <IconExternalLink />
@@ -45,7 +44,7 @@ export const FileList = ({ filesWithId, setFilesWithId }: FileListProps) => {
         <ActionIcon
           color="red"
           variant="filled"
-          onClick={() => handleRemoveFile(fileWithId.id)}
+          onClick={() => handleRemoveFile(file.id)}
         >
           <IconX />
         </ActionIcon>
