@@ -69,10 +69,7 @@ export default function App() {
           <h2>Upload videos / supplementary documents</h2>
 
           <div className="video-table-container">
-            <DragDrop
-              filesWithId={filesWithId}
-              setFilesWithId={setFilesWithId}
-            />
+            <DragDrop setFilesWithId={setFilesWithId} />
 
             <FileList
               filesWithId={filesWithId}

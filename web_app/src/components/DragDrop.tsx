@@ -1,22 +1,16 @@
 import { Group, Text, rem } from '@mantine/core'
 import { IconUpload, IconFileUpload, IconX } from '@tabler/icons-react'
 import { Dropzone, MIME_TYPES } from '@mantine/dropzone'
-import { useEffect } from 'react'
 import classes from './DragDrop.module.css'
 import cx from 'clsx'
 import { FileWithId } from '../App'
 import { v4 as uuidv4 } from 'uuid'
 
 export interface DragDropProps {
-  filesWithId: FileWithId[]
   setFilesWithId: any
 }
 
-export const DragDrop = ({ filesWithId, setFilesWithId }: DragDropProps) => {
-  useEffect(() => {
-    console.log(filesWithId)
-  }, [filesWithId])
-
+export const DragDrop = ({ setFilesWithId }: DragDropProps) => {
   return (
     <Dropzone
       className={cx(classes.dragdrop)}
