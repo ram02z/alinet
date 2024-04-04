@@ -18,8 +18,13 @@ export interface Question {
   score: number
 }
 
+export interface FileWithId {
+  id: string
+  file: File
+}
+
 export default function App() {
-  const [files, setFiles] = useState<File[]>([])
+  const [filesWithId, setFilesWithId] = useState<FileWithId[]>([])
   const [selection, setSelection] = useState<string[]>([])
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState<boolean>(false)
@@ -27,8 +32,8 @@ export default function App() {
   const generateQuestions = async () => {
     setLoading(true)
     const formData = new FormData()
-    files.forEach((file) => {
-      formData.append('files', file)
+    filesWithId.forEach((filesWithId) => {
+      formData.append('files', filesWithId.file)
     })
 
     try {
@@ -64,14 +69,11 @@ export default function App() {
           <h2>Upload videos / supplementary documents</h2>
 
           <div className="video-table-container">
-            <DragDrop
-              files={files}
-              setFiles={setFiles}
-            />
+            <DragDrop setFilesWithId={setFilesWithId} />
 
             <FileList
-              files={files}
-              setFiles={setFiles}
+              filesWithId={filesWithId}
+              setFilesWithId={setFilesWithId}
             />
           </div>
         </div>
@@ -80,7 +82,7 @@ export default function App() {
           <Button
             loading={loading}
             onClick={generateQuestions}
-            disabled={files.length === 0 || loading}
+            disabled={filesWithId.length === 0 || loading}
             className="generate-question-btn"
           >
             <IconSettingsCog className="setting-icon" /> Generate Questions

@@ -1,36 +1,42 @@
-import cx from "clsx";
-import { useState } from "react";
-import { Table, ScrollArea, ActionIcon, Text, Group } from "@mantine/core";
-import classes from "./FileList.module.css";
-import { IconExternalLink, IconX } from "@tabler/icons-react";
-import { FilePreviewModal } from "./FilePreviewModal.tsx";
+import cx from 'clsx'
+import { useState } from 'react'
+import { Table, ScrollArea, ActionIcon, Text, Group } from '@mantine/core'
+import classes from './FileList.module.css'
+import { IconExternalLink, IconX } from '@tabler/icons-react'
+import { FilePreviewModal } from './FilePreviewModal.tsx'
+import { FileWithId } from '../App.tsx'
 
 export interface FileListProps {
-  files: File[];
-  setFiles: any;
+  filesWithId: FileWithId[]
+  setFilesWithId: any
 }
 
-export const FileList = ({ files, setFiles }: FileListProps) => {
-  const [scrolled, setScrolled] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+export const FileList = ({ filesWithId, setFilesWithId }: FileListProps) => {
+  const [scrolled, setScrolled] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewModalOpen, setPreviewModalOpen] = useState(false)
 
-  const handleRemoveFile = (index: number) => {
-    setFiles((prevFiles: File[]) => prevFiles.filter((_, i) => i !== index));
-  };
+  const handleRemoveFile = (idToRemove: string) => {
+    setFilesWithId((prevFiles: FileWithId[]) =>
+      prevFiles.filter((fileWithId: FileWithId) => fileWithId.id !== idToRemove)
+    )
+  }
 
   const handleFileClick = (file: File) => {
-    setSelectedFile(file);
-    setPreviewModalOpen(true);
-  };
+    setSelectedFile(file)
+    setPreviewModalOpen(true)
+  }
 
   // @ts-ignore
-  const filesExpand = files.map((file, index) => (
-    <Table.Tr key={file.name}>
+  const filesExpand = filesWithId.map((fileWithId: FileWithId) => (
+    <Table.Tr key={fileWithId.id}>
       <Table.Td className={classes.tdName}>
         <Group>
-          <Text>{file.name}</Text>
-          <ActionIcon onClick={() => handleFileClick(file)} variant="light">
+          <Text>{fileWithId.file.name}</Text>
+          <ActionIcon
+            onClick={() => handleFileClick(fileWithId.file)}
+            variant="light"
+          >
             <IconExternalLink />
           </ActionIcon>
         </Group>
@@ -39,13 +45,13 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
         <ActionIcon
           color="red"
           variant="filled"
-          onClick={() => handleRemoveFile(index)}
+          onClick={() => handleRemoveFile(fileWithId.id)}
         >
           <IconX />
         </ActionIcon>
       </Table.Td>
     </Table.Tr>
-  ));
+  ))
 
   return (
     <>
@@ -73,5 +79,5 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
         />
       )}
     </>
-  );
-};
+  )
+}
