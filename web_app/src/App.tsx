@@ -35,8 +35,13 @@ export interface Question {
   score: number;
 }
 
+export interface FileWithId {
+  id: string
+  file: File
+}
+
 export default function App() {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<FileWithId[]>([])
   const [selection, setSelection] = useState<string[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -45,11 +50,11 @@ export default function App() {
   const [openedSettings, { toggle: toggleSettings }] = useDisclosure(false);
 
   const generateQuestions = async () => {
-    setLoading(true);
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
+    setLoading(true)
+    const formData = new FormData()
+    files.forEach((filesWithId) => {
+      formData.append('files', filesWithId.file)
+    })
 
     formData.append("top_k", topK.toString());
     formData.append("distance_threshold", distanceThreshold.toString());
@@ -84,7 +89,7 @@ export default function App() {
     <MantineProvider theme={theme}>
       <Container fluid p="md">
         <Flex direction="row">
-          <DragDrop files={files} setFiles={setFiles} />
+          <DragDrop setFiles={setFiles} />
           <FileList files={files} setFiles={setFiles} />
         </Flex>
 

@@ -1,36 +1,41 @@
-import cx from "clsx";
-import { useState } from "react";
-import { Table, ScrollArea, ActionIcon, Text, Group } from "@mantine/core";
-import classes from "./FileList.module.css";
-import { IconExternalLink, IconX } from "@tabler/icons-react";
-import { FilePreviewModal } from "./FilePreviewModal.tsx";
+import cx from 'clsx'
+import { useState } from 'react'
+import { Table, ScrollArea, ActionIcon, Text, Group } from '@mantine/core'
+import classes from './FileList.module.css'
+import { IconExternalLink, IconX } from '@tabler/icons-react'
+import { FilePreviewModal } from './FilePreviewModal.tsx'
+import { FileWithId } from '../App.tsx'
 
 export interface FileListProps {
-  files: File[];
-  setFiles: any;
+  files: FileWithId[]
+  setFiles: any
 }
 
 export const FileList = ({ files, setFiles }: FileListProps) => {
-  const [scrolled, setScrolled] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewModalOpen, setPreviewModalOpen] = useState(false)
 
-  const handleRemoveFile = (index: number) => {
-    setFiles((prevFiles: File[]) => prevFiles.filter((_, i) => i !== index));
-  };
+  const handleRemoveFile = (idToRemove: string) => {
+    setFiles((prevFiles: FileWithId[]) =>
+      prevFiles.filter((file: FileWithId) => file.id !== idToRemove)
+    )
+  }
 
   const handleFileClick = (file: File) => {
-    setSelectedFile(file);
-    setPreviewModalOpen(true);
-  };
+    setSelectedFile(file)
+    setPreviewModalOpen(true)
+  }
 
-  // @ts-ignore
-  const filesExpand = files.map((file, index) => (
-    <Table.Tr key={file.name}>
+  const filesExpand = files.map((file: FileWithId) => (
+    <Table.Tr key={file.id}>
       <Table.Td className={classes.tdName}>
         <Group>
-          <Text>{file.name}</Text>
-          <ActionIcon onClick={() => handleFileClick(file)} variant="light">
+          <Text>{file.file.name}</Text>
+          <ActionIcon
+            onClick={() => handleFileClick(file.file)}
+            variant="light"
+          >
             <IconExternalLink />
           </ActionIcon>
         </Group>
@@ -39,13 +44,13 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
         <ActionIcon
           color="red"
           variant="filled"
-          onClick={() => handleRemoveFile(index)}
+          onClick={() => handleRemoveFile(file.id)}
         >
           <IconX />
         </ActionIcon>
       </Table.Td>
     </Table.Tr>
-  ));
+  ))
 
   return (
     <>
@@ -73,5 +78,5 @@ export const FileList = ({ files, setFiles }: FileListProps) => {
         />
       )}
     </>
-  );
-};
+  )
+}
