@@ -4,22 +4,34 @@ import { Dropzone, MIME_TYPES } from '@mantine/dropzone'
 import { useEffect } from 'react'
 import classes from './DragDrop.module.css'
 import cx from 'clsx'
+import { FileWithId } from '../App'
+import { v4 as uuidv4 } from 'uuid'
 
 export interface DragDropProps {
-  files: File[]
-  setFiles: any
+  filesWithId: FileWithId[]
+  setFilesWithId: any
 }
 
-export const DragDrop = ({ files, setFiles }: DragDropProps) => {
+export const DragDrop = ({ filesWithId, setFilesWithId }: DragDropProps) => {
   useEffect(() => {
-    console.log(files)
-  }, [files])
+    console.log(filesWithId)
+  }, [filesWithId])
 
   return (
     <Dropzone
       className={cx(classes.dragdrop)}
       onDrop={(files: File[]) => {
-        setFiles((prevFiles: File[]) => [...prevFiles, ...files])
+        const filesWithId = files.map((file) => {
+          return {
+            id: uuidv4(),
+            file: file,
+          }
+        })
+
+        setFilesWithId((prevFiles: FileWithId[]) => [
+          ...prevFiles,
+          ...filesWithId,
+        ])
       }}
       onReject={(files) => console.log('rejected files', files)}
       accept={[MIME_TYPES.mp4, MIME_TYPES.pdf]}
