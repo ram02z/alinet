@@ -16,14 +16,14 @@ def baseline(
     video_path: str,
     asr_model: asr.Model,
     qg_model: qg.Model,
-    augment_context: Callable[[str], str],
+    augment_sources: Callable[[list[str]], list[str]],
 ) -> list[Question]:
     asr_pipe = asr.Pipeline(asr_model)
     whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
     chunk_pipe = chunking.Pipeline(qg_model)
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    text_chunks = [augment_context(chunk.text) for chunk in transcript_chunks]
+    text_chunks = augment_sources([chunk.text for chunk in transcript_chunks])
 
     qg_pipe = qg.Pipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)

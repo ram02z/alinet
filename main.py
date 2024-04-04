@@ -90,16 +90,16 @@ async def generate_questions(
 
     collection = create_collection_with_documents(pdfs_bytes=pdfs_bytes)
 
-    def query_collection(context: str) -> str:
+    def query_collection(source_texts: list[str]) -> list[str]:
         if collection:
-            return db.add_relevant_context_to_source(
-                context=context,
+            return db.add_relevant_context_to_sources(
+                source_texts=source_texts,
                 collection=collection,
                 top_k=top_k,
                 distance_threshold=distance_threshold,
             )
         else:
-            return context
+            return source_texts
 
     questions = []
     for temp_video_path in temp_video_paths:
@@ -107,7 +107,7 @@ async def generate_questions(
             video_path=temp_video_path,
             asr_model=asr.Model.DISTIL_MEDIUM,
             qg_model=qg.Model.BALANCED_RA,
-            augment_context=query_collection,
+            augment_sources=query_collection,
         )
         questions.extend(generated_questions)
 
