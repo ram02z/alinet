@@ -64,6 +64,11 @@ class Database:
             self.angle = AnglE.from_pretrained(
                 "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
             ).cuda()
+        elif torch.backends.mps.is_available():
+            mps_device = torch.device("mps")
+            self.angle = AnglE.from_pretrained(
+                "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
+            ).to(mps_device)
         else:
             self.angle = AnglE.from_pretrained(
                 "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
