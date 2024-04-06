@@ -169,12 +169,13 @@ class Database:
 
         sources_with_context = []
         for i, source_text in enumerate(source_texts):
-            source_with_context = source_text
+            context = []
             for j in range(len(query_result["distances"][i])):
                 if query_result["distances"][i][j] > distance_threshold:
-                    context = query_result["documents"][i][j]
-                    source_with_context += f" {context}"
+                    document = query_result["documents"][i][j]
+                    context.append(document)
 
+            source_with_context = " ".join([source_text, *context])
             sources_with_context.append(source_with_context)
 
         return sources_with_context
