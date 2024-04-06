@@ -20,7 +20,7 @@ import torch
 
 @dataclass
 class RAGDatabaseArguments:
-    context: str = field(metadata={"help": "Context to add relevant information to"})
+    texts: list[str] = field(metadata={"help": "Texts to add relevant information to"})
     doc_paths: list[str] = field(
         metadata={"help": "List of document paths"},
     )
@@ -64,6 +64,11 @@ class Database:
             self.angle = AnglE.from_pretrained(
                 "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
             ).cuda()
+        elif torch.backends.mps.is_available():
+            mps_device = torch.device("mps")
+            self.angle = AnglE.from_pretrained(
+                "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
+            ).to(mps_device)
         else:
             self.angle = AnglE.from_pretrained(
                 "WhereIsAI/UAE-Large-V1", pooling_strategy="cls"
@@ -86,25 +91,35 @@ class Database:
         return "".join(texts)
 
     # Splits a document into chunks of text, aiming to respect a maximum token limit.
-    def _create_document_chunks(self, document: str, chunk_size: int = 512):
+    def _create_document_chunks(self, document: str, chunk_size: int):
         doc = nlp(document)
         sentences = [span.text for span in doc.sents]
+
         if not sentences:
             return []
+
         tokenized_sents = self.tokenizer(sentences)
+        documents = []
+        current_document = []
+        current_length = 0
 
-        token_i = 0
-        doc_i = 0
-        documents = [[]]
-        for sent, tokens in zip(sentences, tokenized_sents["input_ids"]):
-            if token_i + len(tokens) >= chunk_size:
-                token_i = 0
-                documents.append([])
-                doc_i += 1
-            documents[doc_i].append(sent)
-            token_i += len(tokens)
+        # Initialize the first document with the first sentence
+        # Otherwise, we might have an empty first document
+        current_document = [sentences[0]]
+        current_length = len(tokenized_sents["input_ids"][0])
 
-        return [" ".join(d) for d in documents]
+        for sent, tokens in zip(sentences[1:], tokenized_sents["input_ids"][1:]):
+            if current_length + len(tokens) >= chunk_size:
+                documents.append(" ".join(current_document))
+                current_document = []
+                current_length = 0
+            current_document.append(sent)
+            current_length += len(tokens)
+
+        if current_document:
+            documents.append(" ".join(current_document))
+
+        return documents
 
     def store_documents(
         self,
@@ -139,26 +154,31 @@ class Database:
 
         return collection
 
-    def add_relevant_context_to_source(
+    def add_relevant_context_to_sources(
         self,
-        context: str,
+        source_texts: list[str],
         collection: Collection,
         distance_threshold: float = 0.5,
         top_k: int = 1,
     ):
-        query_embedding = self.angle.encode(context, to_numpy=True)
+        query_embeddings = self.angle.encode(source_texts, to_numpy=True)
 
-        relevant_queries = collection.query(
-            query_embeddings=query_embedding, n_results=top_k
+        query_result = collection.query(
+            query_embeddings=query_embeddings, n_results=top_k
         )
 
-        for i in range(len(relevant_queries["distances"][0])):
-            if relevant_queries["distances"][0][i] > distance_threshold:
-                relevant_context = relevant_queries["documents"][0][i]
+        sources_with_context = []
+        for i, source_text in enumerate(source_texts):
+            context = []
+            for j in range(len(query_result["distances"][i])):
+                if query_result["distances"][i][j] > distance_threshold:
+                    document = query_result["documents"][i][j]
+                    context.append(document)
 
-                context = f"{context} {relevant_context}"
+            source_with_context = " ".join([source_text, *context])
+            sources_with_context.append(source_with_context)
 
-        return context
+        return sources_with_context
 
 
 if __name__ == "__main__":
@@ -176,8 +196,8 @@ if __name__ == "__main__":
 
     db.store_documents(collection, pdfs_bytes=pdfs_bytes)
 
-    result = db.add_relevant_context_to_source(
-        args.context, collection, args.distance_threshold, args.top_k
+    result = db.add_relevant_context_to_sources(
+        args.texts, collection, args.distance_threshold, args.top_k
     )
     print(result)
     db.client.reset()
