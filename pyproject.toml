@@ -10,10 +10,13 @@ authors = [
 ]
 license = "MIT"
 readme = "README.md"
+packages = [
+    { include = "alinet", from = "src" }
+]
 
 [tool.poetry.dependencies]
 python = ">=3.10, <4.0"
-transformers = "^4.35.2"
+transformers = "4.37.2"
 torch = [
   { url = "https://download.pytorch.org/whl/cu118/torch-2.1.2%2Bcu118-cp310-cp310-linux_x86_64.whl", platform = "linux", python = "3.10"},
   { version = "2.1.2", source = "pypi", platform = "!=linux"}
@@ -31,10 +34,28 @@ en-core-web-md = {url = "https://github.com/explosion/spacy-models/releases/down
 evaluate = "^0.4.1"
 bert-score = "^0.3.13"
 protobuf = "^4.25.1"
+pytesseract = "^0.3.10"
+pypdf = "^4.0.1"
+instructorembedding = "^1.0.1"
+sentence-transformers = "^2.3.1"
+angle-emb = "^0.3.3"
+chromadb = "^0.4.23"
+tqdm = "^4.66.2"
+jiwer = "^3.0.3"
+openai = "^1.12.0"
+moviepy = "^1.0.3"
+fastapi = "^0.110.0"
+uvicorn = "^0.28.0"
+python-multipart = "^0.0.9"
+bitsandbytes = "0.42.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.1.6"
 jupyter = "^1.0.0"
+pytest = "^8.1.1"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [build-system]
 requires = ["poetry-core"]

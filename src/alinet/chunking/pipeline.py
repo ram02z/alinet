@@ -1,15 +1,21 @@
 from transformers import AutoTokenizer
-from qg import Model
+from alinet.chunking import TimeChunk
+from alinet.qg import Model
 import spacy
 
-INPUT_TOKEN_LIMIT = {Model.DISCORD: 1024}
+INPUT_TOKEN_LIMIT = {
+    Model.BASELINE: 512,
+    Model.BASELINE_NOISE: 512,
+    Model.BALANCED: 512,
+}
 
 nlp = spacy.load("en_core_web_md")
+
 
 class ChunkPipeline:
     def __init__(
         self,
-        model_id=Model.DISCORD,
+        model_id=Model.BASELINE,
     ):
         """
         :param model_id: name of huggingface transformers model
@@ -22,12 +28,14 @@ class ChunkPipeline:
         self,
         chunks: list[dict[str, str | tuple[float, float]]],
         audio_length: float,
-        stride_length=80,
-        min_duration=120,
-    ) -> list[dict[str, str | tuple[float, float]]]:
+        min_words_per_sentence=4,
+        stride_length=0,
+        min_duration=60,
+    ) -> list[TimeChunk]:
         """
         :param chunks: transcript chunks with chunk-level timestamps
         :param audio_length: length of the original audio in seconds
+        :param min_words_per_sentence: minimum number of words per sentence
         :param stride_length: maximum number of tokens to add to both sides of chunk
         :param min_duration: minimum duration per chunk
         """
@@ -75,18 +83,19 @@ class ChunkPipeline:
         if current_sentence.strip():
             process_chunk(chunks[-1])
 
-        # Remove sentences with < 4 words
+        # Remove short sentences
         for chunk in time_chunks:
             sentenceArr = chunk["text"]
             chunk["text"] = [
                 sentence
                 for sentence in sentenceArr
-                if len(sentence.split()) >= 4 and "..." not in sentence
+                if len(sentence.split()) >= min_words_per_sentence
+                and "..." not in sentence
             ]
-            
+
         # Merge consecutive sentences within a chunk when the second sentence starts with a coordinating conjunction ('CCONJ').
         for chunk in time_chunks:
-            chunk_sentences = chunk['text']
+            chunk_sentences = chunk["text"]
             for i in range(len(chunk_sentences) - 1, 0, -1):
                 current_sent = chunk_sentences[i]
 
@@ -99,9 +108,9 @@ class ChunkPipeline:
                     chunk_sentences.pop(i)
 
         # Add stride to chunks
-        # NOTE: In the future, look into adding right stride to potentially only the first issue. 
+        # NOTE: In the future, look into adding right stride to potentially only the first issue.
         # Cannot add right stride to all chunks because else we cause some chunks to start with a coordinating conjunctive
-        chunks_with_stride = []
+        chunks_with_stride: list[TimeChunk] = []
         for chunk_idx in range(len(time_chunks)):
             # Left stride
             left_sents = []
@@ -118,13 +127,12 @@ class ChunkPipeline:
                     left_sents.append(sent)
                     sentence_index += 1
 
+            chunk_text = " ".join(left_sents + time_chunks[chunk_idx]["text"])
+            start_time, end_time = time_chunks[chunk_idx]["timestamp"]
             chunks_with_stride.append(
-                {
-                    "timestamp": time_chunks[chunk_idx]["timestamp"],
-                    "text": " ".join(
-                        left_sents + time_chunks[chunk_idx]["text"]
-                    ),
-                }
+                TimeChunk(
+                    text=chunk_text, start_time=start_time, end_time=end_time
+                )
             )
 
         return chunks_with_stride
