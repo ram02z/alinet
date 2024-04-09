@@ -17,6 +17,8 @@ import io
 from dataclasses import dataclass, field
 import torch
 
+from alinet.rag.pdf import get_text_sections
+
 
 @dataclass
 class RAGDatabaseArguments:
@@ -83,11 +85,9 @@ class Database:
         )
 
     def _get_doc_text(self, pdf_bytes: bytes):
-        texts = []
         with io.BytesIO(pdf_bytes) as pdf_stream:
             doc = fitz.open(stream=pdf_stream)
-            for page in doc:
-                texts.append(page.get_text())
+            texts = get_text_sections(doc)
         return "".join(texts)
 
     # Splits a document into chunks of text, aiming to respect a maximum token limit.
