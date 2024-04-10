@@ -134,8 +134,6 @@ class Database:
                 section_chunks = self._create_document_chunks(section, max_token_limit)
                 chunks.extend(section_chunks)
 
-            __import__('pprint').pprint(chunks)
-
             for doc in chunks:
                 embedding = self.angle.encode(doc, to_numpy=True)
 
