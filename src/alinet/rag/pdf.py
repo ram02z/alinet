@@ -34,15 +34,16 @@ def get_text_sections(doc: fitz.Document) -> list[str]:
                 )
                 section_text = ""
             current_heading = block.text
-        section_text += block.text
+        section_text += block.text.replace("\n", " ")
 
     if current_heading and section_text:
         sections.append(DocumentSection(heading=current_heading, text=section_text))
 
     filtered_sections = [
-        section.text
+        section.text.strip()
         for section in sections
         if section.heading.strip().lower() not in SECTIONS_TO_REMOVE
+        or not section.text.strip()
     ]
 
     return filtered_sections
