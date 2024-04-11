@@ -4,7 +4,7 @@ from transformers import HfArgumentParser, set_seed
 import evaluate
 import openpyxl
 from openpyxl import Workbook
-
+import logging
 import json
 import os
 import sys
@@ -12,6 +12,8 @@ import sys
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
 from alinet import chunking, qg, rag  # noqa: E402
+
+logger = logging.getLogger(__name__)
 
 
 def create_or_load_workbook(filename):
