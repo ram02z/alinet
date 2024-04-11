@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-import logging
 import datasets
 from transformers import HfArgumentParser, set_seed
 import evaluate
@@ -13,8 +12,6 @@ import sys
 SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
 sys.path.append(SRC_DIR)
 from alinet import chunking, qg, rag  # noqa: E402
-
-logger = logging.getLogger(__name__)
 
 
 def create_or_load_workbook(filename):
@@ -64,8 +61,6 @@ def main():
     args = parser.parse_args_into_dataclasses()[0]
 
     set_seed(args.seed)
-    logger.info("loading embedding model")
-
     db = rag.Database()
 
     collection = db.create_collection()
@@ -97,10 +92,6 @@ def main():
         distance_threshold=args.distance_threshold,
     )
 
-    for text in sources_with_context:
-        print(text)
-        print()
-
     text_pairs = []
 
     for i, text_with_context in enumerate(sources_with_context):
@@ -117,7 +108,7 @@ def main():
 
     # Write the header row
     worksheet["A1"] = "Source Text"
-    worksheet["B1"] = "Source with Context"
+    worksheet["B1"] = "Context"
 
     # Write the data rows
     for row_num, pair in enumerate(text_pairs, start=2):
@@ -127,9 +118,8 @@ def main():
     # Save the workbook
     workbook.save("source_vs_rag.xlsx")
 
-    if not db.client.reset():
-        logger.warning("database collections and entries could not be deleted")
-    del db
+    # Delete database
+    db.client.reset()
 
 
 if __name__ == "__main__":
