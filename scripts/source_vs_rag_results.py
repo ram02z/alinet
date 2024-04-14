@@ -25,7 +25,6 @@
 
 import openpyxl
 from openpyxl.styles import Alignment
-from collections import Counter
 
 
 SOURCE_INDEX = 2
@@ -34,9 +33,6 @@ SOURCE_RAG_INDEX = 14
 
 
 def calculate_quality(scores_str: str):
-    if scores_str is None or scores_str == "" or scores_str == " ":
-        return "EMPTY"
-
     # Incase of typos in the document:
     # Remove spaces in the string and leading and trailing commas.
     clean_score = scores_str.replace(" ", "").strip(",").split(",")
@@ -76,7 +72,7 @@ bad_source_rag_count = 0
 # Col 14 is the Source + RAG question
 # Col 15,16,17 are the individual quality  ------------- Index 14
 # Col 18 is Source + RAG overall quality
-def calculate_section(index):
+def get_quality(index):
     results = [""] * 3
     for i in range(3):
         quality = calculate_quality(row[index + i])
@@ -91,6 +87,18 @@ def calculate_section(index):
     return mode_value
 
 
+good_source_good_rag_count = 0
+good_source_bad_rag_count = 0
+bad_source_good_rag_count = 0
+bad_source_bad_rag_count = 0
+
+
+source_rag_combinations = {
+    "Good Source, Good RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
+    "Good Source, Bad RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
+    "Bad Source, Good RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
+    "Bad Source, Bad RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
+}
 # Load the Excel file
 workbook = openpyxl.load_workbook("sample_data/source_vs_rag.xlsx")
 
@@ -112,68 +120,20 @@ for worksheet_name in workbook.sheetnames:
     cell = worksheet.cell(row=2, column=6, value="Overall Quality")
     cell.alignment = Alignment(vertical="top", horizontal="left")
 
-    good_source_count = 0
-    bad_source_count = 0
-
-    good_rag_count = 0
-    bad_rag_count = 0
-
-    good_source_rag_count = 0
-    bad_source_rag_count = 0
-
-    source_rag_combinations = {
-        "Good Source, Good RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
-        "Good Source, Bad RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
-        "Bad Source, Good RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
-        "Bad Source, Bad RAG": {"Good Source + RAG": 0, "Bad Source + RAG": 0},
-    }
-
     # Skip the first 2 rows - Enumerate behaviour causes index to start from 0, so specify it starts from row 3
     for row_num, row in enumerate(
         worksheet.iter_rows(min_row=3, max_row=7, values_only=True), start=3
     ):
         # Source starts from Index 2 (Column 3)
-        source_quality = calculate_section(
-            SOURCE_INDEX
-        )  # Count Good and Bad for SOURCE
-        if source_quality == "GOOD":
-            good_source_count += 1
-        elif source_quality == "BAD":
-            bad_source_count += 1
-
+        source_quality = get_quality(SOURCE_INDEX)
         # RAG starts from index 8 (Column 9)
-        rag_quality = calculate_section(RAG_INDEX)  # Count Good and Bad for RAG
-        if rag_quality == "GOOD":
-            good_rag_count += 1
-        elif rag_quality == "BAD":
-            bad_rag_count += 1
-
+        rag_quality = get_quality(RAG_INDEX)
         # Source + RAG starts from Index 14 (Column 15)
-        source_rag_quality = calculate_section(
-            SOURCE_RAG_INDEX
-        )  # Count Good and Bad for SOURCE + RAGE
-        if source_rag_quality == "GOOD":
-            good_source_rag_count += 1
-        elif source_rag_quality == "BAD":
-            bad_source_rag_count += 1
-
-        # How many Source Overall Quality are Good and RAG Overall Quality are Good
-        # From these how many Source + Rag Overall Quality are Good?
-        # From these how many Source + Rag Overall Quality are Bad?
-
-        # How many Source Overall Quality are Good and RAG Overall Quality are Bad
-        # From these how many Source + Rag Overall Quality are Good?
-        # From these how many Source + Rag Overall Quality are Bad?
-
-        # How many Source Overall Quality are Bad and RAG Overall Quality are Good
-        # From these how many Source + Rag Overall Quality are Good?
-        # From these how many Source + Rag Overall Quality are Bad?
-
-        # How many Source Overall Quality are Bad and RAG Overall Quality are Bad
-        # From these how many Source + Rag Overall Quality are Good?
-        # From these how many Source + Rag Overall Quality are Bad?
+        source_rag_quality = get_quality(SOURCE_RAG_INDEX)
 
         if source_quality == "GOOD" and rag_quality == "GOOD":
+            good_source_good_rag_count += 1
+
             if source_rag_quality == "GOOD":
                 source_rag_combinations["Good Source, Good RAG"][
                     "Good Source + RAG"
@@ -185,6 +145,8 @@ for worksheet_name in workbook.sheetnames:
                 ] += 1
 
         elif source_quality == "GOOD" and rag_quality == "BAD":
+            good_source_bad_rag_count += 1
+
             if source_rag_quality == "GOOD":
                 source_rag_combinations["Good Source, Bad RAG"][
                     "Good Source + RAG"
@@ -194,6 +156,8 @@ for worksheet_name in workbook.sheetnames:
                 source_rag_combinations["Good Source, Bad RAG"]["Bad Source + RAG"] += 1
 
         elif source_quality == "BAD" and rag_quality == "GOOD":
+            bad_source_good_rag_count += 1
+
             if source_rag_quality == "GOOD":
                 source_rag_combinations["Bad Source, Good RAG"][
                     "Good Source + RAG"
@@ -203,6 +167,8 @@ for worksheet_name in workbook.sheetnames:
                 source_rag_combinations["Bad Source, Good RAG"]["Bad Source + RAG"] += 1
 
         elif source_quality == "BAD" and rag_quality == "BAD":
+            bad_source_bad_rag_count += 1
+
             if source_rag_quality == "GOOD":
                 source_rag_combinations["Bad Source, Bad RAG"]["Good Source + RAG"] += 1
 
@@ -228,19 +194,46 @@ for worksheet_name in workbook.sheetnames:
     worksheet.cell(row=9, column=15, value=bad_source_rag_count)
     worksheet.cell(row=9, column=17, value=good_source_rag_count)
 
-    # TODO: Store this information on the worksheet
-    # Print the results for this worksheet
-    for combination, counts in source_rag_combinations.items():
-        good = counts["Good Source + RAG"]
-        bad = counts["Bad Source + RAG"]
-        if good == 0 and bad == 0:
-            print(f"{combination}: No Combination")
-        else:
-            print(f"{combination}:")
-            print(f"- Good Source + RAG: {counts['Good Source + RAG']}")
-            print(f"- Bad Source + RAG: {counts['Bad Source + RAG']}")
 
-    print()
+print("\nSummary Table:")
+print(
+    "{:<25} {:<20} {:<20} {:<20}".format(
+        "Scenario", "Total Cases", "Good Source + RAG", "Bad Source + RAG"
+    )
+)
+print("-" * 100)
+print(
+    "{:<25} {:<20} {:<20} {:<20}".format(
+        "Good Source, Good RAG",
+        good_source_good_rag_count,
+        source_rag_combinations["Good Source, Good RAG"]["Good Source + RAG"],
+        source_rag_combinations["Good Source, Good RAG"]["Bad Source + RAG"],
+    )
+)
+print(
+    "{:<25} {:<20} {:<20} {:<20}".format(
+        "Good Source, Bad RAG",
+        good_source_bad_rag_count,
+        source_rag_combinations["Good Source, Bad RAG"]["Good Source + RAG"],
+        source_rag_combinations["Good Source, Bad RAG"]["Bad Source + RAG"],
+    )
+)
+print(
+    "{:<25} {:<20} {:<20} {:<20}".format(
+        "Bad Source, Good RAG",
+        bad_source_good_rag_count,
+        source_rag_combinations["Bad Source, Good RAG"]["Good Source + RAG"],
+        source_rag_combinations["Bad Source, Good RAG"]["Bad Source + RAG"],
+    )
+)
+print(
+    "{:<25} {:<20} {:<20} {:<20}".format(
+        "Bad Source, Bad RAG",
+        bad_source_bad_rag_count,
+        source_rag_combinations["Bad Source, Bad RAG"]["Good Source + RAG"],
+        source_rag_combinations["Bad Source, Bad RAG"]["Bad Source + RAG"],
+    )
+)
 
 
 # Save the modified workbook
