@@ -23,6 +23,14 @@
   flex: 70%;
 }
 
-.td1st {
+.tdName {
   flex: 1;
+}
+
+.thName {
+  width: 70%;
+}
+
+.thRemove {
+  width: 30%;
 }

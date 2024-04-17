@@ -16,6 +16,7 @@
     "@tabler/icons-react": "^3.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-pdf": "^7.7.1",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
@@ -31,8 +32,10 @@
     "postcss": "^8.4.35",
     "postcss-preset-mantine": "1.13.0",
     "postcss-simple-vars": "^7.0.1",
+    "prettier": "^3.2.5",
     "typescript": "^5.4.2",
-    "vite": "^5.1.6"
+    "vite": "^5.1.6",
+    "vite-plugin-static-copy": "^1.0.2"
   },
   "packageManager": "yarn@4.1.1"
 }

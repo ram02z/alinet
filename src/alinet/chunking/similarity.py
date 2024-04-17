@@ -1,11 +1,11 @@
+import warnings
 import spacy
 from sklearn.metrics.pairwise import cosine_similarity
-import warnings
 
 from alinet.chunking.model import TimeChunk
 
 
-def compute_cosine_similarity_word_embeddings(text1, text2):
+def compute_cosine_similarity_word_embeddings(text1, text2) -> float:
     """
     Compute the cosine similarity between the word embeddings of two texts.
 
@@ -25,7 +25,7 @@ def compute_cosine_similarity_word_embeddings(text1, text2):
 
     # Compute cosine similarity between the two vectors
     cosine_sim = cosine_similarity(embeddings1, embeddings2)[0, 0]
-    return cosine_sim
+    return abs(float(cosine_sim))
 
 
 def find_matching_slide_range(
@@ -86,13 +86,11 @@ def filter_questions_by_retention_rate(
 ) -> dict[int, str]:
     """
     Filter questions based on the retention rate and similarity threshold.
-
     Parameters:
     - sim_scores (list): List of similarity scores.
     - generated_questions (list): List of generated questions.
     - similarity_threshold (float): Threshold for similarity scores.
     - filtering_threshold (float): Threshold for the retention rate.
-
     Returns:
     dict: A Dictionary of filtered questions based on the retention rate and similarity threshold.
     """
@@ -113,10 +111,10 @@ def filter_questions_by_retention_rate(
         return filtered_questions
 
 
-def filter_similar_questions(question_dict):
-    filtered_dict = {}
-    for idx, question in question_dict.items():
-        if question not in filtered_dict.values():
-            filtered_dict[idx] = question
-            
-    return filtered_dict
+def filter_similar_questions(questions: list[str]) -> list[str]:
+    filtered_questions = []
+    for question in questions:
+        if question not in filtered_questions:
+            filtered_questions.append(question)
+
+    return filtered_questions
