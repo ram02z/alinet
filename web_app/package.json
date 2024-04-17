@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npm i && vite",
     "build": "tsc && vite build",
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
@@ -36,6 +36,5 @@
     "typescript": "^5.4.2",
     "vite": "^5.1.6",
     "vite-plugin-static-copy": "^1.0.2"
-  },
-  "packageManager": "yarn@4.1.1"
+  }
 }

@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "mmqg"
-version = "0.1.1"
+name = "alinet"
+version = "1.0.0"
 description = "multi-modal question generation"
 authors = [
     "Omar Zeghouani <omarzeghouanii@gmail.com>",

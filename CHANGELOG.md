@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+-  Add final system
+-  Update CLI to run evaluation scripts
+-  Rename system from `mmqg` to `alinet`
+-  Add web application integration PoC
+
 ## [0.1.1] - 2023-12-20
 
 ### Fixed
