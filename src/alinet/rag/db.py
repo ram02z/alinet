@@ -17,6 +17,8 @@ import io
 from dataclasses import dataclass, field
 import torch
 
+from alinet.rag.pdf import get_text_sections
+
 
 @dataclass
 class RAGDatabaseArguments:
@@ -82,13 +84,11 @@ class Database:
             path=output_dir, settings=settings
         )
 
-    def _get_doc_text(self, pdf_bytes: bytes):
-        texts = []
+    def _get_doc_text(self, pdf_bytes: bytes) -> list[str]:
         with io.BytesIO(pdf_bytes) as pdf_stream:
             doc = fitz.open(stream=pdf_stream)
-            for page in doc:
-                texts.append(page.get_text())
-        return "".join(texts)
+            texts = get_text_sections(doc)
+            return texts
 
     # Splits a document into chunks of text, aiming to respect a maximum token limit.
     def _create_document_chunks(self, document: str, chunk_size: int):
@@ -128,8 +128,11 @@ class Database:
         max_token_limit: int = 32,
     ):
         for pdf_bytes in pdfs_bytes:
-            document = self._get_doc_text(pdf_bytes)
-            chunks = self._create_document_chunks(document, max_token_limit)
+            document_sections = self._get_doc_text(pdf_bytes)
+            chunks = []
+            for section in document_sections:
+                section_chunks = self._create_document_chunks(section, max_token_limit)
+                chunks.extend(section_chunks)
 
             for doc in chunks:
                 embedding = self.angle.encode(doc, to_numpy=True)
