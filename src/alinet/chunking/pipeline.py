@@ -1,17 +1,21 @@
 from transformers import AutoTokenizer
-from qg import Model
-from spacy.lang.en import English
+from alinet.chunking import TimeChunk
+from alinet.qg import Model
+import spacy
 
-INPUT_TOKEN_LIMIT = {Model.DISCORD: 1024}
+INPUT_TOKEN_LIMIT = {
+    Model.BASELINE: 512,
+    Model.BASELINE_NOISE: 512,
+    Model.BALANCED: 512,
+}
 
-nlp = English()
-nlp.add_pipe("sentencizer")
+nlp = spacy.load("en_core_web_md")
 
 
 class ChunkPipeline:
     def __init__(
         self,
-        model_id=Model.DISCORD,
+        model_id=Model.BASELINE,
     ):
         """
         :param model_id: name of huggingface transformers model
@@ -24,12 +28,14 @@ class ChunkPipeline:
         self,
         chunks: list[dict[str, str | tuple[float, float]]],
         audio_length: float,
-        stride_length=50,
-        min_duration=120,
-    ) -> list[dict[str, str | tuple[float, float]]]:
+        min_words_per_sentence=4,
+        stride_length=0,
+        min_duration=60,
+    ) -> list[TimeChunk]:
         """
         :param chunks: transcript chunks with chunk-level timestamps
         :param audio_length: length of the original audio in seconds
+        :param min_words_per_sentence: minimum number of words per sentence
         :param stride_length: maximum number of tokens to add to both sides of chunk
         :param min_duration: minimum duration per chunk
         """
@@ -77,24 +83,35 @@ class ChunkPipeline:
         if current_sentence.strip():
             process_chunk(chunks[-1])
 
-        # Add stride to chunks
-        chunks_with_stride = []
-        for chunk_idx in range(len(time_chunks)):
-            # Right stride
-            right_sents = []
-            if chunk_idx < len(time_chunks) - 1:
-                next_chunk_idx = chunk_idx + 1
-                sentence_idx = 0
-                while len(time_chunks[next_chunk_idx]["text"]) > sentence_idx:
-                    sent = time_chunks[next_chunk_idx]["text"][sentence_idx]
-                    token_count = len(
-                        self._tokenizer.tokenize("".join(right_sents) + sent)
-                    )
-                    if token_count >= stride_length:
-                        break
-                    right_sents.append(sent)
-                    sentence_idx += 1
+        # Remove short sentences
+        for chunk in time_chunks:
+            sentenceArr = chunk["text"]
+            chunk["text"] = [
+                sentence
+                for sentence in sentenceArr
+                if len(sentence.split()) >= min_words_per_sentence
+                and "..." not in sentence
+            ]
 
+        # Merge consecutive sentences within a chunk when the second sentence starts with a coordinating conjunction ('CCONJ').
+        for chunk in time_chunks:
+            chunk_sentences = chunk["text"]
+            for i in range(len(chunk_sentences) - 1, 0, -1):
+                current_sent = chunk_sentences[i]
+
+                prev_sent = chunk_sentences[i - 1]
+                doc = nlp(current_sent)
+
+                if doc[0].pos_ == "CCONJ":
+                    merged_sentence = prev_sent + " " + current_sent
+                    chunk_sentences[i - 1] = merged_sentence
+                    chunk_sentences.pop(i)
+
+        # Add stride to chunks
+        # NOTE: In the future, look into adding right stride to potentially only the first issue.
+        # Cannot add right stride to all chunks because else we cause some chunks to start with a coordinating conjunctive
+        chunks_with_stride: list[TimeChunk] = []
+        for chunk_idx in range(len(time_chunks)):
             # Left stride
             left_sents = []
             if chunk_idx > 0:
@@ -110,13 +127,12 @@ class ChunkPipeline:
                     left_sents.append(sent)
                     sentence_index += 1
 
+            chunk_text = " ".join(left_sents + time_chunks[chunk_idx]["text"])
+            start_time, end_time = time_chunks[chunk_idx]["timestamp"]
             chunks_with_stride.append(
-                {
-                    "timestamp": time_chunks[chunk_idx]["timestamp"],
-                    "text": " ".join(
-                        left_sents + time_chunks[chunk_idx]["text"] + right_sents
-                    ),
-                }
+                TimeChunk(
+                    text=chunk_text, start_time=start_time, end_time=end_time
+                )
             )
 
         return chunks_with_stride

@@ -1,0 +1,36 @@
+.header {
+  position: sticky;
+  top: 0;
+  background-color: var(--mantine-color-body);
+  transition: box-shadow 150ms ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-bottom: rem(1px) solid
+      light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-3));
+  }
+}
+
+.scrolled {
+  box-shadow: var(--mantine-shadow-sm);
+}
+
+.table {
+  flex: 70%;
+}
+
+.tdName {
+  flex: 1;
+}
+
+.thName {
+  width: 70%;
+}
+
+.thRemove {
+  width: 30%;
+}
