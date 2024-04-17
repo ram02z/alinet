@@ -81,4 +81,4 @@ This will save only the video clips associated with the questions that have a si
 
 ## Scripts
 
-See [scripts](scripts/) directory for our training and evaluation scripts.
+See [scripts](/scripts/README.md) directory for our training and evaluation scripts.
