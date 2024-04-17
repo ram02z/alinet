@@ -1,15 +1,15 @@
-# AliNET
+# ALINet
 
-> AliNET utilizes video lectures to generate high-quality questions pertinent to the provided educational content
+> ALINet utilizes video lectures to generate high-quality questions pertinent to the provided educational content
 
-## Installation
+## Getting started
 
-AliNET requires the following dependencies:
+### Prerequisites
 
 - Python 3.10
-- Poetry
-- Tesseract
-- FFmpeg
+- [Python Poetry](https://python-poetry.org/)
+- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
+- [FFmpeg](https://ffmpeg.org/)
 
 Using `brew` package manager as an example:
 
@@ -26,9 +26,16 @@ poetry install
 
 The virtual environment will be created locally in the `.venv` directory.
 
-PyTorch with CUDA support will be only be installed on Linux environments.
+> [!NOTE]
+> PyTorch with CUDA support will be only be installed on Linux environments.
 
 ## Usage
+
+To activate the Python virtual environment, run the following command:
+
+```sh
+poetry shell
+```
 
 ### Web App
 
@@ -45,9 +52,9 @@ cd web_app
 npm run dev
 ```
 
-### Command Line Interface
+### Command Line Interface (CLI)
 
-This will generate all questions and the filtered video clips. Used for our human evaluation.
+The CLI will generate all questions and the filtered video clips (used for our human evaluation).
 
 ```sh
 python cli.py \
@@ -72,6 +79,6 @@ python cli.py \
 
 This will save only the video clips associated with the questions that have a similarity score greater than `0.6` and a retention rate greater than `0.4`.
 
-## Fine-tuning
+## Scripts
 
-See `/scripts` directory to learn how to generate and prepare the datasets, train the model and evaluate its performance.
+See [scripts](scripts/) directory for our training and evaluation scripts.
