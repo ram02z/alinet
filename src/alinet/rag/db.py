@@ -7,6 +7,7 @@ from chromadb.config import Settings
 from angle_emb import AnglE
 import logging
 from spacy.lang.en import English
+from alinet.model import Document, Reference, TextWithReferences
 
 from alinet.qg import Model
 
@@ -36,13 +37,9 @@ class RAGDatabaseArguments:
     )
 
 
-# Helper function
 def generate_sha256_hash_from_text(text):
-    # Create a SHA256 hash object
     sha256_hash = hashlib.sha256()
-    # Update the hash object with the text encoded to bytes
     sha256_hash.update(text.encode("utf-8"))
-    # Return the hexadecimal representation of the hash
     return sha256_hash.hexdigest()
 
 
@@ -124,35 +121,32 @@ class Database:
     def store_documents(
         self,
         collection: Collection,
-        pdfs_bytes: list[bytes],
+        docs: list[Document],
         max_token_limit: int = 32,
     ):
-        for pdf_bytes in pdfs_bytes:
-            document_sections = self._get_doc_text(pdf_bytes)
+        for doc in docs:
+            document_sections = self._get_doc_text(doc.content)
             chunks = []
             for section in document_sections:
                 section_chunks = self._create_document_chunks(section, max_token_limit)
                 chunks.extend(section_chunks)
 
-            for doc in chunks:
-                embedding = self.angle.encode(doc, to_numpy=True)
+            for chunk in chunks:
+                embedding = self.angle.encode(chunk, to_numpy=True)
 
                 collection.add(
                     embeddings=embedding,
-                    documents=doc,
-                    ids=generate_sha256_hash_from_text(doc),
+                    documents=chunk,
+                    ids=generate_sha256_hash_from_text(chunk),
+                    metadatas={"file_name": doc.name},
                 )
 
     # Makes sure that an old collection with the same name is deleted, so that a new one is created
     def create_collection(self, collection_name: str = "default"):
-        try:
-            self.client.delete_collection(collection_name)
-        except ValueError:
-            logger.info(f"{collection_name} does not exist")
-
         collection: Collection = self.client.create_collection(
             name=collection_name,
             metadata={"hnsw:space": "cosine"},  # l2 is the default
+            get_or_create=True,
         )
 
         return collection
@@ -163,44 +157,52 @@ class Database:
         collection: Collection,
         distance_threshold: float = 0.5,
         top_k: int = 1,
-    ):
+    ) -> list[TextWithReferences]:
         query_embeddings = self.angle.encode(source_texts, to_numpy=True)
 
         query_result = collection.query(
             query_embeddings=query_embeddings, n_results=top_k
         )
 
-        sources_with_context = []
+        sources_with_context: list[TextWithReferences] = []
         for i, source_text in enumerate(source_texts):
-            context = []
+            context: list[Reference] = []
             for j in range(len(query_result["distances"][i])):
                 if query_result["distances"][i][j] > distance_threshold:
                     document = query_result["documents"][i][j]
-                    context.append(document)
+                    context.append(
+                        Reference(
+                            file_name=query_result["metadatas"][i][j]["file_name"],
+                            text=document,
+                        )
+                    )
 
-            source_with_context = " ".join([source_text, *context])
-            sources_with_context.append(source_with_context)
+            ref_texts = [ref.text for ref in context]
+            source_with_context = " ".join([source_text, *ref_texts])
+            sources_with_context.append(
+                TextWithReferences(text=source_with_context, ref=context)
+            )
 
         return sources_with_context
 
 
-if __name__ == "__main__":
-    parser = HfArgumentParser((RAGDatabaseArguments,))
-    args = parser.parse_args_into_dataclasses()[0]
+# if __name__ == "__main__":
+#     parser = HfArgumentParser((RAGDatabaseArguments,))
+#     args = parser.parse_args_into_dataclasses()[0]
 
-    db = Database()
-    collection = db.create_collection()
+#     db = Database()
+#     collection = db.create_collection()
 
-    pdfs_bytes: list[bytes] = []
-    for doc_path in args.doc_paths:
-        with open(doc_path, "rb") as f:
-            pdf_bytes = f.read()
-        pdfs_bytes.append(pdf_bytes)
+#     pdfs_bytes: list[bytes] = []
+#     for doc_path in args.doc_paths:
+#         with open(doc_path, "rb") as f:
+#             pdf_bytes = f.read()
+#         pdfs_bytes.append(pdf_bytes)
 
-    db.store_documents(collection, pdfs_bytes=pdfs_bytes)
+#     db.store_documents(collection, pdfs_bytes=pdfs_bytes)
 
-    result = db.add_relevant_context_to_sources(
-        args.texts, collection, args.distance_threshold, args.top_k
-    )
-    print(result)
-    db.client.reset()
+#     result = db.add_relevant_context_to_sources(
+#         args.texts, collection, args.distance_threshold, args.top_k
+#     )
+#     print(result)
+#     db.client.reset()

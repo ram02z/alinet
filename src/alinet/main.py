@@ -1,50 +1,76 @@
 import csv
 import random
 from alinet import asr, qg, chunking, Question
+from alinet.chunking.model import TimeChunk
 from alinet.chunking.similarity import (
     filter_questions_by_retention_rate,
     get_similarity_scores,
-    filter_similar_questions,
 )
 from alinet.chunking.video import save_video_clips, slide_chunking
+from pathlib import Path
 import warnings
 
 from typing import Callable
+
+from alinet.model import Reference, TextWithReferences
 
 
 def baseline(
     video_path: str,
     asr_model: asr.Model,
     qg_model: qg.Model,
-    augment_sources: Callable[[list[str]], list[str]],
+    slide_chunks: list[TimeChunk],
+    augment_sources: Callable[[list[str]], list[TextWithReferences]],
 ) -> list[Question]:
-    asr_pipe = asr.Pipeline(asr_model)
-    whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
+    # asr_pipe = asr.Pipeline(asr_model)
+    # whisper_chunks, duration = asr_pipe(video_path, batch_size=1)
+    import json
+
+    with open("./sample_data/lecture_5/demo/transcript.json", "rb") as f:
+        data = json.load(f)
+        whisper_chunks = data["chunks"]
+        duration = data["duration"]
     chunk_pipe = chunking.Pipeline(qg_model)
     transcript_chunks = chunk_pipe(whisper_chunks, duration)
 
-    text_chunks = augment_sources([chunk.text for chunk in transcript_chunks])
+    reftext_chunks = augment_sources([chunk.text for chunk in transcript_chunks])
+    text_chunks = [reftext.text for reftext in reftext_chunks]
 
     qg_pipe = qg.Pipeline(qg_model)
     generated_questions = qg_pipe(text_chunks)
-    filtered_questions = filter_similar_questions(generated_questions)
 
-    slide_chunks = slide_chunking(video_path)
+    video_name = Path(video_path).name
     if len(slide_chunks) == 0:
         warnings.warn(
             "Slide chunks are empty. Questions will not have a similarity score."
         )
-        return [
-            Question(text=question, similarity_score=0.0)
-            for question in filtered_questions
-        ]
+        questions = []
+        for question, chunk, refs in zip(
+            generated_questions, transcript_chunks, reftext_chunks
+        ):
+            chunk_ref = Reference(file_name=video_name, text=chunk.text)
+            all_refs = []
+            if refs.ref:
+                all_refs = refs.ref
+            all_refs.append(chunk_ref)
+            questions.append(
+                Question(text=question, similarity_score=0.0, refs=all_refs)
+            )
+        return questions
 
     sim_scores = get_similarity_scores(transcript_chunks, slide_chunks)
+    questions = []
+    for question, chunk, refs, score in zip(
+        generated_questions, transcript_chunks, reftext_chunks, sim_scores
+    ):
+        chunk_ref = Reference(file_name=video_name, text=chunk.text)
+        all_refs = []
+        if refs.ref:
+            all_refs = refs.ref
+        all_refs.append(chunk_ref)
+        questions.append(Question(text=question, similarity_score=score, refs=all_refs))
 
-    return [
-        Question(text=question, similarity_score=score)
-        for question, score in zip(generated_questions, sim_scores)
-    ]
+    return questions
 
 
 def create_eval_questions(

@@ -9,7 +9,8 @@ import {
   Tooltip,
   Stack,
   Space,
-  Flex,
+  Popover,
+  Button,
 } from "@mantine/core";
 import classes from "./GeneratedQuestions.module.css";
 import { Question } from "../App";
@@ -98,6 +99,23 @@ export const GeneratedQuestions = ({
           </Table.Td>
           <Table.Td>{item.text}</Table.Td>
           <Table.Td>{item.score.toFixed(2)}</Table.Td>
+          <Table.Td>
+            {item.refs.map((ref, idx) => {
+              return (
+                <Popover width={400} position="left" withArrow shadow="md">
+                  <Popover.Target>
+                    <Button variant="transparent" size="xs">[{idx + 1}]</Button>
+                  </Popover.Target>
+                  <Popover.Dropdown>
+                    <Text size="md">
+                      <b>{ref.file_name}</b>:<br />
+                      {ref.text}
+                    </Text>
+                  </Popover.Dropdown>
+                </Popover>
+              );
+            })}
+          </Table.Td>
         </Table.Tr>
       );
     }
@@ -158,6 +176,7 @@ export const GeneratedQuestions = ({
                 </Center>
               </Group>
             </Table.Th>
+            <Table.Th>References</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>{rows}</Table.Tbody>

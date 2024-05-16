@@ -33,15 +33,21 @@ export interface Question {
   id: string;
   text: string;
   score: number;
+  refs: Reference[];
+}
+
+export interface Reference {
+  file_name: string;
+  text: string;
 }
 
 export interface FileWithId {
-  id: string
-  file: File
+  id: string;
+  file: File;
 }
 
 export default function App() {
-  const [files, setFiles] = useState<FileWithId[]>([])
+  const [files, setFiles] = useState<FileWithId[]>([]);
   const [selection, setSelection] = useState<string[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -50,11 +56,11 @@ export default function App() {
   const [openedSettings, { toggle: toggleSettings }] = useDisclosure(false);
 
   const generateQuestions = async () => {
-    setLoading(true)
-    const formData = new FormData()
+    setLoading(true);
+    const formData = new FormData();
     files.forEach((filesWithId) => {
-      formData.append('files', filesWithId.file)
-    })
+      formData.append("files", filesWithId.file);
+    });
 
     formData.append("top_k", topK.toString());
     formData.append("distance_threshold", distanceThreshold.toString());
@@ -68,11 +74,16 @@ export default function App() {
       if (response.ok) {
         const data = await response.json();
         const questionsWithId = data.questions.map(
-          (question: { text: string; similarity_score: number }) => {
+          (question: {
+            text: string;
+            similarity_score: number;
+            refs: Reference[];
+          }) => {
             return {
               id: uuidv4(),
               text: question.text,
               score: question.similarity_score,
+              refs: question.refs,
             };
           },
         );
@@ -150,7 +161,7 @@ export default function App() {
           variant="gradient"
           gradient={{ from: "blue", to: "cyan", deg: 90 }}
         >
-        Generated Questions
+          Generated Questions
         </Text>
         <Space h={16} />
         <GeneratedQuestions
