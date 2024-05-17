@@ -26,7 +26,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
   const handleUpload = async () => {
     setUploading(true);
     try {
-      onFileUpload(file.file);
+      await onFileUpload(file.file);
     } finally {
       setUploading(false);
       setUploaded(true);
